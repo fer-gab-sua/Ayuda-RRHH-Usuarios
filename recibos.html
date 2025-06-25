@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mis Recibos de Sueldo - Portal RH</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background: #f9fafb;
+      color: #1f2937;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(135deg, #2563eb, #dc2626);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+      flex-shrink: 0;
+      min-height: 100vh;
+    }
+    .logo { font-size: 24px; font-weight: 700; margin-bottom: 40px; }
+    .nav { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+    .nav a {
+      padding: 12px 20px; border-radius: 12px; text-decoration: none;
+      color: white; background-color: rgba(255,255,255,0.1);
+      transition: background 0.3s, transform 0.2s; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav a:hover { background-color: rgba(255,255,255,0.3); transform: scale(1.03);}
+    .main-content {
+      flex: 1; padding: 40px 5vw; max-width: 1000px; margin: 0 auto;
+      display: flex; flex-direction: column; gap: 32px;
+    }
+    h1 { font-size: 2rem; margin-bottom: 18px; }
+    .resumen {
+      display: flex; gap: 32px; margin-bottom: 18px;
+    }
+    .resumen-card {
+      background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      padding: 18px 28px; font-size: 1.1rem; font-weight: 600; color: #2563eb;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .resumen-card span { color: #1f2937; font-size: 2rem; font-weight: 700; }
+    .recibos-section { background: #fff; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 28px 24px; }
+    .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 18px; }
+    .recibos-table {
+      width: 100%; border-collapse: collapse; margin-top: 10px;
+    }
+    .recibos-table th, .recibos-table td {
+      border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left;
+    }
+    .recibos-table th { background: #f3f4f6; }
+    .btn-firmar, .btn-disconformidad {
+      padding: 5px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+      margin-right: 6px; font-size: 0.97rem;
+    }
+    .btn-firmar { background: #2563eb; color: #fff; }
+    .btn-firmar:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .btn-disconformidad { background: #dc2626; color: #fff; }
+    .btn-disconformidad:disabled { background: #fca5a5; cursor: not-allowed; }
+    .estado-firmado { color: #16a34a; font-weight: 600; }
+    .estado-disconforme { color: #dc2626; font-weight: 600; }
+    .estado-pendiente { color: #f59e42; font-weight: 600; }
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-content { padding: 18px 2vw; }
+      .resumen { flex-direction: column; gap: 12px; }
+      .recibos-section { padding: 12px 4px; }
+      .recibos-table, .recibos-table thead, .recibos-table tbody, .recibos-table tr, .recibos-table th, .recibos-table td {
+        display: block;
+        width: 100%;
+      }
+      .recibos-table thead {
+        display: none;
+      }
+      .recibos-table tr {
+        margin-bottom: 18px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        padding: 10px 0;
+      }
+      .recibos-table td {
+        padding: 8px 12px;
+        border: none;
+        position: relative;
+      }
+      .recibos-table td:before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #6b7280;
+        display: block;
+        margin-bottom: 2px;
+        font-size: 0.97em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">Empresa S.A.</div>
+    <nav class="nav">
+      <a href="perfil.html"><span>👤</span>Mi perfil</a>
+      <a href="recibos.html"><span>📄</span>Recibos</a>
+      <a href="#"><span>📁</span>Documentos</a>
+      <a href="#"><span>📝</span>Solicitudes</a>
+      <a href="#"><span>📤</span>Certificados</a>
+      <a href="#"><span>🚪</span>Salir</a>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <h1>Mis Recibos de Sueldo</h1>
+    <div class="resumen">
+      <div class="resumen-card">
+        <div>Sin firmar</div>
+        <span id="sin-firmar">0</span>
+      </div>
+      <div class="resumen-card">
+        <div>Firmados</div>
+        <span id="firmados">0</span>
+      </div>
+    </div>
+    <section class="recibos-section">
+      <div class="section-title">Recibos 2024</div>
+      <table class="recibos-table" id="tabla-recibos">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Recibo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+            <th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Ejemplo de recibos, puedes reemplazar por datos reales -->
+          <tr data-estado="pendiente">
+            <td>2024-05-31</td>
+            <td><a href="#">Recibo Mayo.pdf</a></td>
+            <td class="estado-pendiente">Pendiente</td>
+            <td>
+              <button class="btn-firmar">Firmar</button>
+              <button class="btn-disconformidad">Firmar en Disconformidad</button>
+            </td>
+            <td></td>
+          </tr>
+          <tr data-estado="pendiente">
+            <td>2024-04-30</td>
+            <td><a href="#">Recibo Abril.pdf</a></td>
+            <td class="estado-pendiente">Pendiente</td>
+            <td>
+              <button class="btn-firmar" disabled>Firmar</button>
+              <button class="btn-disconformidad" disabled>Firmar en Disconformidad</button>
+            </td>
+            <td></td>
+          </tr>
+          <tr data-estado="firmado">
+            <td>2024-03-31</td>
+            <td><a href="#">Recibo Marzo.pdf</a></td>
+            <td class="estado-firmado">Firmado</td>
+            <td></td>
+            <td>Firmado el 10/04/2024</td>
+          </tr>
+          <tr data-estado="disconforme">
+            <td>2024-02-29</td>
+            <td><a href="#">Recibo Febrero.pdf</a></td>
+            <td class="estado-disconforme">Firmado en Disconformidad</td>
+            <td></td>
+            <td>Observación: Falta de horas extras</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <script>
+    // Lógica para contar recibos y habilitar botones
+    function actualizarResumen() {
+      const filas = document.querySelectorAll('#tabla-recibos tbody tr');
+      let sinFirmar = 0, firmados = 0;
+      filas.forEach(fila => {
+        const estado = fila.getAttribute('data-estado');
+        if (estado === 'pendiente') sinFirmar++;
+        if (estado === 'firmado' || estado === 'disconforme') firmados++;
+      });
+      document.getElementById('sin-firmar').textContent = sinFirmar;
+      document.getElementById('firmados').textContent = firmados;
+    }
+
+    // Solo permite firmar el primero pendiente
+    function actualizarBotones() {
+      const filas = document.querySelectorAll('#tabla-recibos tbody tr');
+      let puedeFirmar = true;
+      filas.forEach(fila => {
+        const estado = fila.getAttribute('data-estado');
+        const btns = fila.querySelectorAll('.btn-firmar, .btn-disconformidad');
+        if (estado === 'pendiente' && puedeFirmar) {
+          btns.forEach(btn => btn.disabled = false);
+          puedeFirmar = false;
+        } else if (estado === 'pendiente') {
+          btns.forEach(btn => btn.disabled = true);
+        }
+      });
+    }
+
+    // Simulación de firma (solo frontend)
+    document.querySelectorAll('.btn-firmar').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const fila = btn.closest('tr');
+        fila.setAttribute('data-estado', 'firmado');
+        fila.querySelector('td:nth-child(3)').textContent = 'Firmado';
+        fila.querySelector('td:nth-child(3)').className = 'estado-firmado';
+        fila.querySelector('td:nth-child(4)').innerHTML = '';
+        fila.querySelector('td:nth-child(5)').textContent = 'Firmado el ' + new Date().toLocaleDateString();
+        actualizarResumen();
+        actualizarBotones();
+      });
+    });
+    document.querySelectorAll('.btn-disconformidad').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const fila = btn.closest('tr');
+        fila.setAttribute('data-estado', 'disconforme');
+        fila.querySelector('td:nth-child(3)').textContent = 'Firmado en Disconformidad';
+        fila.querySelector('td:nth-child(3)').className = 'estado-disconforme';
+        fila.querySelector('td:nth-child(4)').innerHTML = '';
+        fila.querySelector('td:nth-child(5)').textContent = 'Observación: Falta de horas extras';
+        actualizarResumen();
+        actualizarBotones();
+      });
+    });
+
+    actualizarResumen();
+    actualizarBotones();
+  </script>
+</body>
+</html>

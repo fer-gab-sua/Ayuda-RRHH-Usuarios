@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portal RH - Fernando</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #2563eb;
+      --accent: #dc2626;
+      --bg: #f9fafb;
+      --text: #1f2937;
+      --card-bg: #ffffff;
+      --shadow: rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: row;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+      box-shadow: 4px 0 12px var(--shadow);
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+      z-index: 10;
+      position: relative;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .profile-notif {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .profile-pic {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-image: url('https://via.placeholder.com/100');
+      background-size: cover;
+      border: 3px solid white;
+      flex-shrink: 0;
+    }
+
+    .notification {
+      background-color: var(--card-bg);
+      border-radius: 50%;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px var(--shadow);
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    .notification-icon {
+      font-size: 20px;
+      position: relative;
+      line-height: 1;
+    }
+
+    .notification-count {
+      position: absolute;
+      top: -8px;
+      right: -10px;
+      background-color: red;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: bold;
+      user-select: none;
+    }
+
+    .nav {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .nav a {
+      padding: 12px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: white;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: background 0.3s, transform 0.2s;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .nav a:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.03);
+    }
+
+    .nav-text {
+      display: inline;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 50px 60px;
+      overflow-y: auto;
+      position: relative;
+      min-width: 0;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .welcome {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 40px;
+      width: 100%;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 25px;
+      width: 100%;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 6px 16px var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .card span {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .card h3 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* Tablet */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 10px;
+        border-radius: 0;
+        box-shadow: 0 4px 8px var(--shadow);
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 60px;
+        z-index: 100;
+      }
+      .logo {
+        margin-bottom: 0;
+        font-size: 20px;
+      }
+      .profile-notif {
+        margin-bottom: 0;
+      }
+      .profile-pic {
+        width: 38px;
+        height: 38px;
+        border-width: 2px;
+      }
+      .notification {
+        width: 30px;
+        height: 30px;
+        box-shadow: none;
+      }
+      .nav {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 100vw;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        gap: 0;
+        padding: 8px 0;
+        z-index: 99;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+      }
+      .nav a {
+        padding: 6px 8px;
+        font-size: 12px;
+        border-radius: 8px;
+        color: white;
+        background: none;
+        justify-content: center;
+      }
+      .nav-text {
+        display: none;
+      }
+      .main-content {
+        margin-top: 110px;
+        padding: 15px 4vw 20px 4vw;
+        min-width: 0;
+        width: 100vw;
+        align-items: stretch;
+      }
+      .welcome {
+        font-size: 18px;
+        margin-bottom: 15px;
+      }
+      .cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .card {
+        padding: 12px;
+      }
+      .card span {
+        font-size: 22px;
+      }
+      .card h3 {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo">Empresa S.A.</div>
+    <div class="profile-notif">
+      <div class="profile-pic"></div>
+      <div class="notification" title="Notificaciones">
+        <div class="notification-icon">
+          🔔<div class="notification-count">3</div>
+        </div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a href="#">
+        👤<span class="nav-text">Mi perfil</span>
+      </a>
+      <a href="#">
+        📄<span class="nav-text">Mis recibos de sueldo</span>
+      </a>
+      <a href="#">
+        📁<span class="nav-text">Documentación importante</span>
+      </a>
+      <a href="#">
+        📝<span class="nav-text">Solicitudes</span>
+      </a>
+      <a href="#">
+        📤<span class="nav-text">Firmar certificados</span>
+      </a>
+      <a href="#">
+        🚪<span class="nav-text">Salir</span>
+      </a>
+    </nav>
+  </aside>
+  <main class="main-content">
+    <div class="welcome">Hola Fernando 👋</div>
+    <section class="cards">
+      <div class="card">
+        <span>📄</span>
+        <h3>Ver Recibos</h3>
+      </div>
+      <div class="card">
+        <span>📁</span>
+        <h3>Documentación</h3>
+      </div>
+      <div class="card">
+        <span>📝</span>
+        <h3>Solicitudes</h3>
+      </div>
+      <div class="card">
+        <span>📤</span>
+        <h3>Subir Certificados</h3>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
