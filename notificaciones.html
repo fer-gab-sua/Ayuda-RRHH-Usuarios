@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Certificados - Portal RH</title>
+  <title>Notificaciones - Portal RH</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -47,30 +47,33 @@
       padding: 28px 24px; margin-bottom: 12px;
     }
     .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 18px; }
-    .cert-table {
+    .notif-table {
       width: 100%; border-collapse: collapse; margin-top: 10px;
     }
-    .cert-table th, .cert-table td {
+    .notif-table th, .notif-table td {
       border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left;
     }
-    .cert-table th { background: #f3f4f6; }
-    .estado-pendiente { color: #f59e42; font-weight: 600; }
-    .estado-cargado { color: #16a34a; font-weight: 600; }
-    .btn-subir {
+    .notif-table th { background: #f3f4f6; }
+    .estado-noleida { color: #dc2626; font-weight: 600; }
+    .estado-leida { color: #16a34a; font-weight: 600; }
+    .btn-leer {
       padding: 5px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
       background: #2563eb; color: #fff; font-size: 0.97rem;
     }
-    .btn-subir:disabled { background: #a5b4fc; cursor: not-allowed; }
+    .btn-eliminar {
+      padding: 5px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
+      background: #dc2626; color: #fff; font-size: 0.97rem;
+    }
     @media (max-width: 900px) {
       .sidebar { display: none; }
       .main-content { padding: 18px 2vw; }
       .section { padding: 12px 4px; }
-      .cert-table, .cert-table thead, .cert-table tbody, .cert-table tr, .cert-table th, .cert-table td {
+      .notif-table, .notif-table thead, .notif-table tbody, .notif-table tr, .notif-table th, .notif-table td {
         display: block;
         width: 100%;
       }
-      .cert-table thead { display: none; }
-      .cert-table tr {
+      .notif-table thead { display: none; }
+      .notif-table tr {
         margin-bottom: 18px;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
@@ -78,12 +81,12 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.03);
         padding: 10px 0;
       }
-      .cert-table td {
+      .notif-table td {
         padding: 8px 12px;
         border: none;
         position: relative;
       }
-      .cert-table td:before {
+      .notif-table td:before {
         content: attr(data-label);
         font-weight: 600;
         color: #6b7280;
@@ -96,59 +99,46 @@
 </head>
 <body>
   <aside class="sidebar">
-    <div class="logo">Ayuda Medica</div>
+    <div class="logo">Empresa S.A.</div>
     <nav class="nav">
       <a href="perfil.html"><span>👤</span>Mi perfil</a>
       <a href="recibos.html"><span>📄</span>Recibos</a>
       <a href="documentos.html"><span>📁</span>Documentos</a>
       <a href="solicitudes.html"><span>📝</span>Solicitudes</a>
       <a href="certificados.html"><span>📤</span>Certificados</a>
+      <a href="notificaciones.html"><span>🔔</span>Notificaciones</a>
       <a href="#"><span>🚪</span>Salir</a>
     </nav>
   </aside>
   <main class="main-content">
-    <h1>Certificados</h1>
+    <h1>Notificaciones</h1>
     <section class="section">
-      <div class="section-title">Listado de inasistencias mes en curso</div>
-      <form id="form-certificado-extra" style="margin-bottom: 24px;">
-        <label style="font-weight:600;display:block;margin-bottom:6px;">Subir certificado por otra causa</label>
-        <input type="file" id="input-certificado-extra" accept="application/pdf,image/*" required style="margin-bottom:8px;">
-        <button type="submit" class="btn-subir">Subir</button>
-      </form>
-      <table class="cert-table">
+      <div class="section-title">Listado de notificaciones</div>
+      <table class="notif-table" id="tabla-notif">
         <thead>
           <tr>
             <th>Fecha</th>
+            <th>Mensaje</th>
             <th>Estado</th>
-            <th>Subir certificado</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td data-label="Fecha">2025-06-03</td>
-            <td data-label="Estado" class="estado-pendiente">Pendiente</td>
-            <td data-label="Subir certificado">
-              <label class="btn-subir">
-                Subir
-                <input type="file" accept="application/pdf,image/*" style="display:none" onchange="subirCertificado(this)">
-              </label>
+          <tr data-leida="false">
+            <td data-label="Fecha">2025-06-25</td>
+            <td data-label="Mensaje">Tienes un recibo de sueldo pendiente de firma.</td>
+            <td data-label="Estado" class="estado-noleida">No leída</td>
+            <td data-label="Acciones">
+              <button class="btn-leer">Marcar como leída</button>
+              <button class="btn-eliminar">Eliminar</button>
             </td>
           </tr>
-          <tr>
-            <td data-label="Fecha">2025-06-12</td>
-            <td data-label="Estado" class="estado-pendiente">Pendiente</td>
-            <td data-label="Subir certificado">
-              <label class="btn-subir">
-                Subir
-                <input type="file" accept="application/pdf,image/*" style="display:none" onchange="subirCertificado(this)">
-              </label>
-            </td>
-          </tr>
-          <tr>
-            <td data-label="Fecha">2025-06-18</td>
-            <td data-label="Estado" class="estado-cargado">Cargado</td>
-            <td data-label="Subir certificado">
-              <span style="color:#2563eb;font-weight:600;">Certificado.pdf</span>
+          <tr data-leida="true">
+            <td data-label="Fecha">2025-06-20</td>
+            <td data-label="Mensaje">Nuevo documento disponible para firmar.</td>
+            <td data-label="Estado" class="estado-leida">Leída</td>
+            <td data-label="Acciones">
+              <button class="btn-eliminar">Eliminar</button>
             </td>
           </tr>
         </tbody>
@@ -156,33 +146,22 @@
     </section>
   </main>
   <script>
-    function subirCertificado(input) {
-      if (input.files.length > 0) {
-        const row = input.closest('tr');
-        row.querySelector('td[data-label="Estado"]').textContent = 'Cargado';
-        row.querySelector('td[data-label="Estado"]').className = 'estado-cargado';
-        const fileName = input.files[0].name;
-        row.querySelector('td[data-label="Subir certificado"]').innerHTML =
-          `<span style="color:#2563eb;font-weight:600;">${fileName}</span>`;
-      }
-    }
-
-    // Subir certificado extra
-    document.getElementById('form-certificado-extra').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const input = document.getElementById('input-certificado-extra');
-      if (input.files.length === 0) return;
-      const fileName = input.files[0].name;
-      const tbody = document.querySelector('.cert-table tbody');
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td data-label="Fecha">-</td>
-        <td data-label="Estado" class="estado-cargado">Cargado</td>
-        <td data-label="Subir certificado"><span style="color:#2563eb;font-weight:600;">${fileName}</span></td>
-      `;
-      tbody.prepend(tr);
-      input.value = '';
+    // Marcar como leída
+    document.querySelectorAll('.btn-leer').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const fila = btn.closest('tr');
+        fila.setAttribute('data-leida', 'true');
+        fila.querySelector('td[data-label="Estado"]').textContent = 'Leída';
+        fila.querySelector('td[data-label="Estado"]').className = 'estado-leida';
+        btn.remove();
+      });
+    });
+    // Eliminar notificación
+    document.querySelectorAll('.btn-eliminar').forEach(btn => {
+      btn.addEventListener('click', function() {
+        if(confirm('¿Eliminar esta notificación?')) {
+          btn.closest('tr').remove();
+        }
+      });
     });
   </script>
-</body>
-</html>
