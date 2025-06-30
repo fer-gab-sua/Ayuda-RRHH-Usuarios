@@ -5,120 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mis Recibos de Sueldo - Portal RH</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      background: #f9fafb;
-      color: #1f2937;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-    }
-    .sidebar {
-      width: 260px;
-      background: linear-gradient(135deg, #2563eb, #dc2626);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-      border-top-right-radius: 20px;
-      border-bottom-right-radius: 20px;
-      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
-      flex-shrink: 0;
-      min-height: 100vh;
-    }
-    .logo { font-size: 24px; font-weight: 700; margin-bottom: 40px; }
-    .nav { width: 100%; display: flex; flex-direction: column; gap: 15px; }
-    .nav a {
-      padding: 12px 20px; border-radius: 12px; text-decoration: none;
-      color: white; background-color: rgba(255,255,255,0.1);
-      transition: background 0.3s, transform 0.2s; font-weight: 500;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .nav a:hover { background-color: rgba(255,255,255,0.3); transform: scale(1.03);}
-    .main-content {
-      flex: 1; padding: 40px 5vw; max-width: 1000px; margin: 0 auto;
-      display: flex; flex-direction: column; gap: 32px;
-    }
-    h1 { font-size: 2rem; margin-bottom: 18px; }
-    .resumen {
-      display: flex; gap: 32px; margin-bottom: 18px;
-    }
-    .resumen-card {
-      background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      padding: 18px 28px; font-size: 1.1rem; font-weight: 600; color: #2563eb;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    .resumen-card span { color: #1f2937; font-size: 2rem; font-weight: 700; }
-    .recibos-section { background: #fff; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); padding: 28px 24px; }
-    .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 18px; }
-    .recibos-table {
-      width: 100%; border-collapse: collapse; margin-top: 10px;
-    }
-    .recibos-table th, .recibos-table td {
-      border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left;
-    }
-    .recibos-table th { background: #f3f4f6; }
-    .btn-firmar, .btn-disconformidad {
-      padding: 5px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
-      margin-right: 6px; font-size: 0.97rem;
-    }
-    .btn-firmar { background: #2563eb; color: #fff; }
-    .btn-firmar:disabled { background: #a5b4fc; cursor: not-allowed; }
-    .btn-disconformidad { background: #dc2626; color: #fff; }
-    .btn-disconformidad:disabled { background: #fca5a5; cursor: not-allowed; }
-    .estado-firmado { color: #16a34a; font-weight: 600; }
-    .estado-disconforme { color: #dc2626; font-weight: 600; }
-    .estado-pendiente { color: #f59e42; font-weight: 600; }
-    @media (max-width: 900px) {
-      .sidebar { display: none; }
-      .main-content { padding: 18px 2vw; }
-      .resumen { flex-direction: column; gap: 12px; }
-      .recibos-section { padding: 12px 4px; }
-      .recibos-table, .recibos-table thead, .recibos-table tbody, .recibos-table tr, .recibos-table th, .recibos-table td {
-        display: block;
-        width: 100%;
-      }
-      .recibos-table thead {
-        display: none;
-      }
-      .recibos-table tr {
-        margin-bottom: 18px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        background: #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        padding: 10px 0;
-      }
-      .recibos-table td {
-        padding: 8px 12px;
-        border: none;
-        position: relative;
-      }
-      .recibos-table td:before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #6b7280;
-        display: block;
-        margin-bottom: 2px;
-        font-size: 0.97em;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">Ayuda Medica</div>
-    <nav class="nav">
-      <a href="perfil.html"><span>👤</span>Mi perfil</a>
-      <a href="recibos.html"><span>📄</span>Recibos</a>
-      <a href="#"><span>📁</span>Documentos</a>
-      <a href="#"><span>📝</span>Solicitudes</a>
-      <a href="#"><span>📤</span>Certificados</a>
-      <a href="#"><span>🚪</span>Salir</a>
-    </nav>
-  </aside>
+  <div id="navbar-container"></div>
+<script>
+  fetch('navbar.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('navbar-container').innerHTML = html);
+</script>
   <main class="main-content">
     <h1>Mis Recibos de Sueldo</h1>
     <div class="resumen">

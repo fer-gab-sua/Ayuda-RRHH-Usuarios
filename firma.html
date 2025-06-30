@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Firmar Recibo - Portal RH</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .firma-container {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+      padding: 28px 24px;
+      max-width: 420px;
+      margin: 40px auto;
+      text-align: center;
+    }
+    #firma-canvas {
+      border: 2px solid #2563eb;
+      border-radius: 8px;
+      background: #f3f4f6;
+      touch-action: none;
+      width: 100%;
+      max-width: 380px;
+      height: 180px;
+      margin-bottom: 18px;
+      cursor: crosshair;
+    }
+    .firma-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .firma-img-preview {
+      margin-top: 18px;
+      max-width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="navbar-container"></div>
+  <script>
+    fetch('navbar.html')
+      .then(res => res.text())
+      .then(html => document.getElementById('navbar-container').innerHTML = html);
+  </script>
+  <main class="main-content">
+    <div class="firma-container">
+      <h1>Firma digital</h1>
+      <p>Por favor, dibuje su firma en el recuadro:</p>
+      <canvas id="firma-canvas" width="380" height="180"></canvas>
+      <div class="firma-actions">
+        <button class="btn" id="limpiar-btn">Limpiar</button>
+        <button class="btn" id="guardar-btn">Guardar firma</button>
+      </div>
+      <img id="firma-preview" class="firma-img-preview" alt="Vista previa de la firma">
+    </div>
+  </main>
+  <script>
+    const canvas = document.getElementById('firma-canvas');
+    const ctx = canvas.getContext('2d');
+    let dibujando = false;
+    let prevX = 0, prevY = 0;
+
+    function getPos(e) {
+      if (e.touches) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top
+        };
+      } else {
+        return { x: e.offsetX, y: e.offsetY };
+      }
+    }
+
+    function empezarDibujo(e) {
+      dibujando = true;
+      const pos = getPos(e);
+      prevX = pos.x;
+      prevY = pos.y;
+    }
+    function dibujar(e) {
+      if (!dibujando) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(prevX, prevY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = "#1f2937";
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      prevX = pos.x;
+      prevY = pos.y;
+    }
+    function terminarDibujo() {
+      dibujando = false;
+    }
+
+    // Eventos mouse
+    canvas.addEventListener('mousedown', empezarDibujo);
+    canvas.addEventListener('mousemove', dibujar);
+    canvas.addEventListener('mouseup', terminarDibujo);
+    canvas.addEventListener('mouseleave', terminarDibujo);
+
+    // Eventos touch
+    canvas.addEventListener('touchstart', empezarDibujo);
+    canvas.addEventListener('touchmove', dibujar);
+    canvas.addEventListener('touchend', terminarDibujo);
+
+    // Limpiar
+    document.getElementById('limpiar-btn').onclick = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('firma-preview').style.display = 'none';
+    };
+
+    // Guardar firma (muestra preview, podrías enviar el base64 a backend)
+    document.getElementById('guardar-btn').onclick = () => {
+      const dataURL = canvas.toDataURL();
+      const img = document.getElementById('firma-preview');
+      img.src = dataURL;
+      img.style.display = 'block';
+      // Aquí puedes hacer un fetch/AJAX para enviar la firma al servidor si lo necesitas
+      // Ejemplo: fetch('/api/guardar-firma', { method: 'POST', body: JSON.stringify({firma: dataURL}) })
+    };
+  </script>
+</body>
+</html>

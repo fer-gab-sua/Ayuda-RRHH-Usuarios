@@ -5,107 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Certificados - Portal RH</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      background: #f9fafb;
-      color: #1f2937;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-    }
-    .sidebar {
-      width: 260px;
-      background: linear-gradient(135deg, #2563eb, #dc2626);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-      border-top-right-radius: 20px;
-      border-bottom-right-radius: 20px;
-      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
-      flex-shrink: 0;
-      min-height: 100vh;
-    }
-    .logo { font-size: 24px; font-weight: 700; margin-bottom: 40px; }
-    .nav { width: 100%; display: flex; flex-direction: column; gap: 15px; }
-    .nav a {
-      padding: 12px 20px; border-radius: 12px; text-decoration: none;
-      color: white; background-color: rgba(255,255,255,0.1);
-      transition: background 0.3s, transform 0.2s; font-weight: 500;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .nav a:hover { background-color: rgba(255,255,255,0.3); transform: scale(1.03);}
-    .main-content {
-      flex: 1; padding: 40px 5vw; max-width: 900px; margin: 0 auto;
-      display: flex; flex-direction: column; gap: 32px;
-    }
-    h1 { font-size: 2rem; margin-bottom: 18px; }
-    .section {
-      background: #fff; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-      padding: 28px 24px; margin-bottom: 12px;
-    }
-    .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 18px; }
-    .cert-table {
-      width: 100%; border-collapse: collapse; margin-top: 10px;
-    }
-    .cert-table th, .cert-table td {
-      border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left;
-    }
-    .cert-table th { background: #f3f4f6; }
-    .estado-pendiente { color: #f59e42; font-weight: 600; }
-    .estado-cargado { color: #16a34a; font-weight: 600; }
-    .btn-subir {
-      padding: 5px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
-      background: #2563eb; color: #fff; font-size: 0.97rem;
-    }
-    .btn-subir:disabled { background: #a5b4fc; cursor: not-allowed; }
-    @media (max-width: 900px) {
-      .sidebar { display: none; }
-      .main-content { padding: 18px 2vw; }
-      .section { padding: 12px 4px; }
-      .cert-table, .cert-table thead, .cert-table tbody, .cert-table tr, .cert-table th, .cert-table td {
-        display: block;
-        width: 100%;
-      }
-      .cert-table thead { display: none; }
-      .cert-table tr {
-        margin-bottom: 18px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        background: #fff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-        padding: 10px 0;
-      }
-      .cert-table td {
-        padding: 8px 12px;
-        border: none;
-        position: relative;
-      }
-      .cert-table td:before {
-        content: attr(data-label);
-        font-weight: 600;
-        color: #6b7280;
-        display: block;
-        margin-bottom: 2px;
-        font-size: 0.97em;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">Ayuda Medica</div>
-    <nav class="nav">
-      <a href="perfil.html"><span>👤</span>Mi perfil</a>
-      <a href="recibos.html"><span>📄</span>Recibos</a>
-      <a href="documentos.html"><span>📁</span>Documentos</a>
-      <a href="solicitudes.html"><span>📝</span>Solicitudes</a>
-      <a href="certificados.html"><span>📤</span>Certificados</a>
-      <a href="#"><span>🚪</span>Salir</a>
-    </nav>
-  </aside>
+    <div id="navbar-container"></div>
+  <script>
+  fetch('navbar.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('navbar-container').innerHTML = html);
+</script>
   <main class="main-content">
     <h1>Certificados</h1>
     <section class="section">

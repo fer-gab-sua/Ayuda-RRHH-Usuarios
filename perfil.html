@@ -5,101 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mi Perfil - Portal RH</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      background: #f9fafb;
-      color: #1f2937;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-    }
-    .sidebar {
-      width: 260px;
-      background: linear-gradient(135deg, #2563eb, #dc2626);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-      border-top-right-radius: 20px;
-      border-bottom-right-radius: 20px;
-      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
-      flex-shrink: 0;
-      min-height: 100vh;
-    }
-    .logo { font-size: 24px; font-weight: 700; margin-bottom: 40px; }
-    .profile-pic {
-      width: 100px; height: 100px; border-radius: 50%;
-      background-image: url('https://via.placeholder.com/100');
-      background-size: cover; border: 3px solid white; margin-bottom: 20px;
-    }
-    .nav { width: 100%; display: flex; flex-direction: column; gap: 15px; }
-    .nav a {
-      padding: 12px 20px; border-radius: 12px; text-decoration: none;
-      color: white; background-color: rgba(255,255,255,0.1);
-      transition: background 0.3s, transform 0.2s; font-weight: 500;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .nav a:hover { background-color: rgba(255,255,255,0.3); transform: scale(1.03);}
-    .main-content {
-      flex: 1; padding: 40px 5vw; max-width: 900px; margin: 0 auto;
-      display: flex; flex-direction: column; gap: 32px;
-    }
-    h1 { font-size: 2rem; margin-bottom: 18px; }
-    .section {
-      background: #fff; border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.06);
-      padding: 28px 24px; margin-bottom: 12px;
-    }
-    .section-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 18px; }
-    .form-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 18px 32px;
-    }
-    .form-group { display: flex; flex-direction: column; }
-    .form-group label { font-size: 0.97rem; margin-bottom: 4px; font-weight: 500;}
-    .form-group input, .form-group textarea {
-      padding: 7px 10px; border: 1px solid #d1d5db; border-radius: 6px;
-      font-size: 1rem; background: #f3f4f6;
-    }
-    .form-group textarea { resize: vertical; min-height: 40px; }
-    .familiares-table {
-      width: 100%; border-collapse: collapse; margin-top: 10px;
-    }
-    .familiares-table th, .familiares-table td {
-      border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left;
-    }
-    .familiares-table th { background: #f3f4f6; }
-    .add-familiar-btn {
-      margin-top: 10px; padding: 7px 16px; border: none; border-radius: 6px;
-      background: #2563eb; color: white; font-weight: 600; cursor: pointer;
-      transition: background 0.2s;
-    }
-    .add-familiar-btn:hover { background: #1d4ed8; }
-    @media (max-width: 900px) {
-      .sidebar { display: none; }
-      .main-content { padding: 18px 2vw; }
-      .form-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="logo">Ayuda Medica</div>
-    <div class="profile-pic"></div>
-    <nav class="nav">
-      <a href="#"><span>👤</span>Mi perfil</a>
-      <a href="#"><span>📄</span>Recibos</a>
-      <a href="#"><span>📁</span>Documentos</a>
-      <a href="#"><span>📝</span>Solicitudes</a>
-      <a href="#"><span>📤</span>Certificados</a>
-      <a href="#"><span>🚪</span>Salir</a>
-    </nav>
-  </aside>
+  <div id="navbar-container"></div>
+<script>
+  fetch('navbar.html')
+    .then(res => res.text())
+    .then(html => document.getElementById('navbar-container').innerHTML = html);
+</script>
+
   <main class="main-content">
     <h1>Mi Perfil</h1>
     <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 18px;">
       <div style="position: relative;">
-        <img id="profile-img" src="https://via.placeholder.com/120" alt="Foto de perfil" style="width:120px;height:120px;border-radius:50%;border:3px solid #2563eb;object-fit:cover;">
+        <img id="profile-img" src="empleado.png" alt="Foto de perfil" style="width:120px;height:120px;border-radius:50%;border:3px solid #2563eb;object-fit:cover;">
         <label for="profile-upload" style="position:absolute;bottom:8px;right:8px;background:#2563eb;color:#fff;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:13px;">
           Cambiar
           <input id="profile-upload" type="file" accept="image/*" style="display:none;">
@@ -148,25 +68,31 @@
       <div class="form-grid">
         <div class="form-group">
           <label>Calle</label>
-          <input type="text" value="Av. Siempre Viva" />
+          <input type="text" value="Av. Siempre Viva" disabled />
         </div>
         <div class="form-group">
           <label>Número</label>
-          <input type="text" value="742" />
+          <input type="text" value="742" disabled />
         </div>
         <div class="form-group">
           <label>Piso</label>
-          <input type="text" value="3" />
+          <input type="text" value="3" disabled />
         </div>
         <div class="form-group">
           <label>Departamento</label>
-          <input type="text" value="B" />
+          <input type="text" value="B" disabled />
         </div>
         <div class="form-group" style="grid-column: 1 / -1;">
           <label>Observaciones</label>
-          <textarea>Sin observaciones</textarea>
+          <textarea disabled>Sin observaciones</textarea>
         </div>
       </div>
+      <div style="margin-top:12px; color:#dc2626; font-size:15px;">
+        Para modificar su domicilio debe generar una declaración jurada.
+      </div>
+      <button class="btn" style="margin-top:10px;" onclick="alert('Funcionalidad para solicitar cambio de domicilio no implementada')">
+        Solicitar cambio de domicilio
+      </button>
     </section>
     <section class="section">
       <div class="section-title">Datos Familiares</div>
@@ -201,13 +127,19 @@
       <div class="form-grid">
         <div class="form-group">
           <label>Código de Obra Social</label>
-          <input type="text" value="1234" />
+          <input type="text" value="1234" disabled />
         </div>
         <div class="form-group">
           <label>Descripción</label>
-          <input type="text" value="OSDE Binario 310" />
+          <input type="text" value="OSDE Binario 310" disabled />
         </div>
       </div>
+      <div style="margin-top:12px; color:#dc2626; font-size:15px;">
+        Para modificar su obra social debe generar una declaración jurada.
+      </div>
+      <button class="btn" style="margin-top:10px;" onclick="alert('Funcionalidad para solicitar cambio de obra social no implementada')">
+        Solicitar cambio de obra social
+      </button>
     </section>
   </main>
   <script>
