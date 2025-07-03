@@ -50,6 +50,47 @@
     color: #92400e;
 }
 
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+.alert-info {
+    background: #dbeafe;
+    border-color: #bfdbfe;
+    color: #1e40af;
+}
+
+.alert-info h6 {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.alert-info ul {
+    margin-bottom: 0;
+    padding-left: 20px;
+}
+
+.form-check {
+    margin-bottom: 15px;
+}
+
+.form-check-input {
+    margin-right: 8px;
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+
+.form-text {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
+
 .estado-observado {
     background: #fed7aa;
     color: #9a3412;
@@ -486,23 +527,51 @@
 <div id="modalFirma" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 class="modal-title">Firmar Recibo</h2>
+            <h2 class="modal-title">🔒 Firmar Recibo de Sueldo</h2>
             <span class="close" onclick="cerrarModalFirma()">&times;</span>
         </div>
         <div class="modal-body">
+            <div class="alert alert-info" style="margin-bottom: 20px;">
+                <h6><i class="fas fa-info-circle"></i> Proceso de Firma Digital</h6>
+                <p><strong>IMPORTANTE:</strong> Al firmar este recibo estás confirmando que:</p>
+                <ul>
+                    <li>Has revisado el contenido del recibo de sueldo</li>
+                    <li>Los datos y montos son correctos</li>
+                    <li>Estás conforme con la liquidación</li>
+                    <li>Esta firma tendrá validez legal</li>
+                </ul>
+            </div>
+            
             <form id="formFirma">
-                <div class="form-group">
-                    <label class="form-label">PIN de Firma Digital:</label>
-                    <input type="password" class="form-control" name="pin_firma" placeholder="Ingresa tu PIN" required>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label class="form-label">Ingresa tu PIN de firma digital:</label>
+                    <input type="password" class="form-control" name="pin_firma" 
+                           placeholder="PIN de 4-6 dígitos" maxlength="6" required>
+                    <div class="form-text">Este PIN validará tu identidad y aplicará tu firma digital al recibo.</div>
                 </div>
-                <p class="text-muted">
-                    <small>Al firmar confirmas que estás de acuerdo con el contenido del recibo de sueldo.</small>
-                </p>
+                
+                <div class="form-check" style="margin-bottom: 15px;">
+                    <input class="form-check-input" type="checkbox" id="confirmarRevisionRecibo" required>
+                    <label class="form-check-label" for="confirmarRevisionRecibo">
+                        <strong>He revisado el recibo y confirmo que los datos son correctos</strong>
+                    </label>
+                </div>
+                
+                <div class="form-check" style="margin-bottom: 20px;">
+                    <input class="form-check-input" type="checkbox" id="confirmarFirmaRecibo" required>
+                    <label class="form-check-label" for="confirmarFirmaRecibo">
+                        <strong>Autorizo la aplicación de mi firma digital a este recibo de sueldo</strong>
+                    </label>
+                </div>
             </form>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="cerrarModalFirma()">Cancelar</button>
-            <button type="button" class="btn btn-primary" onclick="firmarRecibo()">Firmar Recibo</button>
+            <button type="button" class="btn btn-secondary" onclick="cerrarModalFirma()">
+                ❌ Cancelar
+            </button>
+            <button type="button" class="btn btn-success" onclick="firmarRecibo()">
+                🔒 Firmar Recibo
+            </button>
         </div>
     </div>
 </div>
@@ -527,6 +596,13 @@ function mostrarModalFirma() {
 function cerrarModalFirma() {
     document.getElementById('modalFirma').style.display = 'none';
     document.getElementById('formFirma').reset();
+    
+    // Limpiar checkboxes específicamente
+    const confirmarRevision = document.getElementById('confirmarRevisionRecibo');
+    const confirmarFirma = document.getElementById('confirmarFirmaRecibo');
+    
+    if (confirmarRevision) confirmarRevision.checked = false;
+    if (confirmarFirma) confirmarFirma.checked = false;
 }
 
 // Cerrar modales al hacer click fuera
@@ -575,8 +651,29 @@ function enviarObservacion() {
 
 // Firmar recibo
 function firmarRecibo() {
+    // Validar que los checkboxes estén marcados
+    const confirmarRevision = document.getElementById('confirmarRevisionRecibo');
+    const confirmarFirma = document.getElementById('confirmarFirmaRecibo');
+    
+    if (!confirmarRevision.checked) {
+        mostrarMensaje('Debes confirmar que has revisado el recibo', 'error');
+        return;
+    }
+    
+    if (!confirmarFirma.checked) {
+        mostrarMensaje('Debes autorizar la aplicación de tu firma digital', 'error');
+        return;
+    }
+    
     const form = document.getElementById('formFirma');
     const formData = new FormData(form);
+    
+    // Verificar que el PIN no esté vacío
+    const pin = formData.get('pin_firma');
+    if (!pin || pin.trim() === '') {
+        mostrarMensaje('Debes ingresar tu PIN de firma digital', 'error');
+        return;
+    }
     
     fetch('{% url "recibos:procesar_firma" recibo.id %}', {
         method: 'POST',

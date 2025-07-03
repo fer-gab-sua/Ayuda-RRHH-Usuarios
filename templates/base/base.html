@@ -23,28 +23,74 @@
   {% block sidebar %}
   {% if user.is_authenticated %}
   <aside class="sidebar">
+    <!-- Logo de la empresa -->
     <div class="logo">
       <img src="{% static 'img/logo.png' %}" alt="Logo">
+      <h4>Portal RH</h4>
     </div>
-    <div class="profile-notif">
-      <div class="profile-pic">
-        <img src="{% static 'img/empleado.png' %}" alt="Perfil">
+    
+    <!-- Perfil del usuario -->
+    <div class="user-profile">
+      <div class="profile-picture">
+        {% if empleado.foto_perfil %}
+          <img src="{{ empleado.foto_perfil.url }}" alt="Foto de perfil">
+        {% else %}
+          <img src="{% static 'img/empleado.png' %}" alt="Foto por defecto">
+        {% endif %}
+        <div class="profile-status"></div>
       </div>
-      <div class="notification" title="Notificaciones">
-        <div class="notification-icon">
-          🔔<div class="notification-count">0</div>
-        </div>
+      <div class="profile-info">
+        <h5>{{ user.get_full_name|default:user.username }}</h5>
+        <p>{{ empleado.puesto|default:"Empleado" }}</p>
+        <span class="employee-id">{{ empleado.legajo|default:"N/A" }}</span>
       </div>
     </div>
+    
+    <!-- Navegación principal -->
     <nav class="nav">
-      <a href="{% url 'empleados:perfil' %}">👤<span class="nav-text">Mi perfil</span></a>
-      <a href="{% url 'recibos:mis_recibos' %}">📄<span class="nav-text">Mis recibos de sueldo</span></a>
-      <a href="{% url 'documentos:lista' %}">📁<span class="nav-text">Documentación importante</span></a>
-      <a href="{% url 'solicitudes:lista' %}">📝<span class="nav-text">Solicitudes</span></a>
-      <a href="{% url 'documentos:lista' %}">📤<span class="nav-text">Certificados</span></a>
-      <a href="{% url 'notificaciones:lista' %}">🔔<span class="nav-text">Notificaciones</span></a>
-      <a href="{% url 'empleados:logout' %}">🚪<span class="nav-text">Salir</span></a>
+      <div class="nav-section">
+        <span class="nav-section-title">Personal</span>
+        <a href="{% url 'empleados:perfil' %}" class="nav-link">
+          <i class="fas fa-user"></i>
+          <span class="nav-text">Mi Perfil</span>
+        </a>
+        <a href="{% url 'recibos:mis_recibos' %}" class="nav-link">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <span class="nav-text">Recibos de Sueldo</span>
+        </a>
+      </div>
+      
+      <div class="nav-section">
+        <span class="nav-section-title">Gestión</span>
+        <a href="{% url 'documentos:lista' %}" class="nav-link">
+          <i class="fas fa-folder-open"></i>
+          <span class="nav-text">Documentos</span>
+        </a>
+        <a href="{% url 'solicitudes:lista' %}" class="nav-link">
+          <i class="fas fa-clipboard-list"></i>
+          <span class="nav-text">Solicitudes</span>
+        </a>
+      </div>
+      
+      <div class="nav-section">
+        <span class="nav-section-title">Comunicación</span>
+        <a href="{% url 'notificaciones:lista' %}" class="nav-link">
+          <i class="fas fa-bell"></i>
+          <span class="nav-text">Notificaciones</span>
+          {% if notificaciones_count > 0 %}
+            <span class="notification-badge">{{ notificaciones_count }}</span>
+          {% endif %}
+        </a>
+      </div>
     </nav>
+    
+    <!-- Logout y configuración -->
+    <div class="sidebar-footer">
+      <a href="{% url 'empleados:logout' %}" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Cerrar Sesión</span>
+      </a>
+    </div>
   </aside>
   {% endif %}
   {% endblock %}
@@ -63,6 +109,43 @@
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+  <!-- Script para marcar página activa en sidebar -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentPath = window.location.pathname;
+      const navLinks = document.querySelectorAll('.nav-link');
+      
+      navLinks.forEach(link => {
+        const linkPath = new URL(link.href).pathname;
+        if (currentPath === linkPath || (currentPath.startsWith(linkPath) && linkPath !== '/')) {
+          link.classList.add('active');
+        }
+      });
+      
+      // Efecto de ripple en los botones del sidebar
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          const ripple = document.createElement('span');
+          const rect = this.getBoundingClientRect();
+          const size = Math.max(rect.width, rect.height);
+          const x = e.clientX - rect.left - size / 2;
+          const y = e.clientY - rect.top - size / 2;
+          
+          ripple.style.width = ripple.style.height = size + 'px';
+          ripple.style.left = x + 'px';
+          ripple.style.top = y + 'px';
+          ripple.classList.add('ripple');
+          
+          this.appendChild(ripple);
+          
+          setTimeout(() => {
+            ripple.remove();
+          }, 600);
+        });
+      });
+    });
+  </script>
 
   {% block extra_js %}{% endblock %}
 </body>
