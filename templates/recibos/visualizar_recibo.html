@@ -1,0 +1,666 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ recibo.get_periodo_display }} {{ recibo.anio }} - Recibo de Sueldo{% endblock %}
+
+{% block extra_css %}
+<style>
+.recibo-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.recibo-header {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.recibo-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: center;
+}
+
+.recibo-details h1 {
+    color: #1f2937;
+    margin-bottom: 10px;
+}
+
+.recibo-details p {
+    color: #6b7280;
+    margin: 5px 0;
+}
+
+.estado-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.estado-pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.estado-observado {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+.estado-respondido {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.estado-firmado {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.estado-vencido {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.recibo-actions {
+    text-align: right;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    color: white;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pdf-viewer {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.pdf-embed {
+    width: 100%;
+    height: 600px;
+    border: none;
+    border-radius: 8px;
+}
+
+.pdf-container {
+    width: 100%;
+    height: 600px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.observaciones-section {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.observacion-item {
+    background: #f9fafb;
+    border-left: 4px solid #3b82f6;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 0 8px 8px 0;
+}
+
+.observacion-empleado {
+    border-left-color: #f59e0b;
+}
+
+.observacion-rrhh {
+    border-left-color: #10b981;
+}
+
+.observacion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.observacion-autor {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.observacion-fecha {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.observacion-contenido {
+    color: #374151;
+    line-height: 1.6;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+.alert-info {
+    background: #e0f2fe;
+    border-color: #0891b2;
+    color: #0e7490;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-title {
+    margin: 0;
+    color: #1f2937;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-footer {
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+    text-align: right;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.close {
+    color: #6b7280;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #374151;
+}
+
+@media (max-width: 768px) {
+    .recibo-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="recibo-container">
+    <!-- Header del recibo -->
+    <div class="recibo-header">
+        <div class="recibo-info">
+            <div class="recibo-details">
+                <h1>Recibo de Sueldo</h1>
+                <p><strong>Empleado:</strong> {{ empleado.user.get_full_name }}</p>
+                <p><strong>Legajo:</strong> {{ empleado.legajo }}</p>
+                <p><strong>Período:</strong> {{ recibo.get_periodo_display }} {{ recibo.anio }}</p>
+                <p><strong>Fecha de Emisión:</strong> {{ recibo.fecha_emision|date:"d/m/Y" }}</p>
+                <p><strong>Estado:</strong> 
+                    {% if recibo.estado == 'pendiente' %}
+                        <span class="estado-badge estado-pendiente">Pendiente de Firma</span>
+                    {% elif recibo.estado == 'observado' %}
+                        <span class="estado-badge estado-observado">Observado</span>
+                    {% elif recibo.estado == 'respondido' %}
+                        <span class="estado-badge estado-respondido">Respondido por RRHH</span>
+                    {% elif recibo.estado == 'firmado' %}
+                        <span class="estado-badge estado-firmado">Firmado</span>
+                    {% elif recibo.estado == 'vencido' %}
+                        <span class="estado-badge estado-vencido">Vencido</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="recibo-actions">
+                <!-- Alertas de estado -->
+                {% if empleado_tiene_observaciones_pendientes %}
+                    <div class="alert alert-warning">
+                        <strong>⏳ Esperando respuesta de RRHH</strong><br>
+                        Tienes observaciones pendientes que deben ser resueltas antes de firmar nuevos recibos.
+                    </div>
+                {% endif %}
+                
+                {% if recibo.estado == 'respondido' %}
+                    <div class="alert alert-info">
+                        <strong>✅ Observación respondida</strong><br>
+                        RRHH ha respondido tu observación. Ahora puedes firmar el recibo.
+                    </div>
+                {% endif %}
+                
+                <!-- Botones de acción -->
+                <div class="btn-group">
+                    {% if puede_observar and recibo.estado != 'observado' %}
+                        <button class="btn btn-warning" onclick="mostrarModalObservacion()">
+                            💬 Hacer Observación
+                        </button>
+                    {% endif %}
+                    
+                    {% if puede_firmar %}
+                        <button class="btn btn-primary" onclick="mostrarModalFirma()">
+                            ✍️ Firmar Recibo
+                        </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'recibos:mis_recibos' %}" class="btn btn-secondary">
+                        ← Volver a Recibos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Visor de PDF -->
+    <div class="pdf-viewer">
+        <h3>Documento del Recibo</h3>
+        <div class="pdf-actions" style="margin-bottom: 15px;">
+            <a href="{% url 'recibos:ver_recibo' recibo.id %}" 
+               class="btn btn-primary" 
+               target="_blank"
+               style="margin-right: 10px;">
+                📄 Abrir PDF en nueva ventana
+            </a>
+            <button onclick="togglePdfViewer()" class="btn btn-secondary">
+                👁️ Alternar visor integrado
+            </button>
+        </div>
+        
+        <div id="pdf-viewer-container" class="pdf-container">
+            <iframe id="pdf-iframe"
+                    src="{% url 'recibos:ver_recibo' recibo.id %}" 
+                    type="application/pdf" 
+                    class="pdf-embed"
+                    title="Recibo de Sueldo"
+                    frameborder="0">
+                <p>Tu navegador no soporta la visualización de PDFs. 
+                   <a href="{% url 'recibos:ver_recibo' recibo.id %}" target="_blank">Haz clic aquí para abrir el PDF</a>.
+                </p>
+            </iframe>
+        </div>
+        
+        <div id="pdf-fallback" style="display: none; text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px;">
+            <p>Si tienes problemas para ver el PDF, puedes:</p>
+            <div style="margin-top: 20px;">
+                <a href="{% url 'recibos:ver_recibo' recibo.id %}" 
+                   class="btn btn-primary" 
+                   target="_blank">
+                    📄 Abrir en nueva ventana
+                </a>
+                <a href="{% url 'recibos:ver_recibo' recibo.id %}" 
+                   class="btn btn-secondary" 
+                   download="{{ recibo.nombre_archivo }}">
+                    💾 Descargar PDF
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sección de observaciones -->
+    {% if recibo.observaciones_empleado or recibo.observaciones_rrhh %}
+        <div class="observaciones-section">
+            <h3>Observaciones</h3>
+            
+            {% if recibo.observaciones_empleado %}
+                <div class="observacion-item observacion-empleado">
+                    <div class="observacion-header">
+                        <span class="observacion-autor">💼 Tu Observación</span>
+                        {% if recibo.fecha_observacion %}
+                            <span class="observacion-fecha">{{ recibo.fecha_observacion|date:"d/m/Y H:i" }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="observacion-contenido">{{ recibo.observaciones_empleado }}</div>
+                </div>
+            {% endif %}
+            
+            {% if recibo.observaciones_rrhh %}
+                <div class="observacion-item observacion-rrhh">
+                    <div class="observacion-header">
+                        <span class="observacion-autor">🏢 Respuesta de RRHH</span>
+                        {% if recibo.fecha_respuesta_rrhh %}
+                            <span class="observacion-fecha">{{ recibo.fecha_respuesta_rrhh|date:"d/m/Y H:i" }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="observacion-contenido">{{ recibo.observaciones_rrhh }}</div>
+                    {% if recibo.respondido_por %}
+                        <div class="mt-2">
+                            <small class="text-muted">Respondido por: {{ recibo.respondido_por.get_full_name }}</small>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal para observación -->
+<div id="modalObservacion" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Hacer Observación</h2>
+            <span class="close" onclick="cerrarModalObservacion()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="formObservacion">
+                <div class="form-group">
+                    <label class="form-label">Describe tu observación sobre este recibo:</label>
+                    <textarea class="form-control" name="observaciones" rows="4" placeholder="Escribe aquí tu observación..." required></textarea>
+                </div>
+                <p class="text-muted">
+                    <small>Una vez que hagas la observación, RRHH será notificado y deberá responder antes de que puedas firmar este recibo.</small>
+                </p>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModalObservacion()">Cancelar</button>
+            <button type="button" class="btn btn-warning" onclick="enviarObservacion()">Enviar Observación</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para firma -->
+<div id="modalFirma" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Firmar Recibo</h2>
+            <span class="close" onclick="cerrarModalFirma()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="formFirma">
+                <div class="form-group">
+                    <label class="form-label">PIN de Firma Digital:</label>
+                    <input type="password" class="form-control" name="pin_firma" placeholder="Ingresa tu PIN" required>
+                </div>
+                <p class="text-muted">
+                    <small>Al firmar confirmas que estás de acuerdo con el contenido del recibo de sueldo.</small>
+                </p>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModalFirma()">Cancelar</button>
+            <button type="button" class="btn btn-primary" onclick="firmarRecibo()">Firmar Recibo</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Funciones para modales
+function mostrarModalObservacion() {
+    document.getElementById('modalObservacion').style.display = 'block';
+}
+
+function cerrarModalObservacion() {
+    document.getElementById('modalObservacion').style.display = 'none';
+    document.getElementById('formObservacion').reset();
+}
+
+function mostrarModalFirma() {
+    document.getElementById('modalFirma').style.display = 'block';
+}
+
+function cerrarModalFirma() {
+    document.getElementById('modalFirma').style.display = 'none';
+    document.getElementById('formFirma').reset();
+}
+
+// Cerrar modales al hacer click fuera
+window.onclick = function(event) {
+    const modalObservacion = document.getElementById('modalObservacion');
+    const modalFirma = document.getElementById('modalFirma');
+    
+    if (event.target === modalObservacion) {
+        cerrarModalObservacion();
+    }
+    if (event.target === modalFirma) {
+        cerrarModalFirma();
+    }
+}
+
+// Enviar observación
+function enviarObservacion() {
+    const form = document.getElementById('formObservacion');
+    const formData = new FormData(form);
+    
+    fetch('{% url "recibos:procesar_observacion" recibo.id %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarMensaje(data.message, 'success');
+            cerrarModalObservacion();
+            // Recargar la página después de 2 segundos
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            mostrarMensaje(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al enviar la observación', 'error');
+    });
+}
+
+// Firmar recibo
+function firmarRecibo() {
+    const form = document.getElementById('formFirma');
+    const formData = new FormData(form);
+    
+    fetch('{% url "recibos:procesar_firma" recibo.id %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarMensaje(data.message, 'success');
+            cerrarModalFirma();
+            // Redirigir a la lista de recibos después de 2 segundos
+            setTimeout(() => {
+                window.location.href = '{% url "recibos:mis_recibos" %}';
+            }, 2000);
+        } else {
+            mostrarMensaje(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al firmar el recibo', 'error');
+    });
+}
+
+// Función para mostrar mensajes
+function mostrarMensaje(mensaje, tipo = 'info') {
+    const alertClass = tipo === 'success' ? 'alert-success' : 
+                      tipo === 'error' ? 'alert-danger' : 'alert-info';
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass}`;
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '1001';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.style.padding = '15px';
+    alertDiv.style.borderRadius = '8px';
+    alertDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+    alertDiv.innerHTML = mensaje;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Alternar entre visor integrado y fallback
+function togglePdfViewer() {
+    const container = document.getElementById('pdf-viewer-container');
+    const fallback = document.getElementById('pdf-fallback');
+    
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        fallback.style.display = 'none';
+    } else {
+        container.style.display = 'none';
+        fallback.style.display = 'block';
+    }
+}
+
+// Detectar si el iframe carga correctamente
+document.addEventListener('DOMContentLoaded', function() {
+    const iframe = document.getElementById('pdf-iframe');
+    
+    iframe.addEventListener('load', function() {
+        console.log('PDF cargado correctamente');
+    });
+    
+    iframe.addEventListener('error', function() {
+        console.log('Error al cargar PDF, mostrando fallback');
+        togglePdfViewer();
+    });
+});
+
+// Mostrar mensajes de Django
+{% if messages %}
+    {% for message in messages %}
+        mostrarMensaje('{{ message|escapejs }}', '{{ message.tags }}');
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

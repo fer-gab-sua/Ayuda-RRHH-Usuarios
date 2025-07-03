@@ -1,0 +1,271 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Observar Recibo - Portal RH{% endblock %}
+
+{% block extra_css %}
+<style>
+.observar-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.recibo-info {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 25px;
+}
+
+.recibo-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.recibo-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.estado-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.estado-pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.observacion-form {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-control.textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.btn-group {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 25px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.alert {
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+}
+
+.alert-info {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.loading-spinner {
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #2563eb;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="observar-container">
+    <div class="recibo-info">
+        <div class="recibo-header">
+            <h1 class="recibo-title">
+                Observar Recibo - {{ recibo.get_periodo_display }} {{ recibo.anio }}
+            </h1>
+            <span class="estado-badge estado-{{ recibo.estado }}">
+                {{ recibo.get_estado_display }}
+            </span>
+        </div>
+        
+        <div class="recibo-detalles">
+            <p><strong>Empleado:</strong> {{ empleado.user.get_full_name }}</p>
+            <p><strong>Período:</strong> {{ recibo.get_periodo_display }} {{ recibo.anio }}</p>
+            <p><strong>Fecha de Emisión:</strong> {{ recibo.fecha_emision|date:"d/m/Y H:i" }}</p>
+            <p><strong>Fecha de Vencimiento:</strong> {{ recibo.fecha_vencimiento|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <div class="observacion-form">
+        <div class="alert alert-info">
+            <strong>Información importante:</strong><br>
+            Al realizar una observación sobre este recibo, el estado cambiará a "Observado" y no podrás firmar este ni ningún otro recibo hasta que RRHH responda a tu consulta.
+        </div>
+
+        <form id="observacionForm" method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="observaciones" class="form-label">
+                    Observaciones *
+                </label>
+                <textarea 
+                    id="observaciones" 
+                    name="observaciones" 
+                    class="form-control textarea" 
+                    placeholder="Describe detalladamente tu observación sobre este recibo..."
+                    required
+                ></textarea>
+            </div>
+
+            <div class="btn-group">
+                <a href="{% url 'recibos:mis_recibos' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-comment"></i>
+                    Enviar Observación
+                </button>
+            </div>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Procesando observación...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('observacionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const formData = new FormData(form);
+    const loading = document.getElementById('loading');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    // Mostrar loading
+    form.style.display = 'none';
+    loading.style.display = 'block';
+    
+    fetch('{% url "recibos:procesar_observacion" recibo.id %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Mostrar mensaje de éxito y redirigir
+            alert('Observación enviada correctamente. RRHH revisará tu consulta.');
+            window.location.href = '{% url "recibos:mis_recibos" %}';
+        } else {
+            // Mostrar error
+            alert('Error: ' + data.message);
+            form.style.display = 'block';
+            loading.style.display = 'none';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al procesar la observación. Por favor intenta nuevamente.');
+        form.style.display = 'block';
+        loading.style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

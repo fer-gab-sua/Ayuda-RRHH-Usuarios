@@ -58,7 +58,7 @@ class ReciboSueldo(models.Model):
     class Meta:
         verbose_name = "Recibo de Sueldo"
         verbose_name_plural = "Recibos de Sueldo"
-        ordering = ['-anio', '-periodo']
+        ordering = ['anio', 'periodo']  # Orden cronológico correcto
         unique_together = ['empleado', 'periodo', 'anio']
     
     def __str__(self):
@@ -67,48 +67,74 @@ class ReciboSueldo(models.Model):
     @property
     def esta_vencido(self):
         """Verifica si el recibo está vencido para firmar"""
-        return timezone.now() > self.fecha_vencimiento and self.estado == 'pendiente'
+        # Solo está vencido si es pendiente y pasó la fecha de vencimiento
+        if self.estado != 'pendiente':
+            return False
+        return timezone.now() > self.fecha_vencimiento
     
     @property
     def puede_ver(self):
         """Verifica si el empleado puede ver este recibo"""
-        # Obtener el recibo anterior (cronológicamente)
-        recibo_anterior = ReciboSueldo.objects.filter(
-            empleado=self.empleado,
-            anio__lt=self.anio
-        ).first()
+        # Obtener todos los recibos del empleado y ordenarlos cronológicamente
+        recibos_ordenados = ReciboSueldo.objects.filter(
+            empleado=self.empleado
+        ).extra(
+            select={'orden': 'anio * 100 + CASE '
+                           'WHEN periodo = "enero" THEN 1 '
+                           'WHEN periodo = "febrero" THEN 2 '
+                           'WHEN periodo = "marzo" THEN 3 '
+                           'WHEN periodo = "abril" THEN 4 '
+                           'WHEN periodo = "mayo" THEN 5 '
+                           'WHEN periodo = "junio" THEN 6 '
+                           'WHEN periodo = "julio" THEN 7 '
+                           'WHEN periodo = "agosto" THEN 8 '
+                           'WHEN periodo = "septiembre" THEN 9 '
+                           'WHEN periodo = "octubre" THEN 10 '
+                           'WHEN periodo = "noviembre" THEN 11 '
+                           'WHEN periodo = "diciembre" THEN 12 '
+                           'ELSE 0 END'}
+        ).order_by('orden')
         
-        if not recibo_anterior:
-            # Si no hay recibo anterior, este mismo año buscar por período
-            recibo_anterior = ReciboSueldo.objects.filter(
-                empleado=self.empleado,
-                anio=self.anio,
-                periodo__lt=self.periodo
-            ).order_by('-anio', '-periodo').first()
+        # Convertir a lista para poder iterar
+        recibos_list = list(recibos_ordenados)
         
-        # Si no hay recibo anterior, puede ver este
-        if not recibo_anterior:
-            return True
+        try:
+            # Encontrar la posición del recibo actual
+            posicion_actual = recibos_list.index(self)
             
-        # Solo puede ver si el anterior está firmado
-        return recibo_anterior.estado == 'firmado'
+            # Si es el primer recibo, puede verlo
+            if posicion_actual == 0:
+                return True
+                
+            # Si hay un recibo anterior, verificar que esté firmado
+            recibo_anterior = recibos_list[posicion_actual - 1]
+            return recibo_anterior.estado == 'firmado'
+            
+        except ValueError:
+            # Si no se encuentra el recibo en la lista, puede verlo (caso excepcional)
+            return True
     
     @property
     def puede_firmar(self):
         """Verifica si el recibo puede ser firmado"""
+        # Primero debe poder verlo
         if not self.puede_ver:
             return False
             
+        # No puede firmar si está vencido
         if self.esta_vencido:
             return False
             
-        # Solo puede firmar si está pendiente o si fue observado y RRHH ya respondió
-        if self.estado == 'pendiente':
-            return True
-        elif self.estado == 'respondido':
-            return True
+        # No puede firmar si ya está firmado
+        if self.estado == 'firmado':
+            return False
             
-        return False
+        # Verificar que no tenga observaciones pendientes en otros recibos
+        if self.empleado.recibos_sueldo.filter(estado='observado').exists():
+            return False
+            
+        # Solo puede firmar si está pendiente o si fue observado y RRHH ya respondió
+        return self.estado in ['pendiente', 'respondido']
     
     @property
     def puede_observar(self):
@@ -123,6 +149,10 @@ class ReciboSueldo(models.Model):
     def tiene_observaciones_pendientes(self):
         """Verifica si tiene observaciones esperando respuesta de RRHH"""
         return self.estado == 'observado'
+    
+    def empleado_tiene_observaciones_pendientes(self):
+        """Verifica si el empleado tiene observaciones pendientes en cualquier recibo"""
+        return self.empleado.recibos_sueldo.filter(estado='observado').exists()
     
     def get_orden_periodo(self):
         """Obtiene el número de orden del período para comparaciones"""

@@ -111,6 +111,16 @@
     color: #92400e;
 }
 
+.estado-observado {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.estado-respondido {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
 .estado-firmado {
     background: #d1fae5;
     color: #065f46;
@@ -123,6 +133,15 @@
 
 .estado-vencido {
     background: #f3f4f6;
+    color: #6b7280;
+}
+
+.recibo-bloqueado {
+    opacity: 0.6;
+    background-color: #f9fafb;
+}
+
+.recibo-bloqueado td {
     color: #6b7280;
 }
 
@@ -276,6 +295,14 @@
             <h3>{{ pendientes }}</h3>
             <p>Pendientes de Firma</p>
         </div>
+        <div class="resumen-card" style="border-left-color: #f59e0b;">
+            <h3>{{ observados }}</h3>
+            <p>Observados (Esperando RRHH)</p>
+        </div>
+        <div class="resumen-card" style="border-left-color: #8b5cf6;">
+            <h3>{{ respondidos }}</h3>
+            <p>Respondidos por RRHH</p>
+        </div>
         <div class="resumen-card firmados">
             <h3>{{ firmados }}</h3>
             <p>Firmados</p>
@@ -296,8 +323,13 @@
             <h2 class="section-title">Recibos Disponibles</h2>
             {% if puede_firmar %}
                 <div class="alert alert-info">
-                    <strong>📋 Recibo pendiente de firma</strong><br>
-                    Tienes un recibo pendiente de firmar.
+                    <strong>📋 Recibo listo para firmar</strong><br>
+                    Tienes el recibo de {{ puede_firmar.get_periodo_display }} {{ puede_firmar.anio }} listo para firmar.
+                </div>
+            {% elif tiene_observaciones_pendientes %}
+                <div class="alert alert-warning">
+                    <strong>⏳ Esperando respuesta de RRHH</strong><br>
+                    Tienes observaciones pendientes que deben ser resueltas antes de continuar.
                 </div>
             {% endif %}
         </div>
@@ -316,17 +348,19 @@
                 </thead>
                 <tbody>
                     {% for recibo in recibos %}
-                        <tr>
+                        <tr {% if not recibo.puede_ver %}class="recibo-bloqueado"{% endif %}>
                             <td>{{ recibo.get_periodo_display }}</td>
                             <td>{{ recibo.anio }}</td>
                             <td>{{ recibo.fecha_emision|date:"d/m/Y" }}</td>
                             <td>
                                 {% if recibo.estado == 'pendiente' %}
                                     <span class="estado-badge estado-pendiente">Pendiente</span>
+                                {% elif recibo.estado == 'observado' %}
+                                    <span class="estado-badge" style="background: #fef3c7; color: #92400e;">Observado</span>
+                                {% elif recibo.estado == 'respondido' %}
+                                    <span class="estado-badge" style="background: #ede9fe; color: #7c3aed;">Respondido</span>
                                 {% elif recibo.estado == 'firmado' %}
                                     <span class="estado-badge estado-firmado">Firmado</span>
-                                {% elif recibo.estado == 'firmado_disconforme' %}
-                                    <span class="estado-badge estado-disconforme">Firmado en Disconformidad</span>
                                 {% elif recibo.estado == 'vencido' %}
                                     <span class="estado-badge estado-vencido">Vencido</span>
                                 {% endif %}
@@ -340,29 +374,29 @@
                             </td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{% url 'recibos:ver_recibo' recibo.id %}" 
-                                       class="btn btn-secondary" 
-                                       target="_blank">
-                                        📄 Ver PDF
-                                    </a>
-                                    
-                                    {% if recibo.puede_firmar %}
-                                        <a href="{% url 'recibos:firmar_recibo' recibo.id %}" 
+                                    {% if recibo.puede_ver %}
+                                        <a href="{% url 'recibos:visualizar_recibo' recibo.id %}" 
                                            class="btn btn-primary">
-                                            ✍️ Firmar
+                                            👁️ Ver y Firmar
                                         </a>
-                                    {% elif recibo.estado == 'firmado' and recibo.archivo_firmado %}
-                                        <a href="{{ recibo.archivo_firmado.url }}" 
-                                           class="btn btn-success" 
-                                           target="_blank">
-                                            📋 Ver Firmado
-                                        </a>
-                                    {% elif recibo.estado == 'firmado_disconforme' and recibo.archivo_firmado %}
-                                        <a href="{{ recibo.archivo_firmado.url }}" 
-                                           class="btn btn-warning" 
-                                           target="_blank">
-                                            ⚠️ Ver Firmado
-                                        </a>
+                                        
+                                        {% if recibo.estado == 'firmado' and recibo.archivo_firmado %}
+                                            <a href="{{ recibo.archivo_firmado.url }}" 
+                                               class="btn btn-success" 
+                                               target="_blank">
+                                                📋 Ver Firmado
+                                            </a>
+                                        {% endif %}
+                                        
+                                        {% if recibo.observaciones_empleado %}
+                                            <button class="btn btn-info" 
+                                                    onclick="verObservaciones('{{ recibo.id }}', '{{ recibo.observaciones_empleado|escapejs }}', '{{ recibo.observaciones_rrhh|escapejs }}')">
+                                                💭 Ver Observaciones
+                                            </button>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="btn btn-disabled">🔒 Bloqueado</span>
+                                        <small class="text-muted">Firma el recibo anterior</small>
                                     {% endif %}
                                 </div>
                             </td>

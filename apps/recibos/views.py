@@ -31,36 +31,77 @@ class MisRecibosView(LoginRequiredMixin, ListView):
     paginate_by = 10
     
     def get_queryset(self):
-        """Obtener solo los recibos del empleado logueado"""
+        """Obtener todos los recibos del empleado logueado ordenados cronológicamente"""
         try:
             empleado = Empleado.objects.get(user=self.request.user)
-            return ReciboSueldo.objects.filter(empleado=empleado).order_by('-anio', '-periodo')
+            # Obtener todos los recibos del empleado ordenados cronológicamente
+            return ReciboSueldo.objects.filter(empleado=empleado).extra(
+                select={'orden': 'anio * 100 + CASE '
+                               'WHEN periodo = "enero" THEN 1 '
+                               'WHEN periodo = "febrero" THEN 2 '
+                               'WHEN periodo = "marzo" THEN 3 '
+                               'WHEN periodo = "abril" THEN 4 '
+                               'WHEN periodo = "mayo" THEN 5 '
+                               'WHEN periodo = "junio" THEN 6 '
+                               'WHEN periodo = "julio" THEN 7 '
+                               'WHEN periodo = "agosto" THEN 8 '
+                               'WHEN periodo = "septiembre" THEN 9 '
+                               'WHEN periodo = "octubre" THEN 10 '
+                               'WHEN periodo = "noviembre" THEN 11 '
+                               'WHEN periodo = "diciembre" THEN 12 '
+                               'ELSE 0 END'}
+            ).order_by('orden')
         except Empleado.DoesNotExist:
             return ReciboSueldo.objects.none()
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Estadísticas
-        queryset = self.get_queryset()
-        context['total_recibos'] = queryset.count()
-        context['pendientes'] = queryset.filter(estado='pendiente').count()
-        context['firmados'] = queryset.filter(estado__in=['firmado', 'firmado_disconforme']).count()
-        context['vencidos'] = queryset.filter(estado='vencido').count()
+        # Obtener todos los recibos del empleado (que ya están en el queryset)
+        todos_recibos = self.get_queryset()
         
-        # Recibo más reciente pendiente
-        recibo_pendiente = queryset.filter(estado='pendiente').first()
-        context['puede_firmar'] = recibo_pendiente and recibo_pendiente.puede_firmar
+        # Estadísticas generales
+        context['total_recibos'] = todos_recibos.count()
+        context['pendientes'] = todos_recibos.filter(estado='pendiente').count()
+        context['observados'] = todos_recibos.filter(estado='observado').count()
+        context['respondidos'] = todos_recibos.filter(estado='respondido').count()
+        context['firmados'] = todos_recibos.filter(estado='firmado').count()
+        context['vencidos'] = todos_recibos.filter(estado='vencido').count()
+        
+        # Próximo recibo que puede firmar
+        puede_firmar = next((r for r in todos_recibos if r.puede_firmar), None)
+        context['puede_firmar'] = puede_firmar
+        
+        # Verificar si hay observaciones pendientes que bloquean el flujo
+        tiene_observaciones_pendientes = todos_recibos.filter(estado='observado').exists()
+        context['tiene_observaciones_pendientes'] = tiene_observaciones_pendientes
+        
+        # Información sobre el flujo secuencial
+        recibos_visibles = [r for r in todos_recibos if r.puede_ver]
+        context['recibos_visibles_count'] = len(recibos_visibles)
+        
+        if recibos_visibles:
+            ultimo_visible = recibos_visibles[-1]
+            context['ultimo_recibo_visible'] = ultimo_visible
+            
+            # Verificar si hay más recibos después del último visible
+            context['hay_recibos_bloqueados'] = len(recibos_visibles) < todos_recibos.count()
         
         return context
 
 
+@login_required
 @login_required
 def ver_recibo_pdf(request, recibo_id):
     """Ver el PDF del recibo"""
     try:
         empleado = Empleado.objects.get(user=request.user)
         recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
+        
+        # Verificar que pueda ver este recibo
+        if not recibo.puede_ver:
+            messages.error(request, 'No puedes ver este recibo. Debes firmar el recibo anterior primero.')
+            return redirect('recibos:mis_recibos')
         
         if not recibo.archivo_pdf:
             raise Http404("Archivo no encontrado")
@@ -71,12 +112,98 @@ def ver_recibo_pdf(request, recibo_id):
             descripcion=f"Consultó el recibo de {recibo.get_periodo_display()} {recibo.anio}"
         )
         
-        response = HttpResponse(recibo.archivo_pdf.read(), content_type='application/pdf')
+        # Leer el contenido del archivo
+        try:
+            archivo_content = recibo.archivo_pdf.read()
+        except Exception as e:
+            raise Http404(f"Error al leer el archivo: {str(e)}")
+        
+        response = HttpResponse(archivo_content, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="{recibo.nombre_archivo}"'
+        response['X-Frame-Options'] = 'SAMEORIGIN'
+        response['Content-Security-Policy'] = "frame-ancestors 'self'"
         return response
         
     except Empleado.DoesNotExist:
         raise Http404("Empleado no encontrado")
+
+
+@login_required
+def observar_recibo(request, recibo_id):
+    """Mostrar formulario para observar recibo"""
+    try:
+        empleado = Empleado.objects.get(user=request.user)
+        recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
+        
+        # Verificar que pueda ver este recibo
+        if not recibo.puede_ver:
+            messages.error(request, 'No puedes ver este recibo. Debes firmar el recibo anterior primero.')
+            return redirect('recibos:mis_recibos')
+        
+        # Verificar que pueda observar este recibo
+        if not recibo.puede_observar:
+            messages.error(request, 'No puedes hacer observaciones sobre este recibo en este momento.')
+            return redirect('recibos:mis_recibos')
+        
+        context = {
+            'recibo': recibo,
+            'empleado': empleado,
+        }
+        
+        return render(request, 'recibos/observar_recibo.html', context)
+        
+    except Empleado.DoesNotExist:
+        raise Http404("Empleado no encontrado")
+
+
+@login_required
+@require_POST
+def procesar_observacion_recibo(request, recibo_id):
+    """Procesar la observación del recibo"""
+    try:
+        empleado = Empleado.objects.get(user=request.user)
+        recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
+        
+        if not recibo.puede_observar:
+            return JsonResponse({
+                'success': False,
+                'message': 'No puedes hacer observaciones sobre este recibo en este momento.'
+            })
+        
+        observaciones = request.POST.get('observaciones', '').strip()
+        if not observaciones:
+            return JsonResponse({
+                'success': False,
+                'message': 'Debes ingresar una observación.'
+            })
+        
+        # Actualizar el recibo con la observación
+        recibo.observaciones_empleado = observaciones
+        recibo.fecha_observacion = timezone.now()
+        recibo.estado = 'observado'
+        recibo.save()
+        
+        # Registrar actividad
+        ActividadEmpleado.objects.create(
+            empleado=empleado,
+            descripcion=f"Realizó observaciones sobre el recibo de {recibo.get_periodo_display()} {recibo.anio}"
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Observación enviada correctamente. RRHH revisará tu consulta.'
+        })
+        
+    except Empleado.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Empleado no encontrado'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al procesar la observación: {str(e)}'
+        })
 
 
 @login_required
@@ -86,8 +213,18 @@ def firmar_recibo(request, recibo_id):
         empleado = Empleado.objects.get(user=request.user)
         recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
         
+        # Verificar que pueda ver este recibo
+        if not recibo.puede_ver:
+            messages.error(request, 'No puedes ver este recibo. Debes firmar el recibo anterior primero.')
+            return redirect('recibos:mis_recibos')
+        
+        # Verificar que pueda firmar este recibo
         if not recibo.puede_firmar:
-            messages.error(request, 'Este recibo no puede ser firmado en este momento.')
+            # Verificar si hay observaciones pendientes
+            if empleado.recibos_sueldo.filter(estado='observado').exists():
+                messages.error(request, 'No puedes firmar recibos mientras tengas observaciones pendientes de respuesta.')
+            else:
+                messages.error(request, 'Este recibo no puede ser firmado en este momento.')
             return redirect('recibos:mis_recibos')
         
         # Verificar que tenga firma digital
@@ -141,23 +278,19 @@ def procesar_firma_recibo(request, recibo_id):
                 'message': 'PIN incorrecto. Verifica tu PIN de firma digital.'
             })
         
-        # Tipo de firma
-        tipo_firma = request.POST.get('tipo_firma', 'conforme')
-        observaciones = request.POST.get('observaciones', '')
+        # Tipo de firma (siempre conforme, pero puede haber sido observado previamente)
+        tipo_firma = 'observado' if recibo.estado == 'respondido' else 'conforme'
         
-        # Actualizar estado del recibo
-        if tipo_firma == 'conforme':
-            recibo.estado = 'firmado'
-        else:
-            recibo.estado = 'firmado_disconforme'
-            recibo.observaciones_empleado = observaciones
-        
+        # Actualizar estado del recibo (siempre firmado, sin disconformidad)
+        recibo.estado = 'firmado'
         recibo.fecha_firma = timezone.now()
         recibo.save()
         
         # Generar PDF firmado
         try:
-            pdf_firmado = generar_pdf_firmado(recibo, empleado, tipo_firma, observaciones)
+            # Las observaciones vienen del recibo si fue observado previamente
+            observaciones_para_pdf = recibo.observaciones_empleado if recibo.observaciones_empleado else ''
+            pdf_firmado = generar_pdf_firmado(recibo, empleado, tipo_firma, observaciones_para_pdf)
             pdf_filename = f"recibo_firmado_{recibo.periodo}_{recibo.anio}_{empleado.legajo}.pdf"
             recibo.archivo_firmado.save(pdf_filename, ContentFile(pdf_firmado), save=True)
         except Exception as e:
@@ -170,18 +303,26 @@ def procesar_firma_recibo(request, recibo_id):
             ip_address=get_client_ip(request),
             user_agent=request.META.get('HTTP_USER_AGENT', ''),
             tipo_firma=tipo_firma,
-            observaciones=observaciones
+            observaciones=observaciones_para_pdf
         )
         
         # Registrar actividad
+        descripcion = f"Firmó el recibo de {recibo.get_periodo_display()} {recibo.anio}"
+        if tipo_firma == 'observado':
+            descripcion += " (con observaciones previas resueltas)"
+            
         ActividadEmpleado.objects.create(
             empleado=empleado,
-            descripcion=f"Firmó el recibo de {recibo.get_periodo_display()} {recibo.anio} {'en disconformidad' if tipo_firma == 'disconforme' else ''}"
+            descripcion=descripcion
         )
+        
+        mensaje_success = 'Recibo firmado correctamente.'
+        if tipo_firma == 'observado':
+            mensaje_success += ' Las observaciones previas fueron consideradas.'
         
         return JsonResponse({
             'success': True,
-            'message': f'Recibo firmado {"en disconformidad" if tipo_firma == "disconforme" else "correctamente"}.'
+            'message': mensaje_success
         })
         
     except Empleado.DoesNotExist:
@@ -194,6 +335,38 @@ def procesar_firma_recibo(request, recibo_id):
             'success': False,
             'message': f'Error al procesar la firma: {str(e)}'
         })
+
+
+@login_required
+def visualizar_recibo(request, recibo_id):
+    """Vista para visualizar recibo con opciones de firmar y observar"""
+    try:
+        empleado = Empleado.objects.get(user=request.user)
+        recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
+        
+        if not recibo.puede_ver:
+            messages.error(request, 'No tienes permiso para ver este recibo.')
+            return redirect('recibos:mis_recibos')
+        
+        # Registrar actividad
+        ActividadEmpleado.objects.create(
+            empleado=empleado,
+            descripcion=f"Visualizó el recibo de {recibo.get_periodo_display()} {recibo.anio}"
+        )
+        
+        context = {
+            'recibo': recibo,
+            'empleado': empleado,
+            'puede_firmar': recibo.puede_firmar,
+            'puede_observar': recibo.puede_observar,
+            'tiene_observaciones_pendientes': recibo.tiene_observaciones_pendientes,
+            'empleado_tiene_observaciones_pendientes': recibo.empleado_tiene_observaciones_pendientes(),
+        }
+        
+        return render(request, 'recibos/visualizar_recibo.html', context)
+        
+    except Empleado.DoesNotExist:
+        raise Http404("Empleado no encontrado")
 
 
 def generar_pdf_firmado(recibo, empleado, tipo_firma, observaciones):
