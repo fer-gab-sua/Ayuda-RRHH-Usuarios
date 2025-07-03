@@ -1,0 +1,31 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mis Recibos - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Mis recibos de sueldo</h1>
+
+<div class="resumen">
+  <div class="resumen-card">
+    <span>0</span>
+    Pendientes de firma
+  </div>
+  <div class="resumen-card">
+    <span>0</span>
+    Firmados este año
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Recibos disponibles</div>
+  
+  <div class="receipts-list">
+    <div class="empty-state">
+      <div class="empty-icon">📄</div>
+      <h3>No tienes recibos disponibles</h3>
+      <p>Los recibos aparecerán aquí cuando estén listos para firmar</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

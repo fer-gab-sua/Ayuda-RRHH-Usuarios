@@ -1,0 +1,890 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Mi Perfil</h1>
+
+<!-- Formulario para subir foto -->
+<form id="formSubirFoto" style="display: none;">
+  <input type="file" id="foto-input" name="foto_perfil" accept="image/*">
+</form>
+
+<div style="display: flex; align-items: center; gap: 24px; margin-bottom: 18px;">
+  <div style="position: relative;">
+    <img id="profile-img" src="{% if empleado.foto_perfil %}{{ empleado.foto_perfil.url }}{% else %}{% static 'img/empleado.png' %}{% endif %}" alt="Foto de perfil" style="width:120px;height:120px;border-radius:50%;border:3px solid #2563eb;object-fit:cover;">
+    <label for="foto-input" style="position:absolute;bottom:8px;right:8px;background:#2563eb;color:#fff;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:13px;">
+      Cambiar
+    </label>
+  </div>
+  <div>
+    <strong>{{ user.get_full_name|default:user.username }}</strong><br>
+    <span style="color:#6b7280;font-size:15px;">{{ empleado.puesto|default:'Empleado' }}</span>
+  </div>
+</div>
+
+<form id="formDatosBasicos">
+<section class="section">
+  <div class="section-title">
+    Datos personales
+    <button type="button" class="btn-sm btn-primary" onclick="guardarDatosBasicos()">Guardar cambios</button>
+  </div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" value="{{ user.first_name|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Apellido</label>
+      <input type="text" value="{{ user.last_name|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>DNI</label>
+      <input type="text" value="{{ empleado.dni|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Fecha de nacimiento</label>
+      <input type="date" value="{{ empleado.fecha_nacimiento|date:'Y-m-d'|default:'' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Usuario</label>
+      <input type="text" value="{{ user.username }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" name="email" value="{{ user.email|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Teléfono</label>
+      <input type="tel" name="telefono" value="{{ empleado.telefono|default:'No especificado' }}" />
+    </div>
+  </div>
+</section>
+</form>
+
+<section class="section">
+  <div class="section-title">Datos laborales</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>CUIL</label>
+      <input type="text" value="{{ empleado.cuil|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Fecha de ingreso</label>
+      <input type="text" value="{{ user.date_joined|date:'d/m/Y' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Legajo</label>
+      <input type="text" value="{{ empleado.legajo }}" readonly />
+    </div>
+  </div>
+</section>
+
+<form id="formDatosEmergencia">
+<section class="section">
+  <div class="section-title">
+    Datos de emergencia
+    <button type="button" class="btn-sm btn-primary" onclick="guardarDatosEmergencia()">Guardar cambios</button>
+  </div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Contacto de emergencia</label>
+      <input type="text" name="contacto_emergencia" value="{{ empleado.contacto_emergencia|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Teléfono de emergencia</label>
+      <input type="tel" name="telefono_emergencia" value="{{ empleado.telefono_emergencia|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Relación</label>
+      <input type="text" name="relacion_emergencia" value="{{ empleado.relacion_emergencia|default:'No especificado' }}" />
+    </div>
+  </div>
+</section>
+</form>
+
+<section class="section">
+  <div class="section-title">Grupo familiar</div>
+  <table class="family-table" id="tablaFamiliares">
+    <thead>
+      <tr>
+        <th>Apellido y Nombre</th>
+        <th>Fecha de nacimiento</th>
+        <th>DNI</th>
+        <th>Parentesco</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for familiar in familiares %}
+      <tr data-familiar-id="{{ familiar.id }}">
+        <td>{{ familiar.apellido }}, {{ familiar.nombre }}</td>
+        <td>{{ familiar.fecha_nacimiento|date:'d/m/Y' }}</td>
+        <td>{{ familiar.dni }}</td>
+        <td>{{ familiar.get_parentesco_display }}</td>
+        <td>
+          <button class="btn-ver" onclick="editarFamiliar({{ familiar.id }})">Editar</button>
+          <button class="btn-eliminar" onclick="eliminarFamiliar({{ familiar.id }})">Eliminar</button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr id="sinFamiliares">
+        <td colspan="5" style="text-align:center;color:#6b7280;padding:20px;">
+          No hay familiares registrados
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div style="margin-top: 12px;">
+    <button class="btn-primary" onclick="abrirModalAgregarFamiliar()">+ Agregar familiar</button>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">
+    Domicilio
+    <span style="font-size: 14px; color: #ef4444; margin-left: 10px;">
+      ⚠️ Cambios requieren declaración jurada
+    </span>
+  </div>
+  {% if solicitudes_pendientes %}
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <strong style="color: #92400e;">📋 Solicitud pendiente</strong>
+      <p style="color: #92400e; margin: 4px 0 0 0;">
+        Tienes una solicitud de cambio de domicilio pendiente de aprobación.
+      </p>
+    </div>
+  {% endif %}
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Calle</label>
+      <input type="text" value="{{ domicilio.calle|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Número</label>
+      <input type="text" value="{{ domicilio.numero|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Piso</label>
+      <input type="text" value="{{ domicilio.piso|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Depto</label>
+      <input type="text" value="{{ domicilio.depto|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Barrio</label>
+      <input type="text" value="{{ domicilio.barrio|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Localidad</label>
+      <input type="text" value="{{ domicilio.localidad|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Provincia</label>
+      <input type="text" value="{{ domicilio.provincia|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Código postal</label>
+      <input type="text" value="{{ domicilio.codigo_postal|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group full-width">
+      <label>Entre calles</label>
+      <input type="text" value="{{ domicilio.entre_calles|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group full-width">
+      <label>Observaciones</label>
+      <textarea readonly>{{ domicilio.observaciones|default:'Ninguna' }}</textarea>
+    </div>
+  </div>
+  <div style="margin-top: 12px;">
+    <button class="btn-primary" onclick="abrirModalCambioDomicilio()">
+      📋 Solicitar cambio de domicilio
+    </button>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">
+    Obra Social
+    <span style="font-size: 14px; color: #ef4444; margin-left: 10px;">
+      ⚠️ Cambios requieren declaración jurada
+    </span>
+  </div>
+  {% if solicitudes_pendientes %}
+    <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <strong style="color: #92400e;">📋 Solicitud pendiente</strong>
+      <p style="color: #92400e; margin: 4px 0 0 0;">
+        Tienes una solicitud de cambio de obra social pendiente de aprobación.
+      </p>
+    </div>
+  {% endif %}
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Nombre de la obra social</label>
+      <input type="text" value="{{ obra_social.nombre|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Número de afiliado</label>
+      <input type="text" value="{{ obra_social.numero_afiliado|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Plan</label>
+      <input type="text" value="{{ obra_social.plan|default:'No especificado' }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Fecha de alta</label>
+      <input type="date" value="{{ obra_social.fecha_alta|date:'Y-m-d'|default:'' }}" readonly />
+    </div>
+    <div class="form-group full-width">
+      <label>Observaciones</label>
+      <textarea readonly>{{ obra_social.observaciones|default:'Ninguna' }}</textarea>
+    </div>
+  </div>
+  <div style="margin-top: 12px;">
+    <button class="btn-primary" onclick="abrirModalCambioObraSocial()">
+      📋 Solicitar cambio de obra social
+    </button>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Firma digital</div>
+  <div class="signature-section">
+    <div class="signature-card">
+      <div class="signature-preview">
+        {% if tiene_firma %}
+          <img src="{{ empleado.firma_imagen.url }}" alt="Firma digital" style="max-width: 100%; max-height: 150px;">
+          <p style="color:#16a34a;text-align:center;margin:10px 0 0 0;">
+            ✅ Firma registrada correctamente
+          </p>
+        {% else %}
+          <p style="color:#6b7280;text-align:center;margin:40px 0;">
+            No tienes una firma registrada
+          </p>
+        {% endif %}
+      </div>
+      <div class="signature-actions">
+        {% if tiene_firma %}
+          <button class="btn-primary" onclick="abrirModalFirmaDigital()">
+            ✏️ Actualizar firma
+          </button>
+        {% else %}
+          <button class="btn-primary" onclick="abrirModalFirmaDigital()">
+            ✏️ Crear firma
+          </button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="signature-info">
+      <h3>¿Para qué sirve la firma digital?</h3>
+      <ul>
+        <li>📝 Firmar recibos de sueldo</li>
+        <li>📄 Validar documentos importantes</li>
+        <li>✅ Confirmar solicitudes</li>
+        <li>🔒 Autenticar acciones</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Actividad reciente</div>
+  <div class="activity-list">
+    {% for actividad in actividades %}
+      <div style="padding: 12px; border-left: 3px solid #2563eb; margin-bottom: 8px; background: #f8fafc;">
+        <strong>{{ actividad.fecha|date:'d/m/Y H:i' }}</strong><br>
+        <span style="color:#6b7280;">{{ actividad.descripcion }}</span>
+      </div>
+    {% empty %}
+      <div style="color:#6b7280;text-align:center;padding:20px;">
+        No hay actividad reciente para mostrar.
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Incluir modals -->
+{% include 'empleados/modals.html' %}
+
+<script>
+// ====== VARIABLES GLOBALES ======
+let signaturePads = {};
+
+// ====== FUNCIONES DE UTILIDAD ======
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function mostrarMensaje(mensaje, tipo = 'success') {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.querySelector('h1').insertAdjacentHTML('afterend', alertHtml);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) alert.remove();
+    }, 5000);
+}
+
+function mostrarErroresFormulario(containerId, errores) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    let mensajeError = '';
+    
+    if (typeof errores === 'string') {
+        mensajeError = errores;
+    } else if (typeof errores === 'object') {
+        mensajeError = '<ul style="margin: 0; padding-left: 20px;">';
+        for (const [campo, mensajes] of Object.entries(errores)) {
+            if (Array.isArray(mensajes)) {
+                mensajes.forEach(mensaje => {
+                    mensajeError += `<li><strong>${campo}:</strong> ${mensaje}</li>`;
+                });
+            } else {
+                mensajeError += `<li><strong>${campo}:</strong> ${mensajes}</li>`;
+            }
+        }
+        mensajeError += '</ul>';
+    }
+    
+    container.innerHTML = mensajeError;
+    container.style.display = 'block';
+}
+
+// ====== FUNCIONES DE FIRMA DIGITAL ======
+function inicializarCanvas(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return null;
+    
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    
+    // Configurar canvas
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    
+    // Event listeners para mouse
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    // Event listeners para touch
+    canvas.addEventListener('touchstart', handleTouch, { passive: false });
+    canvas.addEventListener('touchmove', handleTouch, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+    
+    function startDrawing(e) {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+    
+    function draw(e) {
+        if (!isDrawing) return;
+        const rect = canvas.getBoundingClientRect();
+        ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+        ctx.stroke();
+    }
+    
+    function stopDrawing() {
+        isDrawing = false;
+    }
+    
+    function handleTouch(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 
+                                         e.type === 'touchmove' ? 'mousemove' : 'mouseup', {
+            clientX: touch.clientX,
+            clientY: touch.clientY
+        });
+        canvas.dispatchEvent(mouseEvent);
+    }
+    
+    return {
+        canvas: canvas,
+        ctx: ctx,
+        limpiar: () => ctx.clearRect(0, 0, canvas.width, canvas.height),
+        obtenerDataURL: () => canvas.toDataURL()
+    };
+}
+
+function limpiarFirma(canvasId) {
+    if (signaturePads[canvasId]) {
+        signaturePads[canvasId].limpiar();
+    }
+}
+
+// ====== FUNCIONES DEL PERFIL ======
+
+// Subir foto de perfil
+document.getElementById('foto-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validar tipo de archivo
+    if (!file.type.startsWith('image/')) {
+        mostrarMensaje('Por favor selecciona un archivo de imagen válido', 'error');
+        return;
+    }
+    
+    // Validar tamaño (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        mostrarMensaje('La imagen no puede ser mayor a 5MB', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('foto_perfil', file);
+    
+    fetch("{% url 'empleados:subir_foto_perfil' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar imagen en la interfaz
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profile-img').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            mostrarMensaje(data.message);
+        } else {
+            mostrarMensaje(data.message || 'Error al subir la foto', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al subir la foto', 'error');
+    });
+});
+
+// Guardar datos básicos (email y teléfono)
+function guardarDatosBasicos() {
+    const formData = new FormData(document.getElementById('formDatosBasicos'));
+    
+    fetch("{% url 'empleados:guardar_datos_basicos' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarMensaje(data.message);
+        } else {
+            mostrarMensaje(data.message || 'Error al guardar los datos', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al guardar los datos', 'error');
+    });
+}
+
+// Guardar datos de emergencia
+function guardarDatosEmergencia() {
+    const formData = new FormData(document.getElementById('formDatosEmergencia'));
+    
+    fetch("{% url 'empleados:guardar_datos_emergencia' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarMensaje(data.message);
+        } else {
+            mostrarMensaje(data.message || 'Error al guardar los datos de emergencia', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al guardar los datos de emergencia', 'error');
+    });
+}
+
+// ====== FUNCIONES DE FAMILIARES ======
+function abrirModalAgregarFamiliar() {
+    const modal = new bootstrap.Modal(document.getElementById('modalAgregarFamiliar'));
+    modal.show();
+}
+
+// Agregar familiar
+document.getElementById('formAgregarFamiliar').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const spinner = submitBtn.querySelector('.loading-spinner');
+    
+    // Mostrar loading
+    if (submitBtn) submitBtn.disabled = true;
+    if (spinner) spinner.style.display = 'inline-block';
+    
+    const formData = new FormData(this);
+    
+    fetch("{% url 'empleados:agregar_familiar' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregarFamiliar'));
+            if (modal) modal.hide();
+            
+            // Agregar fila a la tabla
+            agregarFilaFamiliar(data.familiar);
+            
+            // Limpiar formulario
+            this.reset();
+            
+            mostrarMensaje(data.message);
+        } else {
+            mostrarMensaje('Error al agregar familiar: ' + JSON.stringify(data.errors), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al agregar familiar', 'error');
+    })
+    .finally(() => {
+        // Ocultar loading
+        if (submitBtn) submitBtn.disabled = false;
+        if (spinner) spinner.style.display = 'none';
+    });
+});
+
+function agregarFilaFamiliar(familiar) {
+    const tbody = document.querySelector('#tablaFamiliares tbody');
+    const sinFamiliares = document.getElementById('sinFamiliares');
+    
+    if (sinFamiliares) {
+        sinFamiliares.remove();
+    }
+    
+    const fila = document.createElement('tr');
+    fila.setAttribute('data-familiar-id', familiar.id);
+    fila.innerHTML = `
+        <td>${familiar.apellido}, ${familiar.nombre}</td>
+        <td>${familiar.fecha_nacimiento}</td>
+        <td>${familiar.dni}</td>
+        <td>${familiar.parentesco}</td>
+        <td>
+            <button class="btn-ver" onclick="editarFamiliar(${familiar.id})">Editar</button>
+            <button class="btn-eliminar" onclick="eliminarFamiliar(${familiar.id})">Eliminar</button>
+        </td>
+    `;
+    
+    tbody.appendChild(fila);
+}
+
+function eliminarFamiliar(familiarId) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este familiar?')) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('familiar_id', familiarId);
+    
+    fetch("{% url 'empleados:eliminar_familiar' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remover fila de la tabla
+            const fila = document.querySelector(`tr[data-familiar-id="${familiarId}"]`);
+            if (fila) {
+                fila.remove();
+            }
+            
+            // Si no hay más familiares, mostrar mensaje
+            const tbody = document.querySelector('#tablaFamiliares tbody');
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = `
+                    <tr id="sinFamiliares">
+                        <td colspan="5" style="text-align:center;color:#6b7280;padding:20px;">
+                            No hay familiares registrados
+                        </td>
+                    </tr>
+                `;
+            }
+            
+            mostrarMensaje(data.message);
+        } else {
+            mostrarMensaje(data.message || 'Error al eliminar familiar', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al eliminar familiar', 'error');
+    });
+}
+
+// ====== FUNCIONES DE SOLICITUDES ======
+function abrirModalCambioDomicilio() {
+    // Verificar si tiene firma digital
+    const tieneFirma = {{ tiene_firma|yesno:"true,false" }};
+    
+    if (!tieneFirma) {
+        mostrarMensaje('Debes crear tu firma digital antes de realizar solicitudes con declaración jurada.', 'error');
+        
+        // Preguntar si quiere crear la firma ahora
+        if (confirm('¿Deseas crear tu firma digital ahora?')) {
+            abrirModalFirmaDigital();
+        }
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalCambioDomicilio'));
+    modal.show();
+}
+
+function abrirModalCambioObraSocial() {
+    // Verificar si tiene firma digital
+    const tieneFirma = {{ tiene_firma|yesno:"true,false" }};
+    
+    if (!tieneFirma) {
+        mostrarMensaje('Debes crear tu firma digital antes de realizar solicitudes con declaración jurada.', 'error');
+        
+        // Preguntar si quiere crear la firma ahora
+        if (confirm('¿Deseas crear tu firma digital ahora?')) {
+            abrirModalFirmaDigital();
+        }
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalCambioObraSocial'));
+    modal.show();
+}
+
+function abrirModalFirmaDigital() {
+    const modal = new bootstrap.Modal(document.getElementById('modalFirmaDigital'));
+    
+    // Inicializar canvas de firma
+    modal._element.addEventListener('shown.bs.modal', function() {
+        if (!signaturePads['canvasFirmaDigital']) {
+            signaturePads['canvasFirmaDigital'] = inicializarCanvas('canvasFirmaDigital');
+        }
+    });
+    
+    modal.show();
+}
+
+// Solicitar cambio de domicilio
+document.getElementById('formCambioDomicilio').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validar PIN
+    const pin = document.getElementById('pinDomicilio').value;
+    if (!pin || pin.length < 4) {
+        mostrarMensaje('Debes ingresar un PIN válido de 4-6 dígitos', 'error');
+        return;
+    }
+    
+    console.log('Enviando solicitud de cambio de domicilio con PIN:', pin);
+    
+    const formData = new FormData(this);
+    formData.append('pin_firma', pin);
+    formData.append('tipo_solicitud', 'domicilio');
+    
+    // Debug: mostrar los datos que se envían
+    console.log('Datos del formulario:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key + ': ' + value);
+    }
+    
+    fetch("{% url 'empleados:solicitar_cambio_domicilio' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log('Respuesta del servidor:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Datos de respuesta:', data);
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalCambioDomicilio')).hide();
+            this.reset();
+            mostrarMensaje(data.message);
+            
+            // Recargar página para mostrar solicitud pendiente
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            mostrarMensaje(data.message || 'Error al enviar solicitud', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error en la solicitud:', error);
+        mostrarMensaje('Error al enviar solicitud', 'error');
+    });
+});
+
+// Solicitar cambio de obra social
+document.getElementById('formCambioObraSocial').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validar PIN
+    const pin = document.getElementById('pinObraSocial').value;
+    if (!pin || pin.length < 4) {
+        mostrarMensaje('Debes ingresar un PIN válido de 4-6 dígitos', 'error');
+        return;
+    }
+    
+    console.log('Enviando solicitud de cambio de obra social con PIN:', pin);
+    
+    const formData = new FormData(this);
+    formData.append('pin_firma', pin);
+    formData.append('tipo_solicitud', 'obra_social');
+    
+    // Debug: mostrar los datos que se envían
+    console.log('Datos del formulario:');
+    for (let [key, value] of formData.entries()) {
+        console.log(key + ': ' + value);
+    }
+    
+    fetch("{% url 'empleados:solicitar_cambio_obra_social' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        console.log('Respuesta del servidor:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Datos de respuesta:', data);
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalCambioObraSocial')).hide();
+            this.reset();
+            mostrarMensaje(data.message);
+            
+            // Recargar página para mostrar solicitud pendiente
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            mostrarMensaje(data.message || 'Error al enviar solicitud', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error en la solicitud:', error);
+        mostrarMensaje('Error al enviar solicitud', 'error');
+    });
+});
+
+// Guardar firma digital
+document.getElementById('formFirmaDigital').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validar PIN
+    const pin = document.getElementById('pin').value;
+    const confirmarPin = document.getElementById('confirmar_pin').value;
+    
+    if (pin !== confirmarPin) {
+        mostrarMensaje('Los PINs no coinciden', 'error');
+        return;
+    }
+    
+    // Validar firma
+    const firmaPad = signaturePads['canvasFirmaDigital'];
+    if (!firmaPad) {
+        mostrarMensaje('Error con la firma digital', 'error');
+        return;
+    }
+    
+    const firmaData = firmaPad.obtenerDataURL();
+    
+    const formData = new FormData();
+    formData.append('firma_data', firmaData);
+    formData.append('pin', pin);
+    formData.append('confirmar_pin', confirmarPin);
+    
+    fetch("{% url 'empleados:guardar_firma_digital' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('modalFirmaDigital')).hide();
+            this.reset();
+            limpiarFirma('canvasFirmaDigital');
+            mostrarMensaje(data.message);
+            
+            // Recargar página para mostrar nueva firma
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            mostrarMensaje(data.message || 'Error al guardar firma', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al guardar firma', 'error');
+    });
+});
+
+// ====== INICIALIZACIÓN ======
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips si están disponibles
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+</script>
+
+
+{% endblock %}

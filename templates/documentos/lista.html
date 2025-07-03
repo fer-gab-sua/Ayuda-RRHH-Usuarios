@@ -1,0 +1,29 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Documentación - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Documentación importante</h1>
+
+<div class="section">
+  <div class="section-title">Mis documentos</div>
+  
+  <div class="action-bar">
+    <a href="{% url 'documentos:subir' %}" class="btn-primary">
+      📤 Subir documento
+    </a>
+  </div>
+  
+  <div class="documents-grid">
+    <div class="empty-state">
+      <div class="empty-icon">📁</div>
+      <h3>No tienes documentos cargados</h3>
+      <p>Sube tu primer documento para comenzar</p>
+      <a href="{% url 'documentos:subir' %}" class="btn-outline">
+        Subir documento
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

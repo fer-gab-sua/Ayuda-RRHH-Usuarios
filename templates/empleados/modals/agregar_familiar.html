@@ -1,0 +1,58 @@
+<!-- Modal para agregar familiar -->
+<div id="modalAgregarFamiliar" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Agregar Familiar</h3>
+      <button type="button" class="close-modal" onclick="cerrarModalAgregarFamiliar()">&times;</button>
+    </div>
+    
+    <form id="formAgregarFamiliar">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="apellido">Apellido *</label>
+            <input type="text" id="apellido" name="apellido" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="nombre">Nombre *</label>
+            <input type="text" id="nombre" name="nombre" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="dni">DNI *</label>
+            <input type="text" id="dni" name="dni" required maxlength="20">
+          </div>
+          
+          <div class="form-group">
+            <label for="fecha_nacimiento">Fecha de nacimiento *</label>
+            <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" required>
+          </div>
+          
+          <div class="form-group full-width">
+            <label for="parentesco">Parentesco *</label>
+            <select id="parentesco" name="parentesco" required>
+              <option value="">Seleccionar parentesco</option>
+              <option value="esposo/a">Esposo/a</option>
+              <option value="hijo/a">Hijo/a</option>
+              <option value="padre/madre">Padre/Madre</option>
+              <option value="hermano/a">Hermano/a</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="erroresAgregarFamiliar" class="alert alert-error" style="display: none;"></div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="cerrarModalAgregarFamiliar()">Cancelar</button>
+        <button type="submit" class="btn-primary">
+          <span class="loading-spinner" style="display: none;">⏳</span>
+          Agregar Familiar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

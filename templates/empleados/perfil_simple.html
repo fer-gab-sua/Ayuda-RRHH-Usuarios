@@ -1,0 +1,201 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Mi Perfil</h1>
+
+<div style="display: flex; align-items: center; gap: 24px; margin-bottom: 18px;">
+  <div style="position: relative;">
+    <img id="profile-img" src="{% static 'img/empleado.png' %}" alt="Foto de perfil" style="width:120px;height:120px;border-radius:50%;border:3px solid #2563eb;object-fit:cover;">
+    <label for="profile-upload" style="position:absolute;bottom:8px;right:8px;background:#2563eb;color:#fff;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:13px;">
+      Cambiar
+      <input id="profile-upload" type="file" accept="image/*" style="display:none;">
+    </label>
+  </div>
+  <div>
+    <strong>{{ user.get_full_name|default:user.username }}</strong><br>
+    <span style="color:#6b7280;font-size:15px;">{{ empleado.puesto|default:'Empleado' }}</span>
+  </div>
+</div>
+
+<section class="section">
+  <div class="section-title">Datos personales</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Nombre</label>
+      <input type="text" value="{{ user.first_name|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Apellido</label>
+      <input type="text" value="{{ user.last_name|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Legajo</label>
+      <input type="text" value="{{ empleado.legajo }}" readonly />
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" value="{{ user.email|default:'No especificado' }}" />
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Información laboral</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Puesto</label>
+      <input type="text" value="{{ empleado.puesto|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Departamento</label>
+      <input type="text" value="{{ empleado.departamento|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Supervisor</label>
+      <input type="text" value="{{ empleado.supervisor|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Tipo de contrato</label>
+      <select>
+        <option value="tiempo_completo" {% if empleado.tipo_contrato == 'tiempo_completo' %}selected{% endif %}>Tiempo completo</option>
+        <option value="tiempo_parcial" {% if empleado.tipo_contrato == 'tiempo_parcial' %}selected{% endif %}>Tiempo parcial</option>
+        <option value="freelance" {% if empleado.tipo_contrato == 'freelance' %}selected{% endif %}>Freelance</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Salario</label>
+      <input type="text" value="{% if empleado.salario %}${{ empleado.salario|floatformat:0 }}{% else %}No especificado{% endif %}" />
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Datos de emergencia</div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Contacto de emergencia</label>
+      <input type="text" value="{{ empleado.contacto_emergencia|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Teléfono de emergencia</label>
+      <input type="tel" value="{{ empleado.telefono_emergencia|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Relación</label>
+      <input type="text" value="{{ empleado.relacion_emergencia|default:'No especificado' }}" />
+    </div>
+    <div class="form-group">
+      <label>Obra social</label>
+      <input type="text" value="{{ empleado.obra_social|default:'No especificado' }}" />
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Grupo familiar</div>
+  <table class="family-table">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Parentesco</th>
+        <th>Fecha de nacimiento</th>
+        <th>DNI</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for familiar in familiares %}
+      <tr>
+        <td>{{ familiar.nombre }}</td>
+        <td>{{ familiar.get_parentesco_display }}</td>
+        <td>{{ familiar.fecha_nacimiento|date:'d/m/Y' }}</td>
+        <td>{{ familiar.dni }}</td>
+        <td>
+          <button class="btn-ver">Editar</button>
+          <button class="btn-eliminar">Eliminar</button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" style="text-align:center;color:#6b7280;padding:20px;">
+          No hay familiares registrados
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div style="margin-top: 12px;">
+    <button class="btn-primary">+ Agregar familiar</button>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Firma digital</div>
+  <div class="signature-section">
+    <div class="signature-card">
+      <div class="signature-preview">
+        {% if empleado.firma_imagen %}
+          <img src="{{ empleado.firma_imagen.url }}" alt="Firma digital" style="max-width: 200px; max-height: 100px;">
+        {% else %}
+          <p style="color:#6b7280;text-align:center;margin:40px 0;">
+            No tienes una firma registrada
+          </p>
+        {% endif %}
+      </div>
+      <div class="signature-actions">
+        {% if empleado.firma_imagen %}
+          <a href="{% url 'empleados:editar_firma' %}" class="btn-primary" style="display:inline-block;padding:10px 20px;background:linear-gradient(135deg, #2563eb, #dc2626);color:white;border:none;border-radius:8px;text-decoration:none;cursor:pointer;">
+            ✏️ Editar firma
+          </a>
+        {% else %}
+          <a href="{% url 'empleados:crear_firma' %}" class="btn-primary" style="display:inline-block;padding:10px 20px;background:linear-gradient(135deg, #2563eb, #dc2626);color:white;border:none;border-radius:8px;text-decoration:none;cursor:pointer;">
+            ✏️ Crear firma
+          </a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="signature-info">
+      <h3>¿Para qué sirve la firma digital?</h3>
+      <ul>
+        <li>📝 Firmar recibos de sueldo</li>
+        <li>📄 Validar documentos importantes</li>
+        <li>✅ Confirmar solicitudes</li>
+        <li>🔒 Autenticar acciones</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Actividad reciente</div>
+  <div class="activity-list">
+    {% for actividad in actividades %}
+      <div style="padding: 12px; border-left: 3px solid #2563eb; margin-bottom: 8px; background: #f8fafc;">
+        <strong>{{ actividad.fecha|date:'d/m/Y H:i' }}</strong><br>
+        <span style="color:#6b7280;">{{ actividad.descripcion }}</span>
+      </div>
+    {% empty %}
+      <div style="color:#6b7280;text-align:center;padding:20px;">
+        No hay actividad reciente para mostrar.
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<script>
+// Manejo del cambio de imagen de perfil
+document.getElementById('profile-upload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('profile-img').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+</script>
+{% endblock %}

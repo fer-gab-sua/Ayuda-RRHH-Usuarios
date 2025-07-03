@@ -1,0 +1,29 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Solicitudes - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Solicitudes</h1>
+
+<div class="action-bar">
+  <a href="{% url 'solicitudes:vacaciones' %}" class="btn-primary">
+    ☀️ Solicitar vacaciones
+  </a>
+  <a href="{% url 'solicitudes:dias_estudio' %}" class="btn-outline">
+    📚 Días de estudio
+  </a>
+</div>
+
+<div class="section">
+  <div class="section-title">Mis solicitudes</div>
+  
+  <div class="requests-list">
+    <div class="empty-state">
+      <div class="empty-icon">📝</div>
+      <h3>No tienes solicitudes realizadas</h3>
+      <p>Cuando realices solicitudes aparecerán aquí</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

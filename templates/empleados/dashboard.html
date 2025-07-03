@@ -1,0 +1,27 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Portal RH - {{ user.get_full_name|default:user.username }}{% endblock %}
+
+{% block content %}
+<div class="welcome">Hola {{ user.get_full_name|default:user.username }} 👋</div>
+
+<section class="cards">
+  <div class="card" onclick="location.href='{% url 'solicitudes:recibos' %}'">
+    <span>📄</span>
+    <h3>Ver Recibos</h3>
+  </div>
+  <div class="card" onclick="location.href='{% url 'documentos:lista' %}'">
+    <span>📁</span>
+    <h3>Documentación</h3>
+  </div>
+  <div class="card" onclick="location.href='{% url 'solicitudes:lista' %}'">
+    <span>📝</span>
+    <h3>Solicitudes</h3>
+  </div>
+  <div class="card" onclick="location.href='{% url 'documentos:lista' %}'">
+    <span>📤</span>
+    <h3>Subir Certificados</h3>
+  </div>
+</section>
+{% endblock %}
