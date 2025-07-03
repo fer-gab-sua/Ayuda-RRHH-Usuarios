@@ -27,6 +27,7 @@ urlpatterns = [
     path('solicitudes/', include('apps.solicitudes.urls')),
     path('notificaciones/', include('apps.notificaciones.urls')),
     path('rrhh/', include('apps.rrhh.urls')),
+    path('recibos/', include('apps.recibos.urls')),
     path('', lambda request: redirect('empleados:login')),  # Redirigir la raíz al login
 ]
 

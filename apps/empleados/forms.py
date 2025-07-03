@@ -76,16 +76,41 @@ class DomicilioForm(forms.ModelForm):
 
 class ObraSocialForm(forms.ModelForm):
     """Formulario para solicitud de cambio de obra social"""
+    archivo_adjunto = forms.FileField(
+        required=False,
+        widget=forms.FileInput(attrs={
+            'class': 'form-control',
+            'accept': '.pdf',
+            'title': 'Solo se permiten archivos PDF'
+        }),
+        help_text='Adjunta un PDF si tienes documentación adicional (opcional)'
+    )
+    
     class Meta:
         model = ObraSocialEmpleado
-        fields = ['nombre', 'numero_afiliado', 'plan', 'fecha_alta', 'observaciones']
+        fields = ['nombre', 'observaciones']
         widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'numero_afiliado': forms.TextInput(attrs={'class': 'form-control'}),
-            'plan': forms.TextInput(attrs={'class': 'form-control'}),
-            'fecha_alta': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'required': True}),
             'observaciones': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Hacer nombre obligatorio
+        self.fields['nombre'].required = True
+        # Hacer otros campos opcionales
+        self.fields['observaciones'].required = False
+    
+    def clean_archivo_adjunto(self):
+        archivo = self.cleaned_data.get('archivo_adjunto')
+        if archivo:
+            # Validar que sea un PDF
+            if not archivo.name.lower().endswith('.pdf'):
+                raise forms.ValidationError('Solo se permiten archivos PDF.')
+            # Validar tamaño (máximo 10MB)
+            if archivo.size > 10 * 1024 * 1024:
+                raise forms.ValidationError('El archivo no puede superar los 10MB.')
+        return archivo
 
 class DeclaracionJuradaForm(forms.Form):
     """Formulario para la declaración jurada"""

@@ -117,13 +117,11 @@ class DomicilioEmpleado(models.Model):
 class ObraSocialEmpleado(models.Model):
     empleado = models.OneToOneField(Empleado, on_delete=models.CASCADE, related_name='obra_social')
     nombre = models.CharField(max_length=100, blank=True)
-    numero_afiliado = models.CharField(max_length=50, blank=True)
-    plan = models.CharField(max_length=100, blank=True)
     fecha_alta = models.DateField(null=True, blank=True)
     observaciones = models.TextField(blank=True)
     
     def __str__(self):
-        return f"{self.nombre} - {self.numero_afiliado}" if self.nombre else "Obra social sin datos"
+        return f"{self.nombre}" if self.nombre else "Obra social sin datos"
     
     class Meta:
         verbose_name = "Obra Social"
@@ -151,6 +149,8 @@ class SolicitudCambio(models.Model):
     datos_antiguos = models.JSONField()  # Guardar los datos actuales antes del cambio
     datos_nuevos = models.JSONField()    # Los nuevos datos solicitados
     declaracion_jurada = models.TextField()  # Texto de la declaración jurada
+    pdf_declaracion = models.FileField(upload_to='declaraciones_juradas/', blank=True, null=True)  # PDF firmado
+    archivo_adjunto = models.FileField(upload_to='adjuntos_solicitudes/', blank=True, null=True)  # PDF adjunto opcional
     observaciones_rrhh = models.TextField(blank=True)  # Comentarios de RRHH
     revisado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='solicitudes_revisadas')
     

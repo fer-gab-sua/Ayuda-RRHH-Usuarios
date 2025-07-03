@@ -1,0 +1,433 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mis Recibos de Sueldo - Portal RH{% endblock %}
+
+{% block extra_css %}
+<style>
+.recibos-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.resumen-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.resumen-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    border-left: 4px solid #2563eb;
+}
+
+.resumen-card.pendientes {
+    border-left-color: #f59e0b;
+}
+
+.resumen-card.firmados {
+    border-left-color: #10b981;
+}
+
+.resumen-card.vencidos {
+    border-left-color: #ef4444;
+}
+
+.resumen-card h3 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0;
+    color: #1f2937;
+}
+
+.resumen-card p {
+    color: #6b7280;
+    margin: 5px 0 0 0;
+    font-size: 0.9rem;
+}
+
+.recibos-section {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.section-header {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.recibos-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.recibos-table th,
+.recibos-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.recibos-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+}
+
+.recibos-table tr:hover {
+    background: #f9fafb;
+}
+
+.estado-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.estado-pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.estado-firmado {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.estado-disconforme {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.estado-vencido {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+    color: white;
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    color: white;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #d97706;
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.empty-state .icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    margin-bottom: 10px;
+    color: #374151;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.pagination a, .pagination span {
+    padding: 8px 16px;
+    margin: 0 4px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+.pagination a:hover {
+    background: #f3f4f6;
+}
+
+.pagination .current {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+.alert-info {
+    background: #e0f2fe;
+    border-color: #0891b2;
+    color: #0e7490;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+@media (max-width: 768px) {
+    .recibos-table {
+        font-size: 0.875rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .resumen-cards {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="recibos-container">
+    <h1>Mis Recibos de Sueldo</h1>
+    
+    <!-- Resumen de estadísticas -->
+    <div class="resumen-cards">
+        <div class="resumen-card pendientes">
+            <h3>{{ pendientes }}</h3>
+            <p>Pendientes de Firma</p>
+        </div>
+        <div class="resumen-card firmados">
+            <h3>{{ firmados }}</h3>
+            <p>Firmados</p>
+        </div>
+        <div class="resumen-card vencidos">
+            <h3>{{ vencidos }}</h3>
+            <p>Vencidos</p>
+        </div>
+        <div class="resumen-card">
+            <h3>{{ total_recibos }}</h3>
+            <p>Total de Recibos</p>
+        </div>
+    </div>
+    
+    <!-- Sección principal -->
+    <div class="recibos-section">
+        <div class="section-header">
+            <h2 class="section-title">Recibos Disponibles</h2>
+            {% if puede_firmar %}
+                <div class="alert alert-info">
+                    <strong>📋 Recibo pendiente de firma</strong><br>
+                    Tienes un recibo pendiente de firmar.
+                </div>
+            {% endif %}
+        </div>
+        
+        {% if recibos %}
+            <table class="recibos-table">
+                <thead>
+                    <tr>
+                        <th>Período</th>
+                        <th>Año</th>
+                        <th>Fecha Emisión</th>
+                        <th>Estado</th>
+                        <th>Fecha Firma</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recibo in recibos %}
+                        <tr>
+                            <td>{{ recibo.get_periodo_display }}</td>
+                            <td>{{ recibo.anio }}</td>
+                            <td>{{ recibo.fecha_emision|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if recibo.estado == 'pendiente' %}
+                                    <span class="estado-badge estado-pendiente">Pendiente</span>
+                                {% elif recibo.estado == 'firmado' %}
+                                    <span class="estado-badge estado-firmado">Firmado</span>
+                                {% elif recibo.estado == 'firmado_disconforme' %}
+                                    <span class="estado-badge estado-disconforme">Firmado en Disconformidad</span>
+                                {% elif recibo.estado == 'vencido' %}
+                                    <span class="estado-badge estado-vencido">Vencido</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if recibo.fecha_firma %}
+                                    {{ recibo.fecha_firma|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Sin firmar</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'recibos:ver_recibo' recibo.id %}" 
+                                       class="btn btn-secondary" 
+                                       target="_blank">
+                                        📄 Ver PDF
+                                    </a>
+                                    
+                                    {% if recibo.puede_firmar %}
+                                        <a href="{% url 'recibos:firmar_recibo' recibo.id %}" 
+                                           class="btn btn-primary">
+                                            ✍️ Firmar
+                                        </a>
+                                    {% elif recibo.estado == 'firmado' and recibo.archivo_firmado %}
+                                        <a href="{{ recibo.archivo_firmado.url }}" 
+                                           class="btn btn-success" 
+                                           target="_blank">
+                                            📋 Ver Firmado
+                                        </a>
+                                    {% elif recibo.estado == 'firmado_disconforme' and recibo.archivo_firmado %}
+                                        <a href="{{ recibo.archivo_firmado.url }}" 
+                                           class="btn btn-warning" 
+                                           target="_blank">
+                                            ⚠️ Ver Firmado
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- Paginación -->
+            {% if is_paginated %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; Primera</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    {% endif %}
+                    
+                    <span class="current">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <div class="icon">📄</div>
+                <h3>No tienes recibos disponibles</h3>
+                <p>Los recibos de sueldo aparecerán aquí cuando sean emitidos por RRHH.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Función para mostrar mensajes
+function mostrarMensaje(mensaje, tipo = 'info') {
+    const alertClass = tipo === 'success' ? 'alert-success' : 
+                      tipo === 'error' ? 'alert-danger' : 'alert-info';
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass}`;
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '1000';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.innerHTML = mensaje;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Mostrar mensajes de Django
+{% if messages %}
+    {% for message in messages %}
+        mostrarMensaje('{{ message }}', '{{ message.tags }}');
+    {% endfor %}
+{% endif %}
+</script>
+{% endblock %}

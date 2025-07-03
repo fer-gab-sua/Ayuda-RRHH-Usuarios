@@ -3,16 +3,18 @@ from django.contrib.auth.views import LoginView as AuthLoginView, LogoutView as 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.urls import reverse
 import json
 import base64
 from django.core.files.base import ContentFile
 from django.utils import timezone
 from .models import Empleado, DomicilioEmpleado, ObraSocialEmpleado, SolicitudCambio, FamiliarEmpleado, ActividadEmpleado
 from .forms import PerfilBasicoForm, DatosEmergenciaForm, FamiliarForm, DomicilioForm, ObraSocialForm, DeclaracionJuradaForm, FirmaDigitalForm, SubirFotoForm
+from .utils import generar_pdf_declaracion_domicilio, generar_pdf_declaracion_obra_social
 
 class LoginView(AuthLoginView):
     template_name = 'empleados/login.html'
@@ -65,8 +67,6 @@ class PerfilView(LoginRequiredMixin, TemplateView):
             empleado=empleado,
             defaults={
                 'nombre': 'OSDE',
-                'numero_afiliado': '123456789/01',
-                'plan': 'Plan 210',
             }
         )
         
@@ -76,11 +76,15 @@ class PerfilView(LoginRequiredMixin, TemplateView):
         # Obtener actividades recientes
         actividades = ActividadEmpleado.objects.filter(empleado=empleado)[:5]
         
-        # Verificar solicitudes pendientes
+        # Verificar solicitudes pendientes por tipo
         solicitudes_pendientes = SolicitudCambio.objects.filter(
             empleado=empleado,
             estado__in=['pendiente', 'en_revision']
-        ).exists()
+        )
+        
+        # Separar por tipo
+        solicitud_domicilio_pendiente = solicitudes_pendientes.filter(tipo='domicilio').first()
+        solicitud_obra_social_pendiente = solicitudes_pendientes.filter(tipo='obra_social').first()
         
         context.update({
             'empleado': empleado,
@@ -89,6 +93,8 @@ class PerfilView(LoginRequiredMixin, TemplateView):
             'familiares': familiares,
             'actividades': actividades,
             'solicitudes_pendientes': solicitudes_pendientes,
+            'solicitud_domicilio_pendiente': solicitud_domicilio_pendiente,
+            'solicitud_obra_social_pendiente': solicitud_obra_social_pendiente,
             'tiene_firma': bool(empleado.firma_imagen),
         })
         return context
@@ -274,7 +280,7 @@ def eliminar_familiar(request):
 
 @login_required
 def solicitar_cambio_domicilio(request):
-    """Solicitar cambio de domicilio con declaración jurada"""
+    """Procesar solicitud de cambio de domicilio ya firmada"""
     if request.method == 'POST':
         try:
             print(f"Solicitud de cambio de domicilio recibida de usuario: {request.user}")
@@ -303,12 +309,21 @@ def solicitar_cambio_domicilio(request):
             print(f"Empleado tiene firma: {bool(empleado.firma_imagen)}")
             
             if empleado.firma_pin != pin_ingresado:
+                print(f"PIN incorrecto para empleado {empleado.legajo}")
                 return JsonResponse({
                     'success': False,
                     'message': 'PIN incorrecto. Verifica tu PIN de firma digital.'
                 })
             
-            # Verificar que no tenga solicitudes pendientes
+            # Recuperar datos del preview de la sesión
+            pdf_preview_data = request.session.get('pdf_preview_data')
+            if not pdf_preview_data:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No se encontraron datos del formulario. Por favor, completa el formulario nuevamente.'
+                })
+            
+            # Verificar que no tenga solicitudes pendientes de domicilio
             solicitud_pendiente = SolicitudCambio.objects.filter(
                 empleado=empleado,
                 tipo='domicilio',
@@ -321,52 +336,48 @@ def solicitar_cambio_domicilio(request):
                     'message': 'Ya tienes una solicitud de cambio de domicilio pendiente'
                 })
             
-            # Procesar formularios
-            domicilio_form = DomicilioForm(request.POST)
-            ddjj_form = DeclaracionJuradaForm(request.POST)
+            # Crear solicitud con los datos del preview
+            solicitud = SolicitudCambio.objects.create(
+                empleado=empleado,
+                tipo='domicilio',
+                datos_antiguos=pdf_preview_data['datos_antiguos'],
+                datos_nuevos=pdf_preview_data['datos_nuevos'],
+                declaracion_jurada="Declaro bajo juramento que los datos proporcionados son veraces y solicito el cambio de domicilio. Firmado digitalmente con PIN autenticado."
+            )
             
-            if domicilio_form.is_valid() and ddjj_form.is_valid():
-                # Obtener datos actuales
-                domicilio_actual = getattr(empleado, 'domicilio', None)
-                datos_antiguos = {}
-                if domicilio_actual:
-                    datos_antiguos = {
-                        'calle': domicilio_actual.calle,
-                        'numero': domicilio_actual.numero,
-                        'piso': domicilio_actual.piso,
-                        'depto': domicilio_actual.depto,
-                        'barrio': domicilio_actual.barrio,
-                        'localidad': domicilio_actual.localidad,
-                        'provincia': domicilio_actual.provincia,
-                        'codigo_postal': domicilio_actual.codigo_postal,
-                        'entre_calles': domicilio_actual.entre_calles,
-                        'observaciones': domicilio_actual.observaciones,
-                    }
+            # Generar PDF firmado final CON FIRMA
+            try:
+                pdf_content = generar_pdf_declaracion_domicilio(solicitud, empleado, incluir_firma=True)
+                pdf_filename = f"declaracion_domicilio_{empleado.legajo}_{solicitud.id}.pdf"
                 
-                # Crear solicitud
-                solicitud = SolicitudCambio.objects.create(
-                    empleado=empleado,
-                    tipo='domicilio',
-                    datos_antiguos=datos_antiguos,
-                    datos_nuevos=domicilio_form.cleaned_data,
-                    declaracion_jurada="Declaro bajo juramento que los datos proporcionados son veraces y solicito el cambio de domicilio. Firmado digitalmente con PIN autenticado."
+                # Guardar el PDF en el campo del modelo
+                solicitud.pdf_declaracion.save(
+                    pdf_filename,
+                    ContentFile(pdf_content),
+                    save=True
                 )
                 
-                # Registrar actividad
-                ActividadEmpleado.objects.create(
-                    empleado=empleado,
-                    descripcion="Solicitó cambio de domicilio mediante declaración jurada autenticada con firma digital"
-                )
+                print(f"PDF generado exitosamente: {pdf_filename}")
                 
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Solicitud de cambio de domicilio enviada correctamente. Será revisada por RRHH.'
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'errors': {**domicilio_form.errors, **ddjj_form.errors}
-                })
+            except Exception as e:
+                print(f"Error al generar PDF: {str(e)}")
+                # Aunque falle el PDF, la solicitud se mantiene
+            
+            # Limpiar datos de sesión
+            if 'pdf_preview_data' in request.session:
+                del request.session['pdf_preview_data']
+            
+            # Registrar actividad
+            ActividadEmpleado.objects.create(
+                empleado=empleado,
+                descripcion="Solicitó cambio de domicilio mediante declaración jurada autenticada con firma digital"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Solicitud de cambio de domicilio enviada correctamente. Será revisada por RRHH.',
+                'solicitud_id': solicitud.id
+            })
                 
         except Exception as e:
             return JsonResponse({
@@ -378,7 +389,7 @@ def solicitar_cambio_domicilio(request):
 
 @login_required
 def solicitar_cambio_obra_social(request):
-    """Solicitar cambio de obra social con declaración jurada"""
+    """Procesar solicitud de cambio de obra social ya firmada"""
     if request.method == 'POST':
         try:
             empleado = get_object_or_404(Empleado, user=request.user)
@@ -404,6 +415,14 @@ def solicitar_cambio_obra_social(request):
                     'message': 'PIN incorrecto. Verifica tu PIN de firma digital.'
                 })
             
+            # Recuperar datos del preview de la sesión
+            pdf_preview_data = request.session.get('pdf_preview_data_obra_social')
+            if not pdf_preview_data:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No se encontraron datos del formulario. Por favor, completa el formulario nuevamente.'
+                })
+            
             # Verificar que no tenga solicitudes pendientes
             solicitud_pendiente = SolicitudCambio.objects.filter(
                 empleado=empleado,
@@ -417,47 +436,58 @@ def solicitar_cambio_obra_social(request):
                     'message': 'Ya tienes una solicitud de cambio de obra social pendiente'
                 })
             
-            # Procesar formularios
-            obra_social_form = ObraSocialForm(request.POST)
-            ddjj_form = DeclaracionJuradaForm(request.POST)
+            # Crear solicitud con los datos del preview
+            solicitud = SolicitudCambio.objects.create(
+                empleado=empleado,
+                tipo='obra_social',
+                datos_antiguos=pdf_preview_data['datos_antiguos'],
+                datos_nuevos=pdf_preview_data['datos_nuevos'],
+                declaracion_jurada="Declaro bajo juramento que los datos proporcionados son veraces y solicito el cambio de obra social. Firmado digitalmente con PIN autenticado."
+            )
             
-            if obra_social_form.is_valid() and ddjj_form.is_valid():
-                # Obtener datos actuales
-                obra_social_actual = getattr(empleado, 'obra_social', None)
-                datos_antiguos = {}
-                if obra_social_actual:
-                    datos_antiguos = {
-                        'nombre': obra_social_actual.nombre,
-                        'numero_afiliado': obra_social_actual.numero_afiliado,
-                        'plan': obra_social_actual.plan,
-                        'fecha_alta': obra_social_actual.fecha_alta.isoformat() if obra_social_actual.fecha_alta else None,
-                        'observaciones': obra_social_actual.observaciones,
-                    }
+            # Guardar archivo adjunto si existe
+            if pdf_preview_data.get('archivo_adjunto'):
+                import base64
+                from django.core.files.base import ContentFile
                 
-                # Crear solicitud
-                solicitud = SolicitudCambio.objects.create(
-                    empleado=empleado,
-                    tipo='obra_social',
-                    datos_antiguos=datos_antiguos,
-                    datos_nuevos=obra_social_form.cleaned_data,
-                    declaracion_jurada="Declaro bajo juramento que los datos proporcionados son veraces y solicito el cambio de obra social. Firmado digitalmente con PIN autenticado."
+                archivo_info = pdf_preview_data['archivo_adjunto']
+                archivo_content = base64.b64decode(archivo_info['content'])
+                archivo_file = ContentFile(archivo_content, name=archivo_info['name'])
+                solicitud.archivo_adjunto.save(archivo_info['name'], archivo_file, save=True)
+            
+            # Generar PDF firmado final CON FIRMA
+            try:
+                pdf_content = generar_pdf_declaracion_obra_social(solicitud, empleado, incluir_firma=True)
+                pdf_filename = f"declaracion_obra_social_{empleado.legajo}_{solicitud.id}.pdf"
+                
+                # Guardar el PDF en el campo del modelo
+                solicitud.pdf_declaracion.save(
+                    pdf_filename,
+                    ContentFile(pdf_content),
+                    save=True
                 )
                 
-                # Registrar actividad
-                ActividadEmpleado.objects.create(
-                    empleado=empleado,
-                    descripcion="Solicitó cambio de obra social mediante declaración jurada autenticada con firma digital"
-                )
+                print(f"PDF generado exitosamente: {pdf_filename}")
                 
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Solicitud de cambio de obra social enviada correctamente. Será revisada por RRHH.'
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'errors': {**obra_social_form.errors, **ddjj_form.errors}
-                })
+            except Exception as e:
+                print(f"Error al generar PDF: {str(e)}")
+                # Aunque falle el PDF, la solicitud se mantiene
+            
+            # Limpiar datos de sesión
+            if 'pdf_preview_data_obra_social' in request.session:
+                del request.session['pdf_preview_data_obra_social']
+            
+            # Registrar actividad
+            ActividadEmpleado.objects.create(
+                empleado=empleado,
+                descripcion="Solicitó cambio de obra social mediante declaración jurada autenticada con firma digital"
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Solicitud de cambio de obra social enviada correctamente. Será revisada por RRHH.',
+                'solicitud_id': solicitud.id
+            })
                 
         except Exception as e:
             return JsonResponse({
@@ -519,3 +549,230 @@ def guardar_firma_digital(request):
             'success': False,
             'message': f'Error al guardar firma: {str(e)}'
         })
+
+@login_required
+def ver_pdf_declaracion(request, solicitud_id):
+    """Ver PDF de declaración jurada"""
+    try:
+        solicitud = get_object_or_404(SolicitudCambio, id=solicitud_id, empleado__user=request.user)
+        
+        if not solicitud.pdf_declaracion:
+            return JsonResponse({
+                'success': False,
+                'message': 'No se encontró el PDF de la declaración jurada'
+            })
+        
+        # Abrir el archivo PDF
+        response = HttpResponse(solicitud.pdf_declaracion.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="declaracion_{solicitud.tipo}_{solicitud.id}.pdf"'
+        
+        return response
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al acceder al PDF: {str(e)}'
+        })
+
+@login_required
+def descargar_pdf_declaracion(request, solicitud_id):
+    """Descargar PDF de declaración jurada"""
+    try:
+        solicitud = get_object_or_404(SolicitudCambio, id=solicitud_id, empleado__user=request.user)
+        
+        if not solicitud.pdf_declaracion:
+            return JsonResponse({
+                'success': False,
+                'message': 'No se encontró el PDF de la declaración jurada'
+            })
+        
+        # Descargar el archivo PDF
+        response = HttpResponse(solicitud.pdf_declaracion.read(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="declaracion_{solicitud.tipo}_{solicitud.id}.pdf"'
+        
+        return response
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error al descargar el PDF: {str(e)}'
+        })
+
+@login_required
+def generar_pdf_preview_domicilio(request):
+    """Generar PDF preview para mostrar antes de firmar"""
+    if request.method == 'POST':
+        try:
+            empleado = get_object_or_404(Empleado, user=request.user)
+            
+            # Validar formulario
+            domicilio_form = DomicilioForm(request.POST)
+            if not domicilio_form.is_valid():
+                return JsonResponse({
+                    'success': False,
+                    'errors': domicilio_form.errors
+                })
+            
+            # Crear solicitud temporal (sin guardar aún)
+            datos_antiguos = {}
+            domicilio_actual = getattr(empleado, 'domicilio', None)
+            if domicilio_actual:
+                datos_antiguos = {
+                    'calle': domicilio_actual.calle,
+                    'numero': domicilio_actual.numero,
+                    'piso': domicilio_actual.piso,
+                    'depto': domicilio_actual.depto,
+                    'barrio': domicilio_actual.barrio,
+                    'localidad': domicilio_actual.localidad,
+                    'provincia': domicilio_actual.provincia,
+                    'codigo_postal': domicilio_actual.codigo_postal,
+                    'entre_calles': domicilio_actual.entre_calles,
+                    'observaciones': domicilio_actual.observaciones,
+                }
+            
+            # Crear objeto temporal para generar PDF
+            from types import SimpleNamespace
+            solicitud_temp = SimpleNamespace(
+                id='PREVIEW',
+                empleado=empleado,
+                fecha_solicitud=timezone.now(),
+                datos_antiguos=datos_antiguos,
+                datos_nuevos=domicilio_form.cleaned_data,
+                tipo='domicilio'
+            )
+            
+            # Generar PDF SIN FIRMA (solo preview)
+            pdf_content = generar_pdf_declaracion_domicilio(solicitud_temp, empleado, incluir_firma=False)
+            
+            # Convertir datos nuevos a formato serializable
+            datos_nuevos_serializable = {}
+            for key, value in domicilio_form.cleaned_data.items():
+                if hasattr(value, 'isoformat'):  # Es una fecha
+                    datos_nuevos_serializable[key] = value.isoformat() if value else None
+                else:
+                    datos_nuevos_serializable[key] = value
+            
+            # Guardar temporalmente en sesión
+            request.session['pdf_preview_data'] = {
+                'datos_antiguos': datos_antiguos,
+                'datos_nuevos': datos_nuevos_serializable,
+                'timestamp': timezone.now().isoformat()
+            }
+            
+            # Retornar PDF como respuesta
+            response = HttpResponse(pdf_content, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename="preview_cambio_domicilio.pdf"'
+            
+            return response
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al generar PDF: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})
+
+@login_required
+def generar_pdf_preview_obra_social(request):
+    """Generar PDF preview para cambio de obra social antes de firmar"""
+    if request.method == 'POST':
+        try:
+            # Limpiar datos de sesión previos para evitar conflictos
+            if 'pdf_preview_data_obra_social' in request.session:
+                del request.session['pdf_preview_data_obra_social']
+            
+            empleado = get_object_or_404(Empleado, user=request.user)
+            
+            # Validar formulario
+            obra_social_form = ObraSocialForm(request.POST, request.FILES)
+            if not obra_social_form.is_valid():
+                return JsonResponse({
+                    'success': False,
+                    'errors': obra_social_form.errors
+                })
+            
+            # Establecer fecha de alta automáticamente como hoy
+            datos_formulario = obra_social_form.cleaned_data.copy()
+            datos_formulario['fecha_alta'] = timezone.now().date()
+            
+            # Remover archivo_adjunto de los datos del formulario para evitar problemas de serialización
+            if 'archivo_adjunto' in datos_formulario:
+                del datos_formulario['archivo_adjunto']
+            
+            # Crear solicitud temporal (sin guardar aún)
+            datos_antiguos = {}
+            obra_social_actual = getattr(empleado, 'obra_social', None)
+            if obra_social_actual:
+                datos_antiguos = {
+                    'nombre': obra_social_actual.nombre,
+                    'fecha_alta': obra_social_actual.fecha_alta.isoformat() if obra_social_actual.fecha_alta else None,
+                    'observaciones': obra_social_actual.observaciones,
+                }
+            
+            # Manejar archivo adjunto
+            archivo_adjunto_session = None
+            archivo_adjunto_pdf = None
+            if 'archivo_adjunto' in request.FILES:
+                archivo_adjunto = request.FILES['archivo_adjunto']
+                
+                # Para el PDF: crear un objeto simple con solo la información necesaria
+                from types import SimpleNamespace
+                archivo_adjunto_pdf = SimpleNamespace(
+                    name=archivo_adjunto.name,
+                    size=archivo_adjunto.size
+                )
+                
+                # Para la sesión: guardar en base64
+                import base64
+                archivo_content = archivo_adjunto.read()
+                archivo_adjunto_session = {
+                    'name': archivo_adjunto.name,
+                    'content': base64.b64encode(archivo_content).decode('utf-8'),
+                    'size': archivo_adjunto.size
+                }
+            
+            # Crear objeto temporal para generar PDF
+            from types import SimpleNamespace
+            solicitud_temp = SimpleNamespace(
+                id='PREVIEW',
+                empleado=empleado,
+                fecha_solicitud=timezone.now(),
+                datos_antiguos=datos_antiguos,
+                datos_nuevos=datos_formulario,
+                tipo='obra_social',
+                archivo_adjunto=archivo_adjunto_pdf
+            )
+            
+            # Generar PDF SIN FIRMA (solo preview)
+            pdf_content = generar_pdf_declaracion_obra_social(solicitud_temp, empleado, incluir_firma=False)
+            
+            # Convertir datos nuevos a formato serializable
+            datos_nuevos_serializable = {}
+            for key, value in datos_formulario.items():
+                if hasattr(value, 'isoformat'):  # Es una fecha
+                    datos_nuevos_serializable[key] = value.isoformat() if value else None
+                else:
+                    datos_nuevos_serializable[key] = value
+            
+            # Guardar temporalmente en sesión
+            request.session['pdf_preview_data_obra_social'] = {
+                'datos_antiguos': datos_antiguos,
+                'datos_nuevos': datos_nuevos_serializable,
+                'archivo_adjunto': archivo_adjunto_session,
+                'timestamp': timezone.now().isoformat()
+            }
+            
+            # Retornar PDF como respuesta (igual que domicilio)
+            response = HttpResponse(pdf_content, content_type='application/pdf')
+            response['Content-Disposition'] = 'inline; filename="preview_cambio_obra_social.pdf"'
+            
+            return response
+            
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error al generar PDF: {str(e)}'
+            })
+    
+    return JsonResponse({'success': False, 'message': 'Método no permitido'})

@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'apps.solicitudes',
     'apps.notificaciones',
     'apps.rrhh',
+    'apps.recibos',
 ]
 
 MIDDLEWARE = [

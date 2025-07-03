@@ -127,24 +127,15 @@
           </div>
           
           <hr>
-          <h6>Declaración Jurada</h6>
-          <div class="declaracion-jurada">
-            <p>Declaro bajo juramento que:</p>
+          <div class="alert alert-warning">
+            <h6><i class="fas fa-exclamation-triangle"></i> Declaración Jurada</h6>
+            <p>Al continuar, declaro bajo juramento que:</p>
             <ul>
               <li>Los datos proporcionados en esta solicitud son veraces y completos.</li>
               <li>Comprendo que la falsedad en esta declaración puede acarrear sanciones disciplinarias.</li>
               <li>Autorizo a la empresa a verificar la información proporcionada.</li>
               <li>Me comprometo a presentar la documentación respaldatoria que me sea requerida.</li>
             </ul>
-          </div>
-          
-          <div class="mb-3">
-            <label class="form-label">Autenticación con PIN</label>
-            <div class="pin-authentication">
-              <p class="text-muted mb-2">Ingresa el PIN de tu firma digital para autenticar esta declaración jurada:</p>
-              <input type="password" class="form-control" id="pinDomicilio" name="pin_firma" placeholder="PIN de 4-6 dígitos" maxlength="6" required>
-              <div class="form-text">Usaremos tu firma digital registrada para validar este documento.</div>
-            </div>
           </div>
           
           <div class="form-check">
@@ -156,7 +147,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+          <button type="submit" class="btn btn-primary">Generar PDF para Revisar</button>
         </div>
       </form>
     </div>
@@ -171,7 +162,7 @@
         <h5 class="modal-title" id="modalCambioObraSocialLabel">Solicitud de Cambio de Obra Social</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form id="formCambioObraSocial">
+      <form id="formCambioObraSocial" enctype="multipart/form-data">
         <div class="modal-body">
           <div class="alert alert-info">
             <h6><i class="fas fa-info-circle"></i> Información Importante</h6>
@@ -180,51 +171,36 @@
           
           <h6>Nuevos Datos de Obra Social</h6>
           <div class="mb-3">
-            <label for="nombre_obra_social" class="form-label">Nombre de la Obra Social</label>
+            <label for="nombre_obra_social" class="form-label">Nombre de la Obra Social <span style="color: red;">*</span></label>
             <input type="text" class="form-control" id="nombre_obra_social" name="nombre" required>
-          </div>
-          <div class="mb-3">
-            <label for="numero_afiliado" class="form-label">Número de Afiliado</label>
-            <input type="text" class="form-control" id="numero_afiliado" name="numero_afiliado" required>
-          </div>
-          <div class="row">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="plan" class="form-label">Plan</label>
-                <input type="text" class="form-control" id="plan" name="plan">
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <label for="fecha_alta" class="form-label">Fecha de Alta</label>
-                <input type="date" class="form-control" id="fecha_alta" name="fecha_alta">
-              </div>
-            </div>
+            <div class="form-text">Nombre completo de la nueva obra social</div>
           </div>
           <div class="mb-3">
             <label for="observaciones_obra_social" class="form-label">Observaciones</label>
-            <textarea class="form-control" id="observaciones_obra_social" name="observaciones" rows="3"></textarea>
+            <textarea class="form-control" id="observaciones_obra_social" name="observaciones" rows="3" placeholder="Información adicional sobre el cambio (opcional)"></textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label for="archivo_adjunto" class="form-label">Archivo Adjunto (PDF)</label>
+            <input type="file" class="form-control" id="archivo_adjunto" name="archivo_adjunto" accept=".pdf">
+            <div class="form-text">Opcional - Adjunta un PDF si tienes documentación adicional (máximo 10MB)</div>
+          </div>
+          
+          <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle"></i> Información sobre la fecha de alta</h6>
+            <p class="mb-0">La fecha de alta se establecerá automáticamente como la fecha de aprobación de esta solicitud por parte de RRHH.</p>
           </div>
           
           <hr>
-          <h6>Declaración Jurada</h6>
-          <div class="declaracion-jurada">
-            <p>Declaro bajo juramento que:</p>
+          <div class="alert alert-warning">
+            <h6><i class="fas fa-exclamation-triangle"></i> Declaración Jurada</h6>
+            <p>Al continuar, declaro bajo juramento que:</p>
             <ul>
               <li>Los datos proporcionados en esta solicitud son veraces y completos.</li>
               <li>Comprendo que la falsedad en esta declaración puede acarrear sanciones disciplinarias.</li>
               <li>Autorizo a la empresa a verificar la información proporcionada.</li>
               <li>Me comprometo a presentar la documentación respaldatoria que me sea requerida.</li>
             </ul>
-          </div>
-          
-          <div class="mb-3">
-            <label class="form-label">Autenticación con PIN</label>
-            <div class="pin-authentication">
-              <p class="text-muted mb-2">Ingresa el PIN de tu firma digital para autenticar esta declaración jurada:</p>
-              <input type="password" class="form-control" id="pinObraSocial" name="pin_firma" placeholder="PIN de 4-6 dígitos" maxlength="6" required>
-              <div class="form-text">Usaremos tu firma digital registrada para validar este documento.</div>
-            </div>
           </div>
           
           <div class="form-check">
@@ -236,7 +212,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+          <button type="submit" class="btn btn-primary">Generar PDF para Revisar</button>
         </div>
       </form>
     </div>
@@ -290,6 +266,152 @@
           <button type="submit" class="btn btn-primary">Guardar Firma</button>
         </div>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para revisar y firmar PDF -->
+<div class="modal fade" id="modalFirmarPDF" tabindex="-1" aria-labelledby="modalFirmarPDFLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalFirmarPDFLabel">Revisar y Firmar Declaración Jurada</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <h6><i class="fas fa-info-circle"></i> Revisa el documento</h6>
+          <p><strong>IMPORTANTE:</strong> Este es un preview del documento. La firma digital se aplicará únicamente después de que ingreses tu PIN y confirmes el envío.</p>
+        </div>
+        
+        <!-- Contenedor para el PDF -->
+        <div id="pdfContainer" style="width: 100%; height: 600px; border: 1px solid #ddd; margin-bottom: 20px;">
+          <iframe id="pdfViewer" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+        
+        <!-- Sección de firma -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">🔒 Firmar Documento Digitalmente</h6>
+          </div>
+          <div class="card-body">
+            <!-- Contenedor para mensajes de error dentro del modal -->
+            <div id="mensajeErrorModal" style="display: none;"></div>
+            
+            <div class="alert alert-warning" style="margin-bottom: 20px;">
+              <strong>⚠️ Proceso de Firma:</strong><br>
+              1. Has revisado el documento arriba<br>
+              2. Al hacer clic en "Firmar y Enviar" se aplicará tu firma digital<br>
+              3. El documento firmado se enviará automáticamente a RRHH
+            </div>
+            
+            <form id="formFirmarPDF">
+              <div class="mb-3">
+                <label class="form-label">Ingresa tu PIN de firma digital:</label>
+                <input type="password" class="form-control" id="pinFirmarPDF" name="pin_firma" 
+                       placeholder="PIN de 4-6 dígitos" maxlength="6" required>
+                <div class="form-text">Este PIN validará tu identidad y aplicará tu firma digital al documento.</div>
+              </div>
+              
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="confirmarRevision" required>
+                <label class="form-check-label" for="confirmarRevision">
+                  <strong>He revisado todos los datos y confirmo que son correctos</strong>
+                </label>
+              </div>
+              
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="confirmarFirma" required>
+                <label class="form-check-label" for="confirmarFirma">
+                  <strong>Autorizo la aplicación de mi firma digital a este documento</strong>
+                </label>
+              </div>
+              
+              <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  ❌ Cancelar
+                </button>
+                <button type="submit" class="btn btn-success">
+                  🔒 Firmar y Enviar a RRHH
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para revisar y firmar PDF de obra social -->
+<div class="modal fade" id="modalFirmarPDFObraSocial" tabindex="-1" aria-labelledby="modalFirmarPDFObraSocialLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalFirmarPDFObraSocialLabel">Revisar y Firmar Declaración Jurada - Obra Social</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+          <h6><i class="fas fa-info-circle"></i> Revisa el documento</h6>
+          <p><strong>IMPORTANTE:</strong> Este es un preview del documento. La firma digital se aplicará únicamente después de que ingreses tu PIN y confirmes el envío.</p>
+        </div>
+        
+        <!-- Contenedor para el PDF -->
+        <div id="pdfContainerObraSocial" style="width: 100%; height: 600px; border: 1px solid #ddd; margin-bottom: 20px;">
+          <iframe id="pdfViewerObraSocial" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+        
+        <!-- Sección de firma -->
+        <div class="card">
+          <div class="card-header">
+            <h6 class="mb-0">🔒 Firmar Documento Digitalmente</h6>
+          </div>
+          <div class="card-body">
+            <!-- Contenedor para mensajes de error dentro del modal -->
+            <div id="mensajeErrorModalObraSocial" style="display: none;"></div>
+            
+            <div class="alert alert-warning" style="margin-bottom: 20px;">
+              <strong>⚠️ Proceso de Firma:</strong><br>
+              1. Has revisado el documento arriba<br>
+              2. Al hacer clic en "Firmar y Enviar" se aplicará tu firma digital<br>
+              3. El documento firmado se enviará automáticamente a RRHH
+            </div>
+            
+            <form id="formFirmarPDFObraSocial">
+              <div class="mb-3">
+                <label class="form-label">Ingresa tu PIN de firma digital:</label>
+                <input type="password" class="form-control" id="pinFirmarPDFObraSocial" name="pin_firma" 
+                       placeholder="PIN de 4-6 dígitos" maxlength="6" required>
+                <div class="form-text">Este PIN validará tu identidad y aplicará tu firma digital al documento.</div>
+              </div>
+              
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="confirmarRevisionObraSocial" required>
+                <label class="form-check-label" for="confirmarRevisionObraSocial">
+                  <strong>He revisado todos los datos y confirmo que son correctos</strong>
+                </label>
+              </div>
+              
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="confirmarFirmaObraSocial" required>
+                <label class="form-check-label" for="confirmarFirmaObraSocial">
+                  <strong>Autorizo la aplicación de mi firma digital a este documento</strong>
+                </label>
+              </div>
+              
+              <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                  ❌ Cancelar
+                </button>
+                <button type="submit" class="btn btn-success">
+                  🔒 Firmar y Enviar a RRHH
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

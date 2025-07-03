@@ -19,6 +19,12 @@ urlpatterns = [
     path('ajax/agregar-familiar/', views.agregar_familiar, name='agregar_familiar'),
     path('ajax/eliminar-familiar/', views.eliminar_familiar, name='eliminar_familiar'),
     path('ajax/solicitar-cambio-domicilio/', views.solicitar_cambio_domicilio, name='solicitar_cambio_domicilio'),
+    path('ajax/generar-pdf-preview-domicilio/', views.generar_pdf_preview_domicilio, name='generar_pdf_preview_domicilio'),
     path('ajax/solicitar-cambio-obra-social/', views.solicitar_cambio_obra_social, name='solicitar_cambio_obra_social'),
     path('ajax/guardar-firma/', views.guardar_firma_digital, name='guardar_firma_digital'),
+    path('ajax/generar-pdf-preview-obra-social/', views.generar_pdf_preview_obra_social, name='generar_pdf_preview_obra_social'),
+    
+    # URLs para PDFs
+    path('pdf/declaracion/<int:solicitud_id>/', views.ver_pdf_declaracion, name='ver_pdf_declaracion'),
+    path('pdf/declaracion/<int:solicitud_id>/descargar/', views.descargar_pdf_declaracion, name='descargar_pdf_declaracion'),
 ]

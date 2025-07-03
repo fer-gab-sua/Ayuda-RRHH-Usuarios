@@ -1,0 +1,538 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Firmar Recibo - Portal RH{% endblock %}
+
+{% block extra_css %}
+<style>
+.firmar-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.recibo-info {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.recibo-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.recibo-header h1 {
+    color: #1f2937;
+    margin-bottom: 10px;
+}
+
+.recibo-header .periodo {
+    font-size: 1.2rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.recibo-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.detail-item {
+    padding: 15px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 4px solid #2563eb;
+}
+
+.detail-item label {
+    font-weight: 600;
+    color: #374151;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.detail-item .value {
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.firma-section {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.firma-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.firma-option {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.firma-option:hover {
+    border-color: #2563eb;
+    background: #f8fafc;
+}
+
+.firma-option.selected {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.firma-option.disconforme.selected {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.firma-option input[type="radio"] {
+    display: none;
+}
+
+.firma-option .icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.firma-option .title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.firma-option .description {
+    color: #6b7280;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.observaciones-section {
+    margin-top: 20px;
+    display: none;
+}
+
+.observaciones-section.show {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.pin-section {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.pin-section h6 {
+    color: #92400e;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pin-input {
+    max-width: 200px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    border-color: #f59e0b;
+    color: #92400e;
+}
+
+.alert-info {
+    background: #e0f2fe;
+    border-color: #0891b2;
+    color: #0e7490;
+}
+
+.declaracion-texto {
+    background: #f9fafb;
+    border-left: 4px solid #2563eb;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 0 8px 8px 0;
+}
+
+.declaracion-texto ul {
+    margin: 10px 0 0 20px;
+    color: #374151;
+}
+
+.declaracion-texto li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .recibo-details {
+        grid-template-columns: 1fr;
+    }
+    
+    .firma-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="firmar-container">
+    <!-- Información del recibo -->
+    <div class="recibo-info">
+        <div class="recibo-header">
+            <h1>Firmar Recibo de Sueldo</h1>
+            <div class="periodo">{{ recibo.get_periodo_display }} {{ recibo.anio }}</div>
+        </div>
+        
+        <div class="recibo-details">
+            <div class="detail-item">
+                <label>Empleado</label>
+                <div class="value">{{ empleado.user.get_full_name }}</div>
+            </div>
+            <div class="detail-item">
+                <label>Legajo</label>
+                <div class="value">{{ empleado.legajo }}</div>
+            </div>
+            <div class="detail-item">
+                <label>Fecha de Emisión</label>
+                <div class="value">{{ recibo.fecha_emision|date:"d/m/Y" }}</div>
+            </div>
+            <div class="detail-item">
+                <label>Fecha Vencimiento</label>
+                <div class="value">{{ recibo.fecha_vencimiento|date:"d/m/Y" }}</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="{% url 'recibos:ver_recibo' recibo.id %}" 
+               class="btn btn-secondary" 
+               target="_blank">
+                📄 Ver PDF del Recibo
+            </a>
+        </div>
+    </div>
+    
+    <!-- Formulario de firma -->
+    <div class="firma-section">
+        <form id="firmaForm">
+            {% csrf_token %}
+            
+            <h2 style="margin-bottom: 25px; text-align: center;">Proceso de Firma Digital</h2>
+            
+            <!-- Opciones de firma -->
+            <div class="firma-options">
+                <div class="firma-option" onclick="seleccionarTipoFirma('conforme')">
+                    <input type="radio" name="tipo_firma" value="conforme" id="conforme" required>
+                    <span class="icon">✅</span>
+                    <div class="title">Firmar Conforme</div>
+                    <div class="description">
+                        Estoy de acuerdo con todos los datos del recibo y lo acepto sin observaciones.
+                    </div>
+                </div>
+                
+                <div class="firma-option disconforme" onclick="seleccionarTipoFirma('disconforme')">
+                    <input type="radio" name="tipo_firma" value="disconforme" id="disconforme" required>
+                    <span class="icon">⚠️</span>
+                    <div class="title">Firmar en Disconformidad</div>
+                    <div class="description">
+                        Tengo observaciones sobre el recibo que deseo hacer constar.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Observaciones (solo para disconformidad) -->
+            <div class="observaciones-section" id="observacionesSection">
+                <div class="alert alert-warning">
+                    <strong>⚠️ Firma en Disconformidad</strong><br>
+                    Describe detalladamente los motivos de tu disconformidad:
+                </div>
+                <div class="form-group">
+                    <label for="observaciones">Observaciones</label>
+                    <textarea class="form-control" 
+                              id="observaciones" 
+                              name="observaciones" 
+                              rows="4" 
+                              placeholder="Explica los motivos de tu disconformidad..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Declaración jurada -->
+            <div class="declaracion-texto">
+                <h6><strong>Declaración Jurada</strong></h6>
+                <p>Al firmar este recibo, declaro bajo juramento que:</p>
+                <ul>
+                    <li>He revisado todos los datos consignados en el recibo de sueldo.</li>
+                    <li>Comprendo el contenido y las implicaciones de mi firma.</li>
+                    <li>La firma se realiza de manera voluntaria y consciente.</li>
+                    <li>En caso de disconformidad, las observaciones expresadas son veraces.</li>
+                </ul>
+            </div>
+            
+            <!-- Autenticación con PIN -->
+            <div class="pin-section">
+                <h6>🔐 Autenticación con PIN</h6>
+                <p style="color: #92400e; margin-bottom: 15px;">
+                    Ingresa tu PIN de firma digital para autenticar este documento:
+                </p>
+                <div class="form-group">
+                    <input type="password" 
+                           class="form-control pin-input" 
+                           id="pin_firma" 
+                           name="pin_firma" 
+                           placeholder="PIN de 4-6 dígitos" 
+                           maxlength="6" 
+                           required>
+                </div>
+            </div>
+            
+            <!-- Botones -->
+            <div class="btn-group">
+                <a href="{% url 'recibos:mis_recibos' %}" class="btn btn-secondary">
+                    ← Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary" id="btnFirmar">
+                    ✍️ Firmar Recibo
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let tipoFirmaSeleccionado = null;
+
+function seleccionarTipoFirma(tipo) {
+    // Limpiar selecciones previas
+    document.querySelectorAll('.firma-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Seleccionar el nuevo tipo
+    const option = document.querySelector(`#${tipo}`).parentElement;
+    option.classList.add('selected');
+    
+    // Marcar el radio button
+    document.getElementById(tipo).checked = true;
+    
+    tipoFirmaSeleccionado = tipo;
+    
+    // Mostrar/ocultar observaciones
+    const observacionesSection = document.getElementById('observacionesSection');
+    if (tipo === 'disconforme') {
+        observacionesSection.classList.add('show');
+        document.getElementById('observaciones').required = true;
+    } else {
+        observacionesSection.classList.remove('show');
+        document.getElementById('observaciones').required = false;
+        document.getElementById('observaciones').value = '';
+    }
+    
+    // Actualizar texto del botón
+    const btnText = tipo === 'conforme' ? '✅ Firmar Conforme' : '⚠️ Firmar en Disconformidad';
+    document.getElementById('btnFirmar').innerHTML = btnText;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function mostrarMensaje(mensaje, tipo = 'info') {
+    const alertClass = tipo === 'success' ? 'alert-success' : 
+                      tipo === 'error' ? 'alert-danger' : 'alert-info';
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${alertClass}`;
+    alertDiv.style.position = 'fixed';
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '1000';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.innerHTML = mensaje;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// Manejar envío del formulario
+document.getElementById('firmaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Validaciones
+    if (!tipoFirmaSeleccionado) {
+        mostrarMensaje('Debes seleccionar un tipo de firma', 'error');
+        return;
+    }
+    
+    const pin = document.getElementById('pin_firma').value;
+    if (!pin || pin.length < 4) {
+        mostrarMensaje('Debes ingresar un PIN válido de 4-6 dígitos', 'error');
+        return;
+    }
+    
+    if (tipoFirmaSeleccionado === 'disconforme') {
+        const observaciones = document.getElementById('observaciones').value.trim();
+        if (!observaciones) {
+            mostrarMensaje('Debes ingresar observaciones para firmar en disconformidad', 'error');
+            return;
+        }
+    }
+    
+    // Confirmar acción
+    const mensaje = tipoFirmaSeleccionado === 'conforme' 
+        ? '¿Confirmas que deseas firmar este recibo CONFORME?' 
+        : '¿Confirmas que deseas firmar este recibo EN DISCONFORMIDAD?';
+    
+    if (!confirm(mensaje)) {
+        return;
+    }
+    
+    // Deshabilitar botón
+    const btnFirmar = document.getElementById('btnFirmar');
+    const originalText = btnFirmar.innerHTML;
+    btnFirmar.disabled = true;
+    btnFirmar.innerHTML = '⏳ Procesando...';
+    
+    // Enviar formulario
+    const formData = new FormData(this);
+    
+    fetch('{% url "recibos:procesar_firma" recibo.id %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            mostrarMensaje(data.message, 'success');
+            setTimeout(() => {
+                window.location.href = '{% url "recibos:mis_recibos" %}';
+            }, 2000);
+        } else {
+            mostrarMensaje(data.message || 'Error al firmar recibo', 'error');
+            btnFirmar.disabled = false;
+            btnFirmar.innerHTML = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        mostrarMensaje('Error al procesar la firma', 'error');
+        btnFirmar.disabled = false;
+        btnFirmar.innerHTML = originalText;
+    });
+});
+</script>
+{% endblock %}

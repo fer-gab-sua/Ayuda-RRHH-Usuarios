@@ -66,14 +66,14 @@ class DomicilioEmpleadoAdmin(admin.ModelAdmin):
 
 @admin.register(ObraSocialEmpleado)
 class ObraSocialEmpleadoAdmin(admin.ModelAdmin):
-    list_display = ['empleado', 'nombre', 'numero_afiliado', 'plan']
-    search_fields = ['empleado__user__first_name', 'empleado__user__last_name', 'nombre', 'numero_afiliado']
+    list_display = ['empleado', 'nombre', 'fecha_alta']
+    search_fields = ['empleado__user__first_name', 'empleado__user__last_name', 'nombre']
     list_filter = ['nombre']
 
 
 @admin.register(SolicitudCambio)
 class SolicitudCambioAdmin(admin.ModelAdmin):
-    list_display = ['empleado', 'tipo', 'estado', 'fecha_solicitud', 'fecha_resolucion']
+    list_display = ['empleado', 'tipo', 'estado', 'fecha_solicitud', 'fecha_resolucion', 'tiene_archivo_adjunto']
     list_filter = ['tipo', 'estado', 'fecha_solicitud']
     search_fields = ['empleado__user__first_name', 'empleado__user__last_name']
     readonly_fields = ['fecha_solicitud', 'datos_antiguos', 'datos_nuevos']
@@ -85,6 +85,10 @@ class SolicitudCambioAdmin(admin.ModelAdmin):
         ('Declaración Jurada', {
             'fields': ('declaracion_jurada',)
         }),
+        ('Archivos', {
+            'fields': ('pdf_declaracion', 'archivo_adjunto'),
+            'description': 'PDF firmado y archivo adjunto (si existe)'
+        }),
         ('Datos', {
             'fields': ('datos_antiguos', 'datos_nuevos'),
             'classes': ('collapse',)
@@ -93,3 +97,7 @@ class SolicitudCambioAdmin(admin.ModelAdmin):
             'fields': ('observaciones_rrhh', 'revisado_por')
         }),
     )
+    
+    def tiene_archivo_adjunto(self, obj):
+        return "✅ Sí" if obj.archivo_adjunto else "❌ No"
+    tiene_archivo_adjunto.short_description = "Archivo adjunto"

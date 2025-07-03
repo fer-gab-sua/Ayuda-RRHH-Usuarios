@@ -149,12 +149,56 @@
       ⚠️ Cambios requieren declaración jurada
     </span>
   </div>
-  {% if solicitudes_pendientes %}
+  {% if solicitud_domicilio_pendiente %}
+    {% if solicitud_domicilio_pendiente.estado == 'aprobada' %}
+    <div style="background: #dcfce7; border: 1px solid #16a34a; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <strong style="color: #166534;">✅ Solicitud aprobada</strong>
+      <p style="color: #166534; margin: 4px 0 8px 0;">
+        Tu solicitud de cambio de domicilio ha sido aprobada por RRHH.
+      </p>
+    {% elif solicitud_domicilio_pendiente.estado == 'rechazada' %}
+    <div style="background: #fecaca; border: 1px solid #dc2626; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <strong style="color: #7f1d1d;">❌ Solicitud rechazada</strong>
+      <p style="color: #7f1d1d; margin: 4px 0 8px 0;">
+        Tu solicitud de cambio de domicilio ha sido rechazada por RRHH.
+      </p>
+      {% if solicitud_domicilio_pendiente.observaciones_rrhh %}
+        <div style="background: rgba(127, 29, 29, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
+          <strong style="color: #7f1d1d; font-size: 12px;">Motivo del rechazo:</strong>
+          <p style="color: #7f1d1d; margin: 4px 0 0 0; font-size: 12px;">{{ solicitud_domicilio_pendiente.observaciones_rrhh }}</p>
+        </div>
+      {% endif %}
+    {% else %}
     <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
       <strong style="color: #92400e;">📋 Solicitud pendiente</strong>
-      <p style="color: #92400e; margin: 4px 0 0 0;">
+      <p style="color: #92400e; margin: 4px 0 8px 0;">
         Tienes una solicitud de cambio de domicilio pendiente de aprobación.
       </p>
+    {% endif %}
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 12px; color: #92400e;">
+          Estado: {{ solicitud_domicilio_pendiente.get_estado_display }} - {{ solicitud_domicilio_pendiente.fecha_solicitud|date:"d/m/Y H:i" }}
+        </span>
+        {% if solicitud_domicilio_pendiente.estado == 'aprobada' and solicitud_domicilio_pendiente.pdf_declaracion %}
+          <a href="{% url 'empleados:ver_pdf_declaracion' solicitud_domicilio_pendiente.id %}" 
+             target="_blank" 
+             style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+            📄 Ver PDF
+          </a>
+          <a href="{% url 'empleados:descargar_pdf_declaracion' solicitud_domicilio_pendiente.id %}" 
+             style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+            📥 Descargar
+          </a>
+        {% elif solicitud_domicilio_pendiente.estado == 'pendiente' or solicitud_domicilio_pendiente.estado == 'en_revision' %}
+          <span style="font-size: 12px; color: #92400e; font-style: italic;">
+            📋 Documento enviado a RRHH - Esperando aprobación
+          </span>
+        {% elif solicitud_domicilio_pendiente.estado == 'rechazada' %}
+          <span style="font-size: 12px; color: #dc2626; font-style: italic;">
+            ❌ Solicitud rechazada
+          </span>
+        {% endif %}
+      </div>
     </div>
   {% endif %}
   <div class="form-grid">
@@ -213,26 +257,62 @@
       ⚠️ Cambios requieren declaración jurada
     </span>
   </div>
-  {% if solicitudes_pendientes %}
+  {% if solicitud_obra_social_pendiente %}
+    {% if solicitud_obra_social_pendiente.estado == 'aprobada' %}
+    <div style="background: #dcfce7; border: 1px solid #16a34a; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <strong style="color: #166534;">✅ Solicitud aprobada</strong>
+      <p style="color: #166534; margin: 4px 0 8px 0;">
+        Tu solicitud de cambio de obra social ha sido aprobada por RRHH.
+      </p>
+    {% elif solicitud_obra_social_pendiente.estado == 'rechazada' %}
+    <div style="background: #fecaca; border: 1px solid #dc2626; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+      <strong style="color: #7f1d1d;">❌ Solicitud rechazada</strong>
+      <p style="color: #7f1d1d; margin: 4px 0 8px 0;">
+        Tu solicitud de cambio de obra social ha sido rechazada por RRHH.
+      </p>
+      {% if solicitud_obra_social_pendiente.observaciones_rrhh %}
+        <div style="background: rgba(127, 29, 29, 0.1); padding: 8px; border-radius: 4px; margin-top: 8px;">
+          <strong style="color: #7f1d1d; font-size: 12px;">Motivo del rechazo:</strong>
+          <p style="color: #7f1d1d; margin: 4px 0 0 0; font-size: 12px;">{{ solicitud_obra_social_pendiente.observaciones_rrhh }}</p>
+        </div>
+      {% endif %}
+    {% else %}
     <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
       <strong style="color: #92400e;">📋 Solicitud pendiente</strong>
-      <p style="color: #92400e; margin: 4px 0 0 0;">
+      <p style="color: #92400e; margin: 4px 0 8px 0;">
         Tienes una solicitud de cambio de obra social pendiente de aprobación.
       </p>
+    {% endif %}
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <span style="font-size: 12px; color: #92400e;">
+          Estado: {{ solicitud_obra_social_pendiente.get_estado_display }} - {{ solicitud_obra_social_pendiente.fecha_solicitud|date:"d/m/Y H:i" }}
+        </span>
+        {% if solicitud_obra_social_pendiente.estado == 'aprobada' and solicitud_obra_social_pendiente.pdf_declaracion %}
+          <a href="{% url 'empleados:ver_pdf_declaracion' solicitud_obra_social_pendiente.id %}" 
+             target="_blank" 
+             style="background: #3b82f6; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+            📄 Ver PDF
+          </a>
+          <a href="{% url 'empleados:descargar_pdf_declaracion' solicitud_obra_social_pendiente.id %}" 
+             style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px;">
+            📥 Descargar
+          </a>
+        {% elif solicitud_obra_social_pendiente.estado == 'pendiente' or solicitud_obra_social_pendiente.estado == 'en_revision' %}
+          <span style="font-size: 12px; color: #92400e; font-style: italic;">
+            📋 Documento enviado a RRHH - Esperando aprobación
+          </span>
+        {% elif solicitud_obra_social_pendiente.estado == 'rechazada' %}
+          <span style="font-size: 12px; color: #dc2626; font-style: italic;">
+            ❌ Solicitud rechazada
+          </span>
+        {% endif %}
+      </div>
     </div>
   {% endif %}
   <div class="form-grid">
     <div class="form-group">
       <label>Nombre de la obra social</label>
       <input type="text" value="{{ obra_social.nombre|default:'No especificado' }}" readonly />
-    </div>
-    <div class="form-group">
-      <label>Número de afiliado</label>
-      <input type="text" value="{{ obra_social.numero_afiliado|default:'No especificado' }}" readonly />
-    </div>
-    <div class="form-group">
-      <label>Plan</label>
-      <input type="text" value="{{ obra_social.plan|default:'No especificado' }}" readonly />
     </div>
     <div class="form-group">
       <label>Fecha de alta</label>
@@ -331,19 +411,48 @@ function getCookie(name) {
 
 function mostrarMensaje(mensaje, tipo = 'success') {
     const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = tipo === 'success' ? '✅' : '❌';
     const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${mensaje}
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="margin: 15px 0; font-weight: 500;">
+            ${icon} ${mensaje}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `;
     document.querySelector('h1').insertAdjacentHTML('afterend', alertHtml);
     
-    // Auto-remover después de 5 segundos
+    // Scroll hacia arriba para que el usuario vea el mensaje
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    
+    // Auto-remover después de 7 segundos para errores, 5 para success
+    const timeout = tipo === 'error' ? 7000 : 5000;
     setTimeout(() => {
         const alert = document.querySelector('.alert');
         if (alert) alert.remove();
-    }, 5000);
+    }, timeout);
+}
+
+// Función para mostrar mensajes dentro del modal
+function mostrarMensajeModal(mensaje, tipo = 'success', modalId = 'mensajeErrorModal') {
+    const alertClass = tipo === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = tipo === 'success' ? '✅' : '❌';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="margin: 15px 0; font-weight: 500;">
+            ${icon} ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    const container = document.getElementById(modalId);
+    if (container) {
+        container.innerHTML = alertHtml;
+        container.style.display = 'block';
+        
+        // Auto-remover después de 7 segundos
+        setTimeout(() => {
+            container.innerHTML = '';
+            container.style.display = 'none';
+        }, 7000);
+    }
 }
 
 function mostrarErroresFormulario(containerId, errores) {
@@ -714,28 +823,128 @@ function abrirModalFirmaDigital() {
     modal.show();
 }
 
-// Solicitar cambio de domicilio
+// Solicitar cambio de domicilio - NUEVO FLUJO
 document.getElementById('formCambioDomicilio').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Validar PIN
-    const pin = document.getElementById('pinDomicilio').value;
-    if (!pin || pin.length < 4) {
-        mostrarMensaje('Debes ingresar un PIN válido de 4-6 dígitos', 'error');
+    // Validar que acepta términos
+    const aceptaTerminos = document.getElementById('aceptoTerminosDomicilio').checked;
+    if (!aceptaTerminos) {
+        mostrarMensaje('Debes aceptar los términos de la declaración jurada', 'error');
         return;
     }
     
-    console.log('Enviando solicitud de cambio de domicilio con PIN:', pin);
+    console.log('Generando PDF preview...');
     
     const formData = new FormData(this);
-    formData.append('pin_firma', pin);
-    formData.append('tipo_solicitud', 'domicilio');
+    const submitBtn = this.querySelector('button[type="submit"]');
     
-    // Debug: mostrar los datos que se envían
-    console.log('Datos del formulario:');
+    // Deshabilitar botón durante el proceso
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Generando PDF...';
+    
+    fetch("{% url 'empleados:generar_pdf_preview_domicilio' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            // El PDF se generó correctamente
+            return response.blob();
+        } else {
+            // Error en la generación
+            return response.json().then(data => {
+                throw new Error(data.message || 'Error al generar PDF');
+            });
+        }
+    })
+    .then(pdfBlob => {
+        console.log('PDF generado exitosamente');
+        
+        // Crear URL para el PDF
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        
+        // Cerrar modal actual
+        const modalActual = bootstrap.Modal.getInstance(document.getElementById('modalCambioDomicilio'));
+        if (modalActual) modalActual.hide();
+        
+        // Mostrar modal de firma con el PDF
+        mostrarModalFirmarPDF(pdfUrl);
+        
+    })
+    .catch(error => {
+        console.error('Error al generar PDF:', error);
+        mostrarMensaje('Error al generar PDF: ' + error.message, 'error');
+    })
+    .finally(() => {
+        // Rehabilitar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Generar PDF para Revisar';
+    });
+});
+
+// Función para mostrar modal de firma
+function mostrarModalFirmarPDF(pdfUrl) {
+    // Configurar el PDF en el iframe
+    const pdfViewer = document.getElementById('pdfViewer');
+    pdfViewer.src = pdfUrl;
+    
+    // Mostrar modal
+    const modalFirmar = new bootstrap.Modal(document.getElementById('modalFirmarPDF'));
+    modalFirmar.show();
+    
+    // Limpiar formulario de firma
+    document.getElementById('formFirmarPDF').reset();
+}
+
+// Procesar firma del PDF
+document.getElementById('formFirmarPDF').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const pin = document.getElementById('pinFirmarPDF').value;
+    const confirmarRevision = document.getElementById('confirmarRevision').checked;
+    const confirmarFirma = document.getElementById('confirmarFirma').checked;
+    
+    // Limpiar mensajes previos
+    const mensajeContainer = document.getElementById('mensajeErrorModal');
+    if (mensajeContainer) {
+        mensajeContainer.innerHTML = '';
+        mensajeContainer.style.display = 'none';
+    }
+    
+    if (!pin || pin.length < 4) {
+        mostrarMensajeModal('Debes ingresar un PIN válido de 4-6 dígitos', 'error', 'mensajeErrorModal');
+        return;
+    }
+    
+    if (!confirmarRevision) {
+        mostrarMensajeModal('Debes confirmar que has revisado el documento', 'error', 'mensajeErrorModal');
+        return;
+    }
+    
+    if (!confirmarFirma) {
+        mostrarMensajeModal('Debes autorizar la aplicación de tu firma digital', 'error', 'mensajeErrorModal');
+        return;
+    }
+    
+    console.log('Enviando solicitud firmada...');
+    console.log('PIN a enviar:', pin);
+    
+    const formData = new FormData();
+    formData.append('pin_firma', pin);
+    
+    // Debug: mostrar contenido del FormData
+    console.log('FormData contents:');
     for (let [key, value] of formData.entries()) {
         console.log(key + ': ' + value);
     }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '🔒 Aplicando firma digital...';
     
     fetch("{% url 'empleados:solicitar_cambio_domicilio' %}", {
         method: 'POST',
@@ -745,50 +954,155 @@ document.getElementById('formCambioDomicilio').addEventListener('submit', functi
         body: formData
     })
     .then(response => {
-        console.log('Respuesta del servidor:', response.status);
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
         return response.json();
     })
     .then(data => {
-        console.log('Datos de respuesta:', data);
+        console.log('Respuesta del servidor:', data);
         if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalCambioDomicilio')).hide();
-            this.reset();
-            mostrarMensaje(data.message);
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalFirmarPDF'));
+            if (modal) modal.hide();
+            
+            // Limpiar formulario original
+            document.getElementById('formCambioDomicilio').reset();
+            
+            mostrarMensaje('✅ Documento firmado digitalmente y enviado a RRHH exitosamente');
             
             // Recargar página para mostrar solicitud pendiente
             setTimeout(() => location.reload(), 2000);
         } else {
-            mostrarMensaje(data.message || 'Error al enviar solicitud', 'error');
+            console.log('Error del servidor:', data.message);
+            mostrarMensajeModal(data.message || 'Error al procesar la solicitud firmada', 'error', 'mensajeErrorModal');
         }
     })
     .catch(error => {
         console.error('Error en la solicitud:', error);
-        mostrarMensaje('Error al enviar solicitud', 'error');
+        mostrarMensajeModal('Error de conexión al procesar la solicitud firmada', 'error', 'mensajeErrorModal');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '🔒 Firmar y Enviar a RRHH';
     });
 });
 
-// Solicitar cambio de obra social
+// Solicitar cambio de obra social - Generar PDF preview
 document.getElementById('formCambioObraSocial').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Validar PIN
-    const pin = document.getElementById('pinObraSocial').value;
-    if (!pin || pin.length < 4) {
-        mostrarMensaje('Debes ingresar un PIN válido de 4-6 dígitos', 'error');
-        return;
-    }
-    
-    console.log('Enviando solicitud de cambio de obra social con PIN:', pin);
+    console.log('Generando PDF preview para obra social...');
     
     const formData = new FormData(this);
-    formData.append('pin_firma', pin);
-    formData.append('tipo_solicitud', 'obra_social');
     
     // Debug: mostrar los datos que se envían
     console.log('Datos del formulario:');
     for (let [key, value] of formData.entries()) {
         console.log(key + ': ' + value);
     }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '📄 Generando PDF...';
+    
+    fetch("{% url 'empleados:generar_pdf_preview_obra_social' %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            // El PDF se generó correctamente
+            return response.blob();
+        } else {
+            // Error en la generación
+            return response.json().then(data => {
+                throw new Error(data.message || 'Error al generar PDF');
+            });
+        }
+    })
+    .then(pdfBlob => {
+        console.log('PDF generado exitosamente');
+        
+        // Crear URL para el PDF
+        const pdfUrl = URL.createObjectURL(pdfBlob);
+        
+        // Cerrar modal actual
+        const modal = bootstrap.Modal.getInstance(document.getElementById('modalCambioObraSocial'));
+        if (modal) modal.hide();
+        
+        // Mostrar PDF en modal de firma
+        mostrarModalFirmarPDFObraSocial(pdfUrl);
+        
+        mostrarMensaje('✅ PDF generado. Revisa el documento y procede a firmarlo');
+    })
+    .catch(error => {
+        console.error('Error al generar PDF:', error);
+        mostrarMensaje('❌ Error al generar PDF: ' + error.message, 'error');
+    })
+    .finally(() => {
+        // Rehabilitar botón
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Generar PDF para Revisar';
+    });
+});
+
+// Función para mostrar modal de firma para obra social
+function mostrarModalFirmarPDFObraSocial(pdfUrl) {
+    console.log('URL del PDF a mostrar:', pdfUrl);
+    
+    // Configurar el PDF en el iframe
+    const pdfViewer = document.getElementById('pdfViewerObraSocial');
+    pdfViewer.src = pdfUrl;
+    
+    // Mostrar modal
+    const modalFirmar = new bootstrap.Modal(document.getElementById('modalFirmarPDFObraSocial'));
+    modalFirmar.show();
+    
+    // Limpiar formulario de firma
+    document.getElementById('formFirmarPDFObraSocial').reset();
+}
+
+// Procesar firma del PDF de obra social
+document.getElementById('formFirmarPDFObraSocial').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const pin = document.getElementById('pinFirmarPDFObraSocial').value;
+    const confirmarRevision = document.getElementById('confirmarRevisionObraSocial').checked;
+    const confirmarFirma = document.getElementById('confirmarFirmaObraSocial').checked;
+    
+    // Limpiar mensajes previos
+    const mensajeContainer = document.getElementById('mensajeErrorModalObraSocial');
+    if (mensajeContainer) {
+        mensajeContainer.innerHTML = '';
+        mensajeContainer.style.display = 'none';
+    }
+    
+    if (!pin || pin.length < 4) {
+        mostrarMensajeModal('Debes ingresar un PIN válido de 4-6 dígitos', 'error', 'mensajeErrorModalObraSocial');
+        return;
+    }
+    
+    if (!confirmarRevision) {
+        mostrarMensajeModal('Debes confirmar que has revisado el documento', 'error', 'mensajeErrorModalObraSocial');
+        return;
+    }
+    
+    if (!confirmarFirma) {
+        mostrarMensajeModal('Debes autorizar la aplicación de tu firma digital', 'error', 'mensajeErrorModalObraSocial');
+        return;
+    }
+    
+    console.log('Enviando solicitud de obra social firmada...');
+    
+    const formData = new FormData();
+    formData.append('pin_firma', pin);
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '🔒 Aplicando firma digital...';
     
     fetch("{% url 'empleados:solicitar_cambio_obra_social' %}", {
         method: 'POST',
@@ -797,26 +1111,32 @@ document.getElementById('formCambioObraSocial').addEventListener('submit', funct
         },
         body: formData
     })
-    .then(response => {
-        console.log('Respuesta del servidor:', response.status);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('Datos de respuesta:', data);
+        console.log('Respuesta del servidor:', data);
         if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('modalCambioObraSocial')).hide();
-            this.reset();
-            mostrarMensaje(data.message);
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalFirmarPDFObraSocial'));
+            if (modal) modal.hide();
+            
+            // Limpiar formulario original
+            document.getElementById('formCambioObraSocial').reset();
+            
+            mostrarMensaje('✅ Documento firmado digitalmente y enviado a RRHH exitosamente');
             
             // Recargar página para mostrar solicitud pendiente
             setTimeout(() => location.reload(), 2000);
         } else {
-            mostrarMensaje(data.message || 'Error al enviar solicitud', 'error');
+            mostrarMensajeModal(data.message || 'Error al procesar la solicitud firmada', 'error', 'mensajeErrorModalObraSocial');
         }
     })
     .catch(error => {
         console.error('Error en la solicitud:', error);
-        mostrarMensaje('Error al enviar solicitud', 'error');
+        mostrarMensajeModal('Error al procesar la solicitud firmada', 'error', 'mensajeErrorModalObraSocial');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '🔒 Firmar y Enviar a RRHH';
     });
 });
 
