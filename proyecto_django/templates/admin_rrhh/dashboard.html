@@ -1,0 +1,155 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+
+{% block title %}Dashboard - Administración RH{% endblock %}
+
+{% block page_title %}Dashboard de Administración{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="number">{{ total_empleados }}</div>
+        <div class="label">Total Empleados</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ recibos_pendientes }}</div>
+        <div class="label">Recibos Pendientes</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ solicitudes_pendientes }}</div>
+        <div class="label">Solicitudes Pendientes</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ notificaciones_no_leidas }}</div>
+        <div class="label">Notificaciones No Leídas</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <!-- Solicitudes Pendientes -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3>Solicitudes Pendientes</h3>
+            <a href="{% url 'admin_rrhh:gestionar_solicitudes' %}" class="btn btn-primary">Ver Todas</a>
+        </div>
+        {% if solicitudes_recientes %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Tipo</th>
+                    <th>Fecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes_recientes %}
+                <tr>
+                    <td>{{ solicitud.empleado.user.get_full_name }}</td>
+                    <td>{{ solicitud.tipo.nombre }}</td>
+                    <td>{{ solicitud.fecha_desde|date:"d/m/Y" }}</td>
+                    <td>
+                        <a href="{% url 'admin_rrhh:procesar_solicitud' solicitud.id %}" class="btn-sm btn-primary">Revisar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 40px; text-align: center; color: #6b7280;">
+            No hay solicitudes pendientes
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Empleados con Recibos Pendientes -->
+    <div class="table-container">
+        <div class="table-header">
+            <h3>Recibos Sin Firmar</h3>
+            <a href="{% url 'admin_rrhh:gestionar_recibos' %}" class="btn btn-primary">Ver Todos</a>
+        </div>
+        {% if empleados_recibos_pendientes %}
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Empleado</th>
+                    <th>Departamento</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for empleado in empleados_recibos_pendientes %}
+                <tr>
+                    <td>{{ empleado.user.get_full_name }}</td>
+                    <td>{{ empleado.departamento }}</td>
+                    <td>
+                        <a href="{% url 'admin_rrhh:gestionar_recibos' %}?empleado={{ empleado.id }}" class="btn-sm btn-warning">Ver Recibos</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 40px; text-align: center; color: #6b7280;">
+            Todos los recibos están firmados
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Actividad Reciente -->
+<div class="table-container" style="margin-top: 20px;">
+    <div class="table-header">
+        <h3>Actividad Reciente</h3>
+        <a href="{% url 'admin_rrhh:reportes' %}" class="btn btn-secondary">Ver Reportes</a>
+    </div>
+    {% if actividades_recientes %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Actividad</th>
+                <th>Usuario</th>
+                <th>Empleado Afectado</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for actividad in actividades_recientes %}
+            <tr>
+                <td>
+                    <span class="badge {% if actividad.tipo_actividad == 'solicitud_aprobada' %}badge-aprobada{% elif actividad.tipo_actividad == 'solicitud_rechazada' %}badge-rechazada{% else %}badge-pendiente{% endif %}">
+                        {{ actividad.get_tipo_actividad_display }}
+                    </span>
+                </td>
+                <td>{{ actividad.usuario_rrhh.user.get_full_name }}</td>
+                <td>{{ actividad.empleado_afectado.user.get_full_name|default:"-" }}</td>
+                <td>{{ actividad.fecha|date:"d/m/Y H:i" }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #6b7280;">
+        No hay actividad reciente
+    </div>
+    {% endif %}
+</div>
+
+<!-- Acciones Rápidas -->
+<div style="margin-top: 30px;">
+    <h3>Acciones Rápidas</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+        <a href="{% url 'admin_rrhh:crear_empleado' %}" class="btn" style="padding: 15px; text-align: center; background: #16a34a; color: white; text-decoration: none; border-radius: 8px;">
+            ➕ Crear Empleado
+        </a>
+        <a href="{% url 'admin_rrhh:subir_recibo' %}" class="btn" style="padding: 15px; text-align: center; background: #2563eb; color: white; text-decoration: none; border-radius: 8px;">
+            📄 Subir Recibo
+        </a>
+        <a href="{% url 'admin_rrhh:enviar_notificacion' %}" class="btn" style="padding: 15px; text-align: center; background: #d97706; color: white; text-decoration: none; border-radius: 8px;">
+            🔔 Enviar Notificación
+        </a>
+        <a href="{% url 'admin_rrhh:exportar_empleados' %}" class="btn" style="padding: 15px; text-align: center; background: #6b7280; color: white; text-decoration: none; border-radius: 8px;">
+            📊 Exportar Datos
+        </a>
+    </div>
+</div>
+{% endblock %}

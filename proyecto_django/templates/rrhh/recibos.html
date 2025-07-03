@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Recibos de Sueldo - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Mis Recibos de Sueldo</h1>
+<div class="resumen">
+    <div class="resumen-card">
+        <div>Sin firmar</div>
+        <span id="sin-firmar">{{ sin_firmar }}</span>
+    </div>
+    <div class="resumen-card">
+        <div>Firmados</div>
+        <span id="firmados">{{ firmados }}</span>
+    </div>
+</div>
+
+<section class="recibos-section">
+    <div class="section-title">Recibos 2024</div>
+    <table class="recibos-table" id="tabla-recibos">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Recibo</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+                <th>Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recibo in recibos %}
+            <tr data-estado="{{ recibo.estado }}">
+                <td>{{ recibo.fecha|date:"d/m/Y" }}</td>
+                <td><a href="{{ recibo.archivo.url }}" target="_blank">{{ recibo.periodo }}.pdf</a></td>
+                <td class="estado-{{ recibo.estado }}">
+                    {% if recibo.estado == 'pendiente' %}
+                        Pendiente
+                    {% elif recibo.estado == 'firmado' %}
+                        Firmado
+                    {% elif recibo.estado == 'disconformidad' %}
+                        Firmado en Disconformidad
+                    {% endif %}
+                </td>
+                <td>
+                    {% if recibo.estado == 'pendiente' %}
+                        <a href="{% url 'firmar_recibo' recibo.id %}" class="btn-firmar">Firmar</a>
+                        <a href="{% url 'firmar_recibo' recibo.id %}" class="btn-disconformidad">Firmar en Disconformidad</a>
+                    {% else %}
+                        <span class="firmado-fecha">Firmado el {{ recibo.fecha_firma|date:"d/m/Y H:i" }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ recibo.observaciones|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; padding: 20px; color: #6b7280;">
+                    No tienes recibos disponibles
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

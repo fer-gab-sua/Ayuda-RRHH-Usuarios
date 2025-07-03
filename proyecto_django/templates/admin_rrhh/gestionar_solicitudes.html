@@ -1,0 +1,176 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+
+{% block title %}Gestionar Solicitudes - Administración RH{% endblock %}
+
+{% block page_title %}Gestión de Solicitudes{% endblock %}
+
+{% block content %}
+<!-- Filtros -->
+<div class="form-section">
+    <form method="get" class="filters">
+        <select name="estado">
+            <option value="">Todos los estados</option>
+            <option value="pendiente" {% if estado_actual == 'pendiente' %}selected{% endif %}>Pendientes</option>
+            <option value="aprobada" {% if estado_actual == 'aprobada' %}selected{% endif %}>Aprobadas</option>
+            <option value="rechazada" {% if estado_actual == 'rechazada' %}selected{% endif %}>Rechazadas</option>
+        </select>
+        <select name="tipo">
+            <option value="">Todos los tipos</option>
+            {% for tipo in tipos_solicitud %}
+                <option value="{{ tipo.id }}" {% if tipo_actual == tipo.id|stringformat:"s" %}selected{% endif %}>
+                    {{ tipo.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+        <select name="empleado">
+            <option value="">Todos los empleados</option>
+            {% for empleado in empleados %}
+                <option value="{{ empleado.id }}" {% if empleado_actual == empleado.id|stringformat:"s" %}selected{% endif %}>
+                    {{ empleado.user.get_full_name }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{% url 'admin_rrhh:gestionar_solicitudes' %}" class="btn btn-secondary">Limpiar</a>
+    </form>
+</div>
+
+<!-- Lista de solicitudes -->
+<div class="table-container">
+    <div class="table-header">
+        <h3>Solicitudes ({{ page_obj.paginator.count }})</h3>
+    </div>
+    {% if page_obj %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Empleado</th>
+                <th>Tipo</th>
+                <th>Fecha Desde</th>
+                <th>Fecha Hasta</th>
+                <th>Estado</th>
+                <th>Fecha Solicitud</th>
+                <th>Motivo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solicitud in page_obj %}
+            <tr>
+                <td>
+                    <strong>{{ solicitud.empleado.user.get_full_name }}</strong><br>
+                    <small style="color: #6b7280;">{{ solicitud.empleado.departamento }}</small>
+                </td>
+                <td>{{ solicitud.tipo.nombre }}</td>
+                <td>{{ solicitud.fecha_desde|date:"d/m/Y" }}</td>
+                <td>
+                    {% if solicitud.fecha_hasta %}
+                        {{ solicitud.fecha_hasta|date:"d/m/Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge badge-{{ solicitud.estado }}">
+                        {% if solicitud.estado == 'pendiente' %}
+                            ⏳ Pendiente
+                        {% elif solicitud.estado == 'aprobada' %}
+                            ✅ Aprobada
+                        {% elif solicitud.estado == 'rechazada' %}
+                            ❌ Rechazada
+                        {% endif %}
+                    </span>
+                </td>
+                <td>{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                <td>
+                    <span title="{{ solicitud.motivo }}">
+                        {{ solicitud.motivo|truncatechars:50 }}
+                    </span>
+                </td>
+                <td>
+                    <div class="btn-group">
+                        {% if solicitud.estado == 'pendiente' %}
+                            <a href="{% url 'admin_rrhh:procesar_solicitud' solicitud.id %}" class="btn-sm btn-primary">Procesar</a>
+                        {% else %}
+                            <span class="btn-sm btn-secondary" title="Ya procesada">✓ Procesada</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}{% if empleado_actual %}&empleado={{ empleado_actual }}{% endif %}">&laquo; Primera</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}{% if empleado_actual %}&empleado={{ empleado_actual }}{% endif %}">Anterior</a>
+        {% endif %}
+
+        <span class="current">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}{% if empleado_actual %}&empleado={{ empleado_actual }}{% endif %}">Siguiente</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if tipo_actual %}&tipo={{ tipo_actual }}{% endif %}{% if empleado_actual %}&empleado={{ empleado_actual }}{% endif %}">Última &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #6b7280;">
+        <h3>No se encontraron solicitudes</h3>
+        <p>{% if estado_actual or tipo_actual or empleado_actual %}Intenta ajustar los filtros.{% else %}Aún no hay solicitudes registradas.{% endif %}</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Estadísticas rápidas -->
+<div class="stats-grid" style="margin-top: 20px;">
+    {% with pendientes=page_obj.paginator.object_list|length %}
+    {% with aprobadas=page_obj.paginator.object_list|length %}
+    {% with rechazadas=page_obj.paginator.object_list|length %}
+    <div class="stat-card">
+        <div class="number" style="color: #d97706;">
+            {{ page_obj.paginator.object_list|length }}
+        </div>
+        <div class="label">Solicitudes Mostradas</div>
+    </div>
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+</div>
+
+<!-- Información sobre solicitudes -->
+<div class="form-section" style="margin-top: 20px;">
+    <h3>ℹ️ Información sobre Solicitudes</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div>
+            <h4>Estados de Solicitudes</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 8px;">
+                    <span class="badge badge-pendiente">⏳ Pendiente</span> - Esperando revisión
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <span class="badge badge-aprobada">✅ Aprobada</span> - Solicitud aprobada
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <span class="badge badge-rechazada">❌ Rechazada</span> - Solicitud rechazada
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h4>Tipos de Solicitudes</h4>
+            <ul style="list-style: none; padding: 0;">
+                {% for tipo in tipos_solicitud %}
+                <li style="margin-bottom: 8px;">
+                    📝 {{ tipo.nombre }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

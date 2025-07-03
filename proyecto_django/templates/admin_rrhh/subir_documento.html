@@ -1,0 +1,124 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+{% load static %}
+
+{% block title %}Subir Documento - Portal RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cloud-upload"></i>
+                        Subir Documento para {{ empleado.user.get_full_name }}
+                    </h4>
+                    <a href="{% url 'admin_rrhh:gestionar_documentos' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    {% if empleado.foto_perfil %}
+                                        <img src="{{ empleado.foto_perfil.url }}" alt="Foto" class="rounded-circle mb-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-person text-white fs-2"></i>
+                                        </div>
+                                    {% endif %}
+                                    <h6 class="card-title">{{ empleado.user.get_full_name }}</h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">Legajo: {{ empleado.legajo }}</small><br>
+                                        <small class="text-muted">{{ empleado.puesto }}</small><br>
+                                        <small class="text-muted">{{ empleado.departamento }}</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre del Documento</label>
+                                    {{ form.nombre }}
+                                    {% if form.nombre.errors %}
+                                        <div class="text-danger">{{ form.nombre.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Ingrese un nombre descriptivo para el documento</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.tipo.id_for_label }}" class="form-label">Tipo de Documento</label>
+                                    {{ form.tipo }}
+                                    {% if form.tipo.errors %}
+                                        <div class="text-danger">{{ form.tipo.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.archivo.id_for_label }}" class="form-label">Archivo</label>
+                                    {{ form.archivo }}
+                                    {% if form.archivo.errors %}
+                                        <div class="text-danger">{{ form.archivo.errors }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Formatos permitidos: PDF, DOC, DOCX, JPG, PNG. Tamaño máximo: 10MB</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción (Opcional)</label>
+                                    {{ form.descripcion }}
+                                    {% if form.descripcion.errors %}
+                                        <div class="text-danger">{{ form.descripcion.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'admin_rrhh:gestionar_documentos' %}" class="btn btn-secondary">Cancelar</a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-cloud-upload"></i> Subir Documento
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Previsualización del archivo seleccionado
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Mostrar información del archivo
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'alert alert-info mt-2';
+                fileInfo.innerHTML = `
+                    <strong>Archivo seleccionado:</strong> ${file.name}<br>
+                    <strong>Tamaño:</strong> ${(file.size / (1024*1024)).toFixed(2)} MB<br>
+                    <strong>Tipo:</strong> ${file.type || 'No especificado'}
+                `;
+                
+                // Remover información anterior si existe
+                const existingInfo = fileInput.parentNode.querySelector('.alert-info');
+                if (existingInfo) {
+                    existingInfo.remove();
+                }
+                
+                fileInput.parentNode.appendChild(fileInfo);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

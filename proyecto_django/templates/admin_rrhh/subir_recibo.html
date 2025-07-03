@@ -1,0 +1,78 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+
+{% block title %}Subir Recibo - Administración RH{% endblock %}
+
+{% block page_title %}Subir Recibo de Sueldo{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <div class="form-section">
+        <h3>📄 Información del Recibo</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.empleado.id_for_label }}">{{ form.empleado.label }}</label>
+                {{ form.empleado }}
+                {% if form.empleado.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.empleado.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.periodo.id_for_label }}">{{ form.periodo.label }}</label>
+                {{ form.periodo }}
+                {% if form.periodo.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.periodo.errors.0 }}</div>
+                {% endif %}
+                <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+                    Ejemplo: "Mayo 2024", "Junio 2024"
+                </small>
+            </div>
+            <div class="form-group">
+                <label for="{{ form.fecha.id_for_label }}">{{ form.fecha.label }}</label>
+                {{ form.fecha }}
+                {% if form.fecha.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.fecha.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.archivo.id_for_label }}">{{ form.archivo.label }}</label>
+                {{ form.archivo }}
+                {% if form.archivo.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.archivo.errors.0 }}</div>
+                {% endif %}
+                <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+                    Solo archivos PDF. Tamaño máximo: 10MB
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Errores generales del formulario -->
+    {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <!-- Información adicional -->
+    <div class="form-section">
+        <h3>ℹ️ Información Importante</h3>
+        <div style="background: #f0f9ff; border: 1px solid #0284c7; border-radius: 8px; padding: 16px;">
+            <h4 style="color: #0284c7; margin-top: 0;">¿Qué sucede después de subir el recibo?</h4>
+            <ul style="margin-bottom: 0; color: #0f172a;">
+                <li>El empleado recibirá una notificación automática</li>
+                <li>El recibo aparecerá en su portal con estado "Pendiente"</li>
+                <li>El empleado podrá descargar, revisar y firmar el recibo</li>
+                <li>Recibirás una notificación cuando sea firmado</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div style="display: flex; gap: 10px; justify-content: end; margin-top: 20px;">
+        <a href="{% url 'admin_rrhh:gestionar_recibos' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success">📤 Subir Recibo</button>
+    </div>
+</form>
+{% endblock %}

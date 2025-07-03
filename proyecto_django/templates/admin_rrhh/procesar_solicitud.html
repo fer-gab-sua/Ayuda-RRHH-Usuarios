@@ -1,0 +1,141 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+
+{% block title %}Procesar Solicitud - Administración RH{% endblock %}
+
+{% block page_title %}Procesar Solicitud{% endblock %}
+
+{% block content %}
+<div class="form-section">
+    <h3>📋 Detalles de la Solicitud</h3>
+    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div>
+                <strong>Empleado:</strong><br>
+                {{ solicitud.empleado.user.get_full_name }}<br>
+                <small style="color: #6b7280;">{{ solicitud.empleado.departamento }} - {{ solicitud.empleado.puesto }}</small>
+            </div>
+            <div>
+                <strong>Tipo de Solicitud:</strong><br>
+                {{ solicitud.tipo.nombre }}
+            </div>
+            <div>
+                <strong>Fecha Desde:</strong><br>
+                {{ solicitud.fecha_desde|date:"d/m/Y" }}
+            </div>
+            <div>
+                <strong>Fecha Hasta:</strong><br>
+                {% if solicitud.fecha_hasta %}
+                    {{ solicitud.fecha_hasta|date:"d/m/Y" }}
+                {% else %}
+                    No aplica
+                {% endif %}
+            </div>
+            <div>
+                <strong>Fecha de Solicitud:</strong><br>
+                {{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}
+            </div>
+            <div>
+                <strong>Estado Actual:</strong><br>
+                <span class="badge badge-{{ solicitud.estado }}">
+                    {% if solicitud.estado == 'pendiente' %}
+                        ⏳ Pendiente
+                    {% elif solicitud.estado == 'aprobada' %}
+                        ✅ Aprobada
+                    {% elif solicitud.estado == 'rechazada' %}
+                        ❌ Rechazada
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border-left: 4px solid #2563eb;">
+        <h4 style="margin-top: 0; color: #1f2937;">Motivo de la Solicitud:</h4>
+        <p style="margin-bottom: 0; line-height: 1.6;">{{ solicitud.motivo }}</p>
+    </div>
+</div>
+
+{% if solicitud.estado == 'pendiente' %}
+<div class="form-section">
+    <h3>✅ Procesar Solicitud</h3>
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="observaciones">Observaciones (opcional):</label>
+            <textarea name="observaciones" id="observaciones" rows="4" 
+                      placeholder="Agrega cualquier comentario o explicación sobre la decisión..." 
+                      style="width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button type="submit" name="accion" value="aprobar" 
+                    class="btn" style="background: #16a34a; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
+                    onclick="return confirm('¿Estás seguro de que deseas APROBAR esta solicitud?')">
+                ✅ Aprobar Solicitud
+            </button>
+            <button type="submit" name="accion" value="rechazar" 
+                    class="btn" style="background: #dc2626; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
+                    onclick="return confirm('¿Estás seguro de que deseas RECHAZAR esta solicitud?')">
+                ❌ Rechazar Solicitud
+            </button>
+            <a href="{% url 'admin_rrhh:gestionar_solicitudes' %}" 
+               class="btn" style="background: #6b7280; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+                ← Volver a Lista
+            </a>
+        </div>
+    </form>
+</div>
+{% else %}
+<div class="form-section">
+    <h3>📋 Solicitud Ya Procesada</h3>
+    <div style="background: #fef3c7; border: 1px solid #d97706; border-radius: 8px; padding: 16px;">
+        <p style="margin: 0; color: #92400e;">
+            <strong>Esta solicitud ya fue procesada el {{ solicitud.fecha_respuesta|date:"d/m/Y H:i" }}.</strong>
+        </p>
+        {% if solicitud.observaciones_respuesta %}
+        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #fbbf24;">
+            <strong>Observaciones de la respuesta:</strong><br>
+            {{ solicitud.observaciones_respuesta }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div style="margin-top: 20px;">
+        <a href="{% url 'admin_rrhh:gestionar_solicitudes' %}" 
+           class="btn" style="background: #6b7280; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600;">
+            ← Volver a Lista
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Información adicional -->
+<div class="form-section">
+    <h3>ℹ️ Información Adicional</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div>
+            <h4>Datos del Empleado</h4>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <li style="margin-bottom: 8px;"><strong>DNI:</strong> {{ solicitud.empleado.dni }}</li>
+                <li style="margin-bottom: 8px;"><strong>Email:</strong> {{ solicitud.empleado.user.email }}</li>
+                <li style="margin-bottom: 8px;"><strong>Teléfono:</strong> {{ solicitud.empleado.telefono }}</li>
+                <li style="margin-bottom: 8px;"><strong>Fecha Ingreso:</strong> {{ solicitud.empleado.fecha_ingreso|date:"d/m/Y" }}</li>
+            </ul>
+        </div>
+        <div>
+            <h4>Historial de Solicitudes</h4>
+            <p style="color: #6b7280; font-size: 14px;">
+                Aquí podrías mostrar un resumen de solicitudes anteriores del empleado.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+}
+</style>
+{% endblock %}

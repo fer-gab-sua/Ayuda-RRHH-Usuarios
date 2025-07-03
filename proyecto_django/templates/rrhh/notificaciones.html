@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Notificaciones - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Notificaciones</h1>
+
+<section class="section">
+    {% if notificaciones %}
+    <div class="notificaciones-list">
+        {% for notificacion in notificaciones %}
+        <div class="notificacion-card {% if not notificacion.leida %}no-leida{% endif %} tipo-{{ notificacion.tipo }}">
+            <div class="notificacion-icon">
+                {% if notificacion.tipo == 'info' %}
+                    ℹ️
+                {% elif notificacion.tipo == 'alerta' %}
+                    ⚠️
+                {% elif notificacion.tipo == 'recordatorio' %}
+                    🔔
+                {% endif %}
+            </div>
+            <div class="notificacion-content">
+                <h4>{{ notificacion.titulo }}</h4>
+                <p>{{ notificacion.mensaje }}</p>
+                <div class="notificacion-meta">
+                    <span class="notificacion-fecha">{{ notificacion.fecha_creacion|date:"d/m/Y H:i" }}</span>
+                    <span class="notificacion-tipo-badge">{{ notificacion.get_tipo_display }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <h3>No tienes notificaciones</h3>
+        <p>Aquí aparecerán las notificaciones importantes de RH.</p>
+    </div>
+    {% endif %}
+</section>
+
+<style>
+.notificaciones-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.notificacion-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid #e5e7eb;
+}
+
+.notificacion-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.notificacion-card.no-leida {
+    border-left-color: #2563eb;
+    background: #f8faff;
+}
+
+.notificacion-card.tipo-alerta {
+    border-left-color: #d97706;
+}
+
+.notificacion-card.tipo-alerta.no-leida {
+    background: #fffbf5;
+}
+
+.notificacion-card.tipo-recordatorio {
+    border-left-color: #16a34a;
+}
+
+.notificacion-card.tipo-recordatorio.no-leida {
+    background: #f6fdf9;
+}
+
+.notificacion-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+.notificacion-content {
+    flex: 1;
+}
+
+.notificacion-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.notificacion-content p {
+    margin: 0 0 12px 0;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.notificacion-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.notificacion-fecha {
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.notificacion-tipo-badge {
+    background: #f3f4f6;
+    color: #6b7280;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.tipo-info .notificacion-tipo-badge {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.tipo-alerta .notificacion-tipo-badge {
+    background: #fed7aa;
+    color: #c2410c;
+}
+
+.tipo-recordatorio .notificacion-tipo-badge {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    font-size: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+
+{% block title %}Crear Empleado - Administración RH{% endblock %}
+
+{% block page_title %}Crear Nuevo Empleado{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Datos de Usuario -->
+    <div class="form-section">
+        <h3>🔑 Datos de Acceso</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.username.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.password.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.password_confirm.id_for_label }}">{{ form.password_confirm.label }}</label>
+                {{ form.password_confirm }}
+                {% if form.password_confirm.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.password_confirm.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Datos Personales -->
+    <div class="form-section">
+        <h3>👤 Información Personal</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.last_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.dni.id_for_label }}">{{ form.dni.label }}</label>
+                {{ form.dni }}
+                {% if form.dni.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.dni.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.fecha_nacimiento.id_for_label }}">{{ form.fecha_nacimiento.label }}</label>
+                {{ form.fecha_nacimiento }}
+                {% if form.fecha_nacimiento.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.fecha_nacimiento.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.email.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.telefono.id_for_label }}">{{ form.telefono.label }}</label>
+                {{ form.telefono }}
+                {% if form.telefono.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.telefono.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Dirección -->
+    <div class="form-section">
+        <h3>🏠 Dirección</h3>
+        <div class="form-grid">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="{{ form.direccion.id_for_label }}">{{ form.direccion.label }}</label>
+                {{ form.direccion }}
+                {% if form.direccion.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.direccion.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.ciudad.id_for_label }}">{{ form.ciudad.label }}</label>
+                {{ form.ciudad }}
+                {% if form.ciudad.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.ciudad.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.codigo_postal.id_for_label }}">{{ form.codigo_postal.label }}</label>
+                {{ form.codigo_postal }}
+                {% if form.codigo_postal.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.codigo_postal.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Contacto de Emergencia -->
+    <div class="form-section">
+        <h3>🚨 Contacto de Emergencia</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.contacto_emergencia.id_for_label }}">{{ form.contacto_emergencia.label }}</label>
+                {{ form.contacto_emergencia }}
+                {% if form.contacto_emergencia.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.contacto_emergencia.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.telefono_emergencia.id_for_label }}">{{ form.telefono_emergencia.label }}</label>
+                {{ form.telefono_emergencia }}
+                {% if form.telefono_emergencia.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.telefono_emergencia.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Datos Laborales -->
+    <div class="form-section">
+        <h3>💼 Información Laboral</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="{{ form.puesto.id_for_label }}">{{ form.puesto.label }}</label>
+                {{ form.puesto }}
+                {% if form.puesto.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.puesto.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.departamento.id_for_label }}">{{ form.departamento.label }}</label>
+                {{ form.departamento }}
+                {% if form.departamento.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.departamento.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.fecha_ingreso.id_for_label }}">{{ form.fecha_ingreso.label }}</label>
+                {{ form.fecha_ingreso }}
+                {% if form.fecha_ingreso.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.fecha_ingreso.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.salario.id_for_label }}">{{ form.salario.label }}</label>
+                {{ form.salario }}
+                {% if form.salario.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.salario.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Foto de Perfil -->
+    <div class="form-section">
+        <h3>📷 Foto de Perfil</h3>
+        <div class="form-group">
+            <label for="{{ form.foto_perfil.id_for_label }}">{{ form.foto_perfil.label }}</label>
+            {{ form.foto_perfil }}
+            {% if form.foto_perfil.errors %}
+                <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">{{ form.foto_perfil.errors.0 }}</div>
+            {% endif %}
+            <small style="color: #6b7280; font-size: 12px; margin-top: 4px; display: block;">
+                Formatos permitidos: JPG, PNG. Tamaño máximo: 5MB
+            </small>
+        </div>
+    </div>
+
+    <!-- Errores generales del formulario -->
+    {% if form.non_field_errors %}
+        <div class="alert alert-error">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <!-- Botones de acción -->
+    <div style="display: flex; gap: 10px; justify-content: end; margin-top: 20px;">
+        <a href="{% url 'admin_rrhh:gestionar_empleados' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success">💾 Crear Empleado</button>
+    </div>
+</form>
+{% endblock %}

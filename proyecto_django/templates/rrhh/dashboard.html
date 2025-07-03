@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Portal RH{% endblock %}
+
+{% block content %}
+<div class="welcome">Hola {{ user.first_name }} 👋</div>
+<section class="cards">
+    <a href="{% url 'recibos' %}" class="card">
+        <span>📄</span>
+        <h3>Ver Recibos</h3>
+        {% if recibos_pendientes > 0 %}
+            <div class="card-badge">{{ recibos_pendientes }} pendientes</div>
+        {% endif %}
+    </a>
+    <a href="{% url 'documentos' %}" class="card">
+        <span>📁</span>
+        <h3>Documentación</h3>
+    </a>
+    <a href="{% url 'solicitudes' %}" class="card">
+        <span>📝</span>
+        <h3>Solicitudes</h3>
+    </a>
+    <a href="{% url 'certificados' %}" class="card">
+        <span>📤</span>
+        <h3>Subir Certificados</h3>
+    </a>
+</section>
+
+<style>
+.card-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #dc2626;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.card {
+    position: relative;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Firmar Recibo - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Firmar Recibo</h1>
+
+<div class="recibo-info">
+    <h3>{{ recibo.periodo }}</h3>
+    <p><strong>Fecha:</strong> {{ recibo.fecha|date:"d/m/Y" }}</p>
+    <p><strong>Empleado:</strong> {{ recibo.empleado }}</p>
+</div>
+
+<div class="recibo-preview">
+    <iframe src="{{ recibo.archivo.url }}" width="100%" height="500px" style="border: 1px solid #ddd; border-radius: 8px;"></iframe>
+</div>
+
+<form method="post" class="firma-form">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="observaciones">Observaciones (opcional):</label>
+        <textarea name="observaciones" id="observaciones" rows="4" placeholder="Ingresa cualquier observación sobre este recibo..."></textarea>
+    </div>
+    
+    <div class="form-actions">
+        <button type="submit" name="accion" value="firmar" class="btn btn-success">
+            ✓ Firmar Recibo
+        </button>
+        <button type="submit" name="accion" value="disconformidad" class="btn btn-warning">
+            ⚠ Firmar en Disconformidad
+        </button>
+        <a href="{% url 'recibos' %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+
+<style>
+.recibo-info {
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.recibo-preview {
+    margin: 20px 0;
+}
+
+.firma-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-success {
+    background: #16a34a;
+    color: white;
+}
+
+.btn-warning {
+    background: #d97706;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.form-actions .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.form-actions .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}

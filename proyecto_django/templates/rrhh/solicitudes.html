@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Solicitudes - Portal RH{% endblock %}
+
+{% block content %}
+<h1>Solicitudes</h1>
+
+<section class="section">
+    <div class="section-title">Nueva Solicitud</div>
+    <form method="post" class="formulario-solicitud">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.tipo.id_for_label }}">Tipo de Solicitud</label>
+            {{ form.tipo }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.fecha_desde.id_for_label }}">Fecha Desde</label>
+            {{ form.fecha_desde }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.fecha_hasta.id_for_label }}">Fecha Hasta (opcional)</label>
+            {{ form.fecha_hasta }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.motivo.id_for_label }}">Motivo/Descripción</label>
+            {{ form.motivo }}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn">Enviar Solicitud</button>
+        </div>
+    </form>
+</section>
+
+<section class="section">
+    <div class="section-title">Mis Solicitudes</div>
+    <table class="solicitudes-table">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Fecha Desde</th>
+                <th>Fecha Hasta</th>
+                <th>Estado</th>
+                <th>Fecha Solicitud</th>
+                <th>Observaciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solicitud in solicitudes %}
+            <tr>
+                <td>{{ solicitud.tipo.nombre }}</td>
+                <td>{{ solicitud.fecha_desde|date:"d/m/Y" }}</td>
+                <td>{{ solicitud.fecha_hasta|date:"d/m/Y"|default:"-" }}</td>
+                <td class="estado-{{ solicitud.estado }}">
+                    {% if solicitud.estado == 'pendiente' %}
+                        Pendiente
+                    {% elif solicitud.estado == 'aprobada' %}
+                        Aprobada
+                    {% elif solicitud.estado == 'rechazada' %}
+                        Rechazada
+                    {% endif %}
+                </td>
+                <td>{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                <td>{{ solicitud.observaciones_respuesta|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 20px; color: #6b7280;">
+                    No tienes solicitudes registradas
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<style>
+.solicitudes-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.solicitudes-table th,
+.solicitudes-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.solicitudes-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #374151;
+}
+
+.estado-pendiente {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.estado-aprobada {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+.estado-rechazada {
+    color: #dc2626;
+    font-weight: 600;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Portal RH{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <aside class="sidebar">
+        <div class="logo"><img src="{% static 'img/logo.png' %}" alt="Logo"></div>
+        <div class="profile-notif">
+            <div class="profile-pic">
+                {% if user.empleado.foto_perfil %}
+                    <img src="{{ user.empleado.foto_perfil.url }}" alt="Foto de perfil">
+                {% else %}
+                    <img src="{% static 'img/empleado.png' %}" alt="Foto de perfil">
+                {% endif %}
+            </div>
+            <div class="notification" title="Notificaciones">
+                <div class="notification-icon">
+                    🔔<div class="notification-count" id="notif-count">{{ notificaciones_count|default:0 }}</div>
+                </div>
+            </div>
+        </div>
+        <nav class="nav">
+            <a href="{% url 'perfil' %}">👤<span class="nav-text">Mi perfil</span></a>
+            <a href="{% url 'recibos' %}">📄<span class="nav-text">Mis recibos de sueldo</span></a>
+            <a href="{% url 'documentos' %}">📁<span class="nav-text">Documentación importante</span></a>
+            <a href="{% url 'solicitudes' %}">📝<span class="nav-text">Solicitudes</span></a>
+            <a href="{% url 'certificados' %}">📤<span class="nav-text">Certificados</span></a>
+            <a href="{% url 'notificaciones' %}">🔔<span class="nav-text">Notificaciones</span></a>
+            {% if user.is_staff or user.perfilrrhh %}
+                <a href="{% url 'admin_rrhh:dashboard' %}">⚙️<span class="nav-text">Administración RH</span></a>
+            {% endif %}
+            <a href="{% url 'logout' %}">🚪<span class="nav-text">Salir</span></a>
+        </nav>
+    </aside>
+    {% endif %}
+    
+    <main class="{% if user.is_authenticated %}main-content{% else %}login-main{% endif %}">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% block extra_js %}
+    <script>
+        // Actualizar contador de notificaciones cada 30 segundos
+        {% if user.is_authenticated %}
+        setInterval(function() {
+            fetch('{% url "notificaciones_count" %}')
+                .then(response => response.json())
+                .then(data => {
+                    const countElement = document.getElementById('notif-count');
+                    if (countElement) {
+                        countElement.textContent = data.count;
+                    }
+                });
+        }, 30000);
+        {% endif %}
+    </script>
+    {% endblock %}
+</body>
+</html>

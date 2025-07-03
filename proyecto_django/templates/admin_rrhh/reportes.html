@@ -1,0 +1,287 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+{% load static %}
+
+{% block title %}Reportes - Portal RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-graph-up"></i>
+                        Reportes y Estadísticas
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Estadísticas Generales -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Total Empleados</h6>
+                                            <h2 class="mb-0">{{ total_empleados }}</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="bi bi-people fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Recibos Generados</h6>
+                                            <h2 class="mb-0">{{ total_recibos }}</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="bi bi-file-earmark-text fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Solicitudes Pendientes</h6>
+                                            <h2 class="mb-0">{{ solicitudes_pendientes }}</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="bi bi-clock-history fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="card-title">Documentos Subidos</h6>
+                                            <h2 class="mb-0">{{ total_documentos }}</h2>
+                                        </div>
+                                        <div class="align-self-center">
+                                            <i class="bi bi-folder fs-1"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reportes -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Empleados por Departamento</h5>
+                                    <a href="{% url 'admin_rrhh:exportar_empleados' %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-download"></i> Exportar CSV
+                                    </a>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="departamentosChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Solicitudes por Tipo</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="solicitudesChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Actividad Mensual</h5>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="actividadChart" width="400" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tablas de Datos -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Últimas Contrataciones</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Empleado</th>
+                                                    <th>Fecha Ingreso</th>
+                                                    <th>Departamento</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for empleado in ultimas_contrataciones %}
+                                                <tr>
+                                                    <td>{{ empleado.user.get_full_name }}</td>
+                                                    <td>{{ empleado.fecha_ingreso|date:"d/m/Y" }}</td>
+                                                    <td>{{ empleado.departamento }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Solicitudes Recientes</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Empleado</th>
+                                                    <th>Tipo</th>
+                                                    <th>Estado</th>
+                                                    <th>Fecha</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for solicitud in solicitudes_recientes %}
+                                                <tr>
+                                                    <td>{{ solicitud.empleado.user.get_full_name }}</td>
+                                                    <td>{{ solicitud.tipo.nombre }}</td>
+                                                    <td>
+                                                        <span class="badge 
+                                                            {% if solicitud.estado == 'aprobada' %}bg-success
+                                                            {% elif solicitud.estado == 'rechazada' %}bg-danger
+                                                            {% else %}bg-warning{% endif %}">
+                                                            {{ solicitud.get_estado_display }}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico de Empleados por Departamento
+    const deptCtx = document.getElementById('departamentosChart').getContext('2d');
+    new Chart(deptCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ departamentos_labels|safe }},
+            datasets: [{
+                data: {{ departamentos_data|safe }},
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Gráfico de Solicitudes por Tipo
+    const solCtx = document.getElementById('solicitudesChart').getContext('2d');
+    new Chart(solCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ tipos_solicitudes_labels|safe }},
+            datasets: [{
+                label: 'Solicitudes',
+                data: {{ tipos_solicitudes_data|safe }},
+                backgroundColor: '#36A2EB'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Gráfico de Actividad Mensual
+    const actCtx = document.getElementById('actividadChart').getContext('2d');
+    new Chart(actCtx, {
+        type: 'line',
+        data: {
+            labels: {{ meses_labels|safe }},
+            datasets: [{
+                label: 'Solicitudes',
+                data: {{ solicitudes_por_mes|safe }},
+                borderColor: '#FF6384',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Contrataciones',
+                data: {{ contrataciones_por_mes|safe }},
+                borderColor: '#36A2EB',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+
+{% block title %}Gestionar Empleados - Administración RH{% endblock %}
+
+{% block page_title %}Gestión de Empleados{% endblock %}
+
+{% block content %}
+<!-- Filtros y búsqueda -->
+<div class="form-section">
+    <form method="get" class="filters">
+        {{ busqueda_form.query }}
+        {{ busqueda_form.departamento }}
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        <a href="{% url 'admin_rrhh:gestionar_empleados' %}" class="btn btn-secondary">Limpiar</a>
+        <a href="{% url 'admin_rrhh:crear_empleado' %}" class="btn btn-success">➕ Nuevo Empleado</a>
+        <a href="{% url 'admin_rrhh:exportar_empleados' %}" class="btn btn-warning">📊 Exportar CSV</a>
+    </form>
+</div>
+
+<!-- Lista de empleados -->
+<div class="table-container">
+    <div class="table-header">
+        <h3>Empleados Registrados ({{ page_obj.paginator.count }})</h3>
+    </div>
+    {% if page_obj %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Foto</th>
+                <th>Nombre</th>
+                <th>DNI</th>
+                <th>Email</th>
+                <th>Puesto</th>
+                <th>Departamento</th>
+                <th>Fecha Ingreso</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empleado in page_obj %}
+            <tr>
+                <td>
+                    {% if empleado.foto_perfil %}
+                        <img src="{{ empleado.foto_perfil.url }}" alt="Foto" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                        {% load static %}
+                        <img src="{% static 'img/empleado.png' %}" alt="Foto" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    {% endif %}
+                </td>
+                <td>
+                    <strong>{{ empleado.user.get_full_name }}</strong><br>
+                    <small style="color: #6b7280;">{{ empleado.user.username }}</small>
+                </td>
+                <td>{{ empleado.dni }}</td>
+                <td>{{ empleado.user.email }}</td>
+                <td>{{ empleado.puesto }}</td>
+                <td>{{ empleado.departamento }}</td>
+                <td>{{ empleado.fecha_ingreso|date:"d/m/Y" }}</td>
+                <td>
+                    <div class="btn-group">
+                        <a href="{% url 'admin_rrhh:editar_empleado' empleado.id %}" class="btn-sm btn-primary" title="Editar">✏️</a>
+                        <a href="{% url 'admin_rrhh:subir_documento' empleado.id %}" class="btn-sm btn-secondary" title="Subir Documento">📎</a>
+                        <a href="{% url 'admin_rrhh:gestionar_recibos' %}?empleado={{ empleado.id }}" class="btn-sm btn-warning" title="Ver Recibos">📄</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">&laquo; Primera</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">Anterior</a>
+        {% endif %}
+
+        <span class="current">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">Siguiente</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.departamento %}&departamento={{ request.GET.departamento }}{% endif %}">Última &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #6b7280;">
+        <h3>No se encontraron empleados</h3>
+        <p>{% if request.GET.query or request.GET.departamento %}Intenta ajustar los filtros de búsqueda.{% else %}Aún no hay empleados registrados.{% endif %}</p>
+        <a href="{% url 'admin_rrhh:crear_empleado' %}" class="btn btn-success">Crear Primer Empleado</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Estadísticas por departamento -->
+{% if departamentos %}
+<div class="form-section" style="margin-top: 20px;">
+    <h3>Empleados por Departamento</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        {% for dept in departamentos %}
+        <div style="background: #f8fafc; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 24px; font-weight: 600; color: #2563eb;">
+                {{ page_obj.paginator.object_list|length }}
+            </div>
+            <div style="color: #6b7280; font-size: 14px;">{{ dept|default:"Sin Departamento" }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

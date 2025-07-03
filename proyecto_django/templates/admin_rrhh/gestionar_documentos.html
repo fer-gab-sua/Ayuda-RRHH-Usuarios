@@ -1,0 +1,206 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+{% load static %}
+
+{% block title %}Gestionar Documentos - Portal RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-folder-fill"></i>
+                        Gestionar Documentos
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Filtros -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <form method="get" class="d-flex gap-2">
+                                <input type="text" name="buscar" class="form-control" placeholder="Buscar por empleado o tipo de documento..." value="{{ request.GET.buscar }}">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        Filtrar por Tipo
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="?tipo=">Todos</a></li>
+                                        <li><a class="dropdown-item" href="?tipo=certificado_trabajo">Certificado de Trabajo</a></li>
+                                        <li><a class="dropdown-item" href="?tipo=recibo_sueldo">Recibo de Sueldo</a></li>
+                                        <li><a class="dropdown-item" href="?tipo=contrato">Contrato</a></li>
+                                        <li><a class="dropdown-item" href="?tipo=otro">Otro</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de documentos -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Empleado</th>
+                                    <th>Tipo</th>
+                                    <th>Nombre</th>
+                                    <th>Fecha Subida</th>
+                                    <th>Tamaño</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for documento in documentos %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if documento.empleado.foto_perfil %}
+                                                <img src="{{ documento.empleado.foto_perfil.url }}" alt="Foto" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-person text-white"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ documento.empleado.user.get_full_name }}</div>
+                                                <small class="text-muted">{{ documento.empleado.legajo }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ documento.get_tipo_display }}</span>
+                                    </td>
+                                    <td>{{ documento.nombre }}</td>
+                                    <td>{{ documento.fecha_subida|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if documento.archivo.size %}
+                                            {% if documento.archivo.size < 1048576 %}
+                                                {{ documento.archivo.size|filesizeformat }}
+                                            {% else %}
+                                                {{ documento.archivo.size|filesizeformat }}
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ documento.archivo.url }}" class="btn btn-outline-primary" target="_blank">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ documento.archivo.url }}" class="btn btn-outline-success" download>
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-outline-danger" data-documento-id="{{ documento.id }}" onclick="eliminarDocumento(this.dataset.documentoId)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <i class="bi bi-folder-x display-1 text-muted"></i>
+                                        <p class="text-muted mt-2">No se encontraron documentos</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paginación -->
+                    {% if documentos.has_other_pages %}
+                    <nav aria-label="Paginación">
+                        <ul class="pagination justify-content-center">
+                            {% if documentos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ documentos.previous_page_number }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}">Anterior</a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for num in documentos.paginator.page_range %}
+                                {% if documentos.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if documentos.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ documentos.next_page_number }}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}">Siguiente</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="eliminarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                ¿Está seguro que desea eliminar este documento? Esta acción no se puede deshacer.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let documentoAEliminar = null;
+
+function eliminarDocumento(documentoId) {
+    documentoAEliminar = documentoId;
+    new bootstrap.Modal(document.getElementById('eliminarModal')).show();
+}
+
+document.getElementById('confirmarEliminar').addEventListener('click', function() {
+    if (documentoAEliminar) {
+        fetch(`/admin-rrhh/documentos/eliminar/${documentoAEliminar}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error al eliminar el documento');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar el documento');
+        });
+    }
+});
+</script>
+{% endblock %}

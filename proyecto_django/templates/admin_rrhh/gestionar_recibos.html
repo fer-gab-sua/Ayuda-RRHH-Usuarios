@@ -1,0 +1,167 @@
+{% extends 'admin_rrhh/base_admin.html' %}
+
+{% block title %}Gestionar Recibos - Administración RH{% endblock %}
+
+{% block page_title %}Gestión de Recibos de Sueldo{% endblock %}
+
+{% block content %}
+<!-- Estadísticas -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="number">{{ stats.total }}</div>
+        <div class="label">Total Recibos</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ stats.pendientes }}</div>
+        <div class="label">Pendientes</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ stats.firmados }}</div>
+        <div class="label">Firmados</div>
+    </div>
+    <div class="stat-card">
+        <div class="number">{{ stats.disconformidad }}</div>
+        <div class="label">En Disconformidad</div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="form-section">
+    <form method="get" class="filters">
+        <select name="estado">
+            <option value="">Todos los estados</option>
+            <option value="pendiente" {% if estado_actual == 'pendiente' %}selected{% endif %}>Pendientes</option>
+            <option value="firmado" {% if estado_actual == 'firmado' %}selected{% endif %}>Firmados</option>
+            <option value="disconformidad" {% if estado_actual == 'disconformidad' %}selected{% endif %}>En Disconformidad</option>
+        </select>
+        <input type="month" name="mes" value="{{ mes_actual }}" placeholder="Filtrar por mes">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <a href="{% url 'admin_rrhh:gestionar_recibos' %}" class="btn btn-secondary">Limpiar</a>
+        <a href="{% url 'admin_rrhh:subir_recibo' %}" class="btn btn-success">📄 Subir Recibo</a>
+    </form>
+</div>
+
+<!-- Lista de recibos -->
+<div class="table-container">
+    <div class="table-header">
+        <h3>Recibos de Sueldo ({{ page_obj.paginator.count }})</h3>
+    </div>
+    {% if page_obj %}
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Empleado</th>
+                <th>Período</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Fecha Firma</th>
+                <th>Observaciones</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recibo in page_obj %}
+            <tr>
+                <td>
+                    <strong>{{ recibo.empleado.user.get_full_name }}</strong><br>
+                    <small style="color: #6b7280;">{{ recibo.empleado.departamento }}</small>
+                </td>
+                <td>{{ recibo.periodo }}</td>
+                <td>{{ recibo.fecha|date:"d/m/Y" }}</td>
+                <td>
+                    <span class="badge badge-{{ recibo.estado }}">
+                        {% if recibo.estado == 'pendiente' %}
+                            ⏳ Pendiente
+                        {% elif recibo.estado == 'firmado' %}
+                            ✅ Firmado
+                        {% elif recibo.estado == 'disconformidad' %}
+                            ⚠️ Disconformidad
+                        {% endif %}
+                    </span>
+                </td>
+                <td>
+                    {% if recibo.fecha_firma %}
+                        {{ recibo.fecha_firma|date:"d/m/Y H:i" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if recibo.observaciones %}
+                        <span title="{{ recibo.observaciones }}">
+                            {{ recibo.observaciones|truncatechars:30 }}
+                        </span>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <a href="{{ recibo.archivo.url }}" target="_blank" class="btn-sm btn-primary" title="Ver PDF">👁️</a>
+                        {% if recibo.estado == 'pendiente' %}
+                            <span class="btn-sm btn-warning" title="Esperando firma">⏳</span>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Paginación -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if mes_actual %}&mes={{ mes_actual }}{% endif %}">&laquo; Primera</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if mes_actual %}&mes={{ mes_actual }}{% endif %}">Anterior</a>
+        {% endif %}
+
+        <span class="current">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if mes_actual %}&mes={{ mes_actual }}{% endif %}">Siguiente</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if estado_actual %}&estado={{ estado_actual }}{% endif %}{% if mes_actual %}&mes={{ mes_actual }}{% endif %}">Última &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: #6b7280;">
+        <h3>No se encontraron recibos</h3>
+        <p>{% if estado_actual or mes_actual %}Intenta ajustar los filtros.{% else %}Aún no hay recibos subidos.{% endif %}</p>
+        <a href="{% url 'admin_rrhh:subir_recibo' %}" class="btn btn-success">Subir Primer Recibo</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Información adicional -->
+<div class="form-section" style="margin-top: 20px;">
+    <h3>ℹ️ Información sobre Recibos</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <div>
+            <h4>Estados de Recibos</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 8px;">
+                    <span class="badge badge-pendiente">⏳ Pendiente</span> - Esperando firma del empleado
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <span class="badge badge-firmado">✅ Firmado</span> - Firmado sin observaciones
+                </li>
+                <li style="margin-bottom: 8px;">
+                    <span class="badge badge-disconformidad">⚠️ Disconformidad</span> - Firmado con observaciones
+                </li>
+            </ul>
+        </div>
+        <div>
+            <h4>Acciones Disponibles</h4>
+            <ul style="list-style: none; padding: 0;">
+                <li style="margin-bottom: 8px;">👁️ Ver PDF del recibo</li>
+                <li style="margin-bottom: 8px;">📄 Subir nuevo recibo</li>
+                <li style="margin-bottom: 8px;">📊 Filtrar por estado o mes</li>
+                <li style="margin-bottom: 8px;">📈 Ver estadísticas generales</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
