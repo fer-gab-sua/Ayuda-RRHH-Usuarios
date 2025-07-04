@@ -4,6 +4,7 @@
 {% block title %}Mis Recibos de Sueldo - Portal RH{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/recibos-responsive.css' %}">
 <style>
 .recibos-container {
     max-width: 1200px;
@@ -61,7 +62,7 @@
 
 .section-header {
     display: flex;
-    justify-content: between;
+    justify-content: flex-start;
     align-items: center;
     margin-bottom: 25px;
     padding-bottom: 15px;
@@ -269,6 +270,20 @@
     color: #92400e;
 }
 
+/* Ajustes para alertas en móvil */
+@media (max-width: 768px) {
+    .alert {
+        padding: 12px;
+        margin-bottom: 16px;
+        font-size: 0.9rem;
+    }
+    
+    .alert strong {
+        display: block;
+        margin-bottom: 4px;
+    }
+}
+
 @media (max-width: 768px) {
     .recibos-table {
         font-size: 0.875rem;
@@ -291,29 +306,29 @@
     
     <!-- Resumen de estadísticas -->
     <div class="resumen-cards">
-        <div class="resumen-card pendientes">
-            <h3>{{ pendientes }}</h3>
-            <p>Pendientes de Firma</p>
-        </div>
-        <div class="resumen-card" style="border-left-color: #f59e0b;">
-            <h3>{{ observados }}</h3>
-            <p>Observados (Esperando RRHH)</p>
-        </div>
-        <div class="resumen-card" style="border-left-color: #8b5cf6;">
-            <h3>{{ respondidos }}</h3>
-            <p>Respondidos por RRHH</p>
+        <div class="resumen-card total">
+            <h3>{{ total_recibos }}</h3>
+            <p>Total de Recibos</p>
         </div>
         <div class="resumen-card firmados">
             <h3>{{ firmados }}</h3>
             <p>Firmados</p>
         </div>
+        <div class="resumen-card pendientes">
+            <h3>{{ pendientes }}</h3>
+            <p>Pendientes de Firma</p>
+        </div>
+        <div class="resumen-card observados">
+            <h3>{{ observados }}</h3>
+            <p>Observados (Esperando RRHH)</p>
+        </div>
+        <div class="resumen-card respondidos">
+            <h3>{{ respondidos }}</h3>
+            <p>Respondidos por RRHH</p>
+        </div>
         <div class="resumen-card vencidos">
             <h3>{{ vencidos }}</h3>
             <p>Vencidos</p>
-        </div>
-        <div class="resumen-card">
-            <h3>{{ total_recibos }}</h3>
-            <p>Total de Recibos</p>
         </div>
     </div>
     
@@ -321,18 +336,20 @@
     <div class="recibos-section">
         <div class="section-header">
             <h2 class="section-title">Recibos Disponibles</h2>
-            {% if puede_firmar %}
-                <div class="alert alert-info">
-                    <strong>📋 Recibo listo para firmar</strong><br>
-                    Tienes el recibo de {{ puede_firmar.get_periodo_display }} {{ puede_firmar.anio }} listo para firmar.
-                </div>
-            {% elif tiene_observaciones_pendientes %}
-                <div class="alert alert-warning">
-                    <strong>⏳ Esperando respuesta de RRHH</strong><br>
-                    Tienes observaciones pendientes que deben ser resueltas antes de continuar.
-                </div>
-            {% endif %}
         </div>
+        
+        <!-- Alertas informativas -->
+        {% if puede_firmar %}
+            <div class="alert alert-info">
+                <strong>📋 Recibo listo para firmar</strong><br>
+                Tienes el recibo de {{ puede_firmar.get_periodo_display }} {{ puede_firmar.anio }} listo para firmar.
+            </div>
+        {% elif tiene_observaciones_pendientes %}
+            <div class="alert alert-warning">
+                <strong>⏳ Esperando respuesta de RRHH</strong><br>
+                Tienes observaciones pendientes que deben ser resueltas antes de continuar.
+            </div>
+        {% endif %}
         
         {% if recibos %}
             <table class="recibos-table">
@@ -349,10 +366,10 @@
                 <tbody>
                     {% for recibo in recibos %}
                         <tr {% if not recibo.puede_ver %}class="recibo-bloqueado"{% endif %}>
-                            <td>{{ recibo.get_periodo_display }}</td>
-                            <td>{{ recibo.anio }}</td>
-                            <td>{{ recibo.fecha_emision|date:"d/m/Y" }}</td>
-                            <td>
+                            <td data-label="Período">{{ recibo.get_periodo_display }}</td>
+                            <td data-label="Año">{{ recibo.anio }}</td>
+                            <td data-label="Fecha Emisión">{{ recibo.fecha_emision|date:"d/m/Y" }}</td>
+                            <td data-label="Estado">
                                 {% if recibo.estado == 'pendiente' %}
                                     <span class="estado-badge estado-pendiente">Pendiente</span>
                                 {% elif recibo.estado == 'observado' %}
@@ -365,14 +382,14 @@
                                     <span class="estado-badge estado-vencido">Vencido</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td data-label="Fecha Firma">
                                 {% if recibo.fecha_firma %}
                                     {{ recibo.fecha_firma|date:"d/m/Y H:i" }}
                                 {% else %}
                                     <span class="text-muted">Sin firmar</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td data-label="Acciones">
                                 <div class="btn-group">
                                     {% if recibo.puede_ver %}
                                         <a href="{% url 'recibos:visualizar_recibo' recibo.id %}" 
