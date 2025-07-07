@@ -1,0 +1,368 @@
+{% extends 'rrhh/base_rrhh.html' %}
+
+{% block title %}Detalle del Empleado{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">{{ empleado.user.get_full_name }}</h1>
+                <div>
+                    <a href="{% url 'rrhh:editar_empleado' empleado.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="{% url 'rrhh:empleados' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información Personal -->
+        <div class="col-12 col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Información Personal</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        {% if empleado.foto_perfil %}
+                            <img src="{{ empleado.foto_perfil.url }}" alt="Foto de perfil" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 100px; height: 100px; margin: 0 auto;">
+                                <i class="fas fa-user fa-2x text-white"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Legajo:</strong></td>
+                            <td>{{ empleado.legajo }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DNI:</strong></td>
+                            <td>{{ empleado.dni }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CUIL:</strong></td>
+                            <td>{{ empleado.cuil|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fecha de Nacimiento:</strong></td>
+                            <td>{{ empleado.fecha_nacimiento|date:"d/m/Y"|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Teléfono:</strong></td>
+                            <td>{{ empleado.telefono|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td>{{ empleado.user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Es RRHH:</strong></td>
+                            <td>
+                                {% if empleado.es_rrhh %}
+                                    <span class="badge bg-success">Sí</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Información Laboral -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Información Laboral</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Puesto:</strong></td>
+                            <td>{{ empleado.puesto|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Departamento:</strong></td>
+                            <td>{{ empleado.departamento|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Supervisor:</strong></td>
+                            <td>{{ empleado.supervisor|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tipo de Contrato:</strong></td>
+                            <td>{{ empleado.get_tipo_contrato_display }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Salario:</strong></td>
+                            <td>
+                                {% if empleado.salario %}
+                                    ${{ empleado.salario|floatformat:2 }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fecha de Contrato:</strong></td>
+                            <td>{{ empleado.fecha_contrato|date:"d/m/Y"|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Domicilio -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Domicilio</h5>
+                    <a href="{% url 'rrhh:editar_domicilio' empleado.pk %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if domicilio %}
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Dirección:</strong></td>
+                                <td>
+                                    {% if domicilio.calle %}
+                                        {{ domicilio.calle }} {{ domicilio.numero|default:"" }}
+                                        {% if domicilio.piso %}, Piso {{ domicilio.piso }}{% endif %}
+                                        {% if domicilio.depto %}, Depto {{ domicilio.depto }}{% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Barrio:</strong></td>
+                                <td>{{ domicilio.barrio|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Localidad:</strong></td>
+                                <td>{{ domicilio.localidad|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Provincia:</strong></td>
+                                <td>{{ domicilio.provincia|default:"-" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Código Postal:</strong></td>
+                                <td>{{ domicilio.codigo_postal|default:"-" }}</td>
+                            </tr>
+                            {% if domicilio.entre_calles %}
+                            <tr>
+                                <td><strong>Entre calles:</strong></td>
+                                <td>{{ domicilio.entre_calles }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                            <p>No hay información de domicilio registrada</p>
+                            <a href="{% url 'rrhh:editar_domicilio' empleado.pk %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> Agregar Domicilio
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Contacto de Emergencia -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Contacto de Emergencia</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Contacto:</strong></td>
+                            <td>{{ empleado.contacto_emergencia|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Teléfono:</strong></td>
+                            <td>{{ empleado.telefono_emergencia|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Relación:</strong></td>
+                            <td>{{ empleado.relacion_emergencia|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de Gestión -->
+        <div class="col-12 col-lg-8">
+            <!-- Recibos de Sueldo -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Recibos de Sueldo</h5>
+                    <span class="badge bg-primary">{{ recibos.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if recibos %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Período</th>
+                                        <th>Año</th>
+                                        <th>Fecha de Vencimiento</th>
+                                        <th>Subido por</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for recibo in recibos|slice:":5" %}
+                                    <tr>
+                                        <td>{{ recibo.periodo|title }}</td>
+                                        <td>{{ recibo.anio }}</td>
+                                        <td>{{ recibo.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                        <td>{{ recibo.subido_por.get_full_name }}</td>
+                                        <td>
+                                            {% if recibo.archivo_pdf %}
+                                                <a href="{{ recibo.archivo_pdf.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="fas fa-file-pdf"></i> Ver PDF
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if recibos.count > 5 %}
+                            <div class="text-center">
+                                <small class="text-muted">Mostrando los últimos 5 recibos de {{ recibos.count }} totales</small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-file-invoice fa-2x mb-3"></i>
+                            <p>No hay recibos de sueldo registrados</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Documentos -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Documentos</h5>
+                    <span class="badge bg-info">{{ documentos.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if documentos %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Fecha de Subida</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for documento in documentos|slice:":5" %}
+                                    <tr>
+                                        <td>{{ documento.tipo }}</td>
+                                        <td>{{ documento.fecha_subida|date:"d/m/Y" }}</td>
+                                        <td>
+                                            {% if documento.estado == 'aprobado' %}
+                                                <span class="badge bg-success">Aprobado</span>
+                                            {% elif documento.estado == 'rechazado' %}
+                                                <span class="badge bg-danger">Rechazado</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pendiente</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if documento.archivo %}
+                                                <a href="{{ documento.archivo.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                                    <i class="fas fa-file"></i> Ver
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if documentos.count > 5 %}
+                            <div class="text-center">
+                                <small class="text-muted">Mostrando los últimos 5 documentos de {{ documentos.count }} totales</small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-file-alt fa-2x mb-3"></i>
+                            <p>No hay documentos registrados</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Solicitudes -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Solicitudes</h5>
+                    <span class="badge bg-warning">{{ solicitudes.count }}</span>
+                </div>
+                <div class="card-body">
+                    {% if solicitudes %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Observaciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for solicitud in solicitudes|slice:":5" %}
+                                    <tr>
+                                        <td>{{ solicitud.tipo }}</td>
+                                        <td>{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</td>
+                                        <td>
+                                            {% if solicitud.estado == 'aprobado' %}
+                                                <span class="badge bg-success">Aprobado</span>
+                                            {% elif solicitud.estado == 'rechazado' %}
+                                                <span class="badge bg-danger">Rechazado</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pendiente</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ solicitud.observaciones|default:"-" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if solicitudes.count > 5 %}
+                            <div class="text-center">
+                                <small class="text-muted">Mostrando las últimas 5 solicitudes de {{ solicitudes.count }} totales</small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-clipboard-list fa-2x mb-3"></i>
+                            <p>No hay solicitudes registradas</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -19,6 +19,22 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from apps.empleados.models import Empleado
+
+def redirect_by_role(request):
+    """Redirige según el rol del usuario"""
+    if not request.user.is_authenticated:
+        return redirect('empleados:login')
+    
+    try:
+        empleado = Empleado.objects.get(user=request.user)
+        if empleado.es_rrhh:
+            return redirect('rrhh:dashboard')
+        else:
+            return redirect('empleados:dashboard')
+    except Empleado.DoesNotExist:
+        return redirect('empleados:dashboard')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,7 +44,7 @@ urlpatterns = [
     path('notificaciones/', include('apps.notificaciones.urls')),
     path('rrhh/', include('apps.rrhh.urls')),
     path('recibos/', include('apps.recibos.urls')),
-    path('', lambda request: redirect('empleados:login')),  # Redirigir la raíz al login
+    path('', redirect_by_role),  # Redirigir la raíz según el rol del usuario
 ]
 
 # Servir archivos media en desarrollo

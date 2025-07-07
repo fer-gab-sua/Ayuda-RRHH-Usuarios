@@ -1,0 +1,1344 @@
+/* ====== Reglas de escritorio para tabla de grupo familiar ====== */
+@media (min-width: 769px) {
+  body .main-content .section .family-table {
+    display: table;
+    border-collapse: collapse;
+    width: 100%;
+    margin: 16px 0;
+    font-size: 0.9rem;
+    overflow-x: visible;
+    white-space: normal;
+  }
+  
+  body .main-content .section .family-table thead,
+  body .main-content .section .family-table tbody {
+    display: table-row-group;
+  }
+  
+  body .main-content .section .family-table th,
+  body .main-content .section .family-table td {
+    display: table-cell;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    position: static;
+    text-align: left;
+    white-space: normal;
+    padding-left: 8px;
+    margin: 0;
+  }
+  
+  body .main-content .section .family-table tr {
+    display: table-row;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  
+  body .main-content .section .family-table td:before {
+    display: none;
+    content: none;
+    position: static;
+  }
+  
+  body .main-content .section .family-table thead tr {
+    position: static;
+    top: auto;
+    left: auto;
+    display: table-row;
+  }
+  
+  body .main-content .section .family-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+  }
+  
+  body .main-content .section .family-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+  }
+}
+
+/* ====== Desktop fixes para asegurar que los labels estén bien alineados ====== */
+@media (min-width: 769px) {
+  .form-group {
+    text-align: left !important;
+  }
+  
+  .form-group label {
+    text-align: left !important;
+    display: block !important;
+    width: auto !important;
+    margin-bottom: 6px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    text-align: left !important;
+    font-size: 0.9rem !important;
+    padding: 8px 12px !important;
+  }
+  
+  /* A  .signature-info ul li {
+    font-size: 0.9rem !important;
+    margin-bottom: 8px !important;
+  }
+  
+  /* Resumen de recibos en móvil */
+  .resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  
+  .resumen-card {
+    margin: 0 auto;
+    max-width: 200px;
+    text-align: center;
+    padding: 16px;
+    font-size: 1rem;
+  }
+  
+  .resumen-card span {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+}
+
+/* Asegurar que las secciones no tengan text-align center en escritorio */
+@media (min-width: 769px) {
+  .section {
+    text-align: left !important;
+  }
+  
+  .section-title {
+    text-align: left !important;
+    font-size: 1.15rem !important;
+  }
+  
+  /* Solo la primera sección (foto de perfil) puede estar centrada */
+  .section:first-child {
+    text-align: center !important;
+  }
+  
+  /* Asegurar que las tablas se vean normales en escritorio */
+  .family-table,
+  .docs-table,
+  .solicitudes-table,
+  .cert-table,
+  .notif-table {
+    display: table !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin: 16px 0 !important;
+    font-size: 0.9rem !important;
+    overflow-x: visible !important;
+    white-space: normal !important;
+  }
+  
+  .family-table thead,
+  .family-table tbody {
+    display: table-row-group !important;
+  }
+  
+  .family-table th,
+  .family-table td {
+    display: table-cell !important;
+    padding: 8px 12px !important;
+    border: 1px solid #e5e7eb !important;
+    position: static !important;
+    text-align: left !important;
+    white-space: normal !important;
+    padding-left: 8px !important;
+  }
+  
+  .family-table tr {
+    display: table-row !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  
+  .family-table td:before {
+    display: none !important;
+    content: none !important;
+  }
+  
+  .family-table thead tr {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    display: table-row !important;
+  }
+  
+  .family-table th {
+    background: #f3f4f6 !important;
+    font-weight: 600 !important;
+  }
+  
+  .family-table tbody tr:nth-child(even) {
+    background: #f9fafb !important;
+  }
+}
+
+/* ====== Mobile Fixes para el navbar ====== */
+
+/* Asegurar que el botón hamburguesa funcione */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex !important;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1001;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    width: 48px;
+    height: 48px;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Sidebar mobile */
+  .sidebar {
+    width: 280px !important;
+    max-width: 280px !important;
+    transform: translateX(-100%) !important;
+    position: fixed !important;
+    z-index: 1000 !important;
+    transition: transform 0.3s ease !important;
+    border-radius: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    overflow-y: auto !important;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0) !important;
+  }
+  
+  /* Main content mobile */
+  .main-content {
+    margin-left: 0 !important;
+    padding: 20px !important;
+    padding-top: 70px !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Overlay */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Contenido centrado solo para cards del home, no para secciones del perfil */
+  .cards {
+    justify-content: center;
+  }
+  
+  .card {
+    margin: 0 auto 16px auto;
+    max-width: 300px;
+  }
+  
+  /* Secciones del perfil con ancho completo */
+  .section {
+    text-align: left !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 16px 0 !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Asegurar que todas las secciones tengan el mismo ancho */
+  .section,
+  .section form,
+  .section > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Títulos de sección uniformes */
+  .section-title {
+    width: 100% !important;
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    font-size: 1.15rem !important;
+  }
+  
+  .section-title .btn-sm {
+    margin: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  /* Formularios con ancho completo */
+  #formDatosBasicos,
+  #formDatosLaborales,
+  #formContactoEmergencia,
+  #formDatosEmergencia {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Específicamente para datos de emergencia que tiene el form envolviendo */
+  #formDatosEmergencia {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  #formDatosEmergencia .section {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 16px 0 !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+  }
+  
+  #formDatosEmergencia .form-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  
+  #formDatosEmergencia .form-group {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* Títulos de sección uniformes */
+  .section-title {
+    width: 100% !important;
+    text-align: left !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .section-title .btn-sm {
+    margin: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+  
+  /* Tabla familiar con ancho completo */
+  .family-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.8rem;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .family-table thead,
+  .family-table tbody,
+  .family-table th,
+  .family-table td,
+  .family-table tr {
+    display: block;
+  }
+  
+  .family-table thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  
+  .family-table tr {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .family-table td {
+    border: none;
+    padding: 8px 0;
+    text-align: left;
+    position: relative;
+    padding-left: 40%;
+    white-space: normal;
+  }
+  
+  .family-table td:before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 35%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.75rem;
+  }
+  
+  .family-table td:first-child:before {
+    content: "Nombre: ";
+  }
+  
+  .family-table td:nth-child(2):before {
+    content: "Nacimiento: ";
+  }
+  
+  .family-table td:nth-child(3):before {
+    content: "DNI: ";
+  }
+  
+  .family-table td:nth-child(4):before {
+    content: "Parentesco: ";
+  }
+  
+  .family-table td:nth-child(5):before {
+    content: "Acciones: ";
+  }
+  
+  .family-table td:last-child {
+    padding-left: 0;
+    text-align: center;
+    margin-top: 12px;
+  }
+  
+  .family-table td:last-child:before {
+    display: none;
+  }
+  
+  /* Botones en la tabla familiar */
+  .family-table .btn-ver,
+  .family-table .btn-eliminar {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 4px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .family-table .btn-ver {
+    background: #3b82f6;
+    color: white;
+  }
+  
+  .family-table .btn-ver:hover {
+    background: #2563eb;
+  }
+  
+  .family-table .btn-eliminar {
+    background: #ef4444;
+    color: white;
+  }
+  
+  .family-table .btn-eliminar:hover {
+    background: #dc2626;
+  }
+  
+  /* Mensaje cuando no hay familiares */
+  .family-table #sinFamiliares {
+    text-align: center;
+    padding: 20px;
+    color: #6b7280;
+    font-style: italic;
+  }
+  
+  .family-table #sinFamiliares:before {
+    display: none;
+  }
+  
+  .family-table #sinFamiliares td {
+    padding-left: 0;
+    text-align: center;
+  }
+  
+  .family-table #sinFamiliares td:before {
+    display: none;
+  }
+  
+  /* Estilos específicos para tablas familiares cuando no hay datos */
+  .family-table tbody tr:only-child td[colspan] {
+    padding: 24px 12px !important;
+    text-align: center !important;
+    color: #6b7280 !important;
+    font-style: italic !important;
+    background: #f9fafb !important;
+    border-radius: 8px !important;
+  }
+  
+  .family-table tbody tr:only-child td[colspan]:before {
+    display: none !important;
+  }
+  
+  /* Mejorar el espaciado entre elementos en móvil */
+  .section + .section {
+    margin-top: 24px;
+  }
+  
+  /* Mejorar la presentación de los botones de acción */
+  .family-table .btn-ver,
+  .family-table .btn-eliminar {
+    width: 70px;
+    text-align: center;
+  }
+  
+  /* Asegurar que los inputs se vean bien en móvil */
+  .form-group input[readonly] {
+    background-color: #f3f4f6;
+    color: #6b7280;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 10px;
+  }
+  
+  /* Mejorar el diseño del header del perfil */
+  .section:first-child {
+    text-align: center !important;
+  }
+  
+  .section:first-child > div {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 16px !important;
+  }
+  
+  /* Asegurar que los formularios ocupen todo el ancho */
+  .form-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .form-group {
+    width: 100% !important;
+    text-align: left !important;
+  }
+  
+  .form-group label {
+    text-align: left !important;
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 6px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    padding: 10px !important;
+    text-align: left !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Mejoras adicionales para móvil muy pequeño */
+@media (max-width: 480px) {
+  .family-table {
+    font-size: 0.75rem;
+  }
+  
+  .family-table td {
+    padding: 6px 0;
+    padding-left: 35%;
+  }
+  
+  .family-table td:before {
+    width: 30%;
+    font-size: 0.7rem;
+  }
+  
+  .family-table .btn-ver,
+  .family-table .btn-eliminar {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+    margin: 2px;
+  }
+  
+  .family-table tr {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+  
+  /* Formularios en móvil pequeño */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  
+  .form-group {
+    margin-bottom: 12px;
+  }
+  
+  .form-group label {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+    text-align: left !important;
+    display: block !important;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 0.85rem;
+    padding: 8px;
+  }
+  
+  /* Botones en móvil pequeño */
+  .btn-primary,
+  .btn-secondary,
+  .btn-outline {
+    font-size: 0.8rem;
+    padding: 8px 16px;
+  }
+  
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+  
+  /* Tabla de recibos en móvil muy pequeño */
+  .recibos-table td {
+    padding-left: 42% !important;
+    font-size: 0.8rem !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  
+  .recibos-table td:before {
+    width: 38% !important;
+    font-size: 0.75rem !important;
+    top: 10px !important;
+  }
+  
+  .recibos-table tr {
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .resumen-card h3 {
+    font-size: 1.8rem !important;
+  }
+  
+  .recibos-table .btn {
+    font-size: 0.75rem !important;
+    padding: 6px 10px !important;
+  }
+  
+  .estado-badge {
+    font-size: 0.7rem !important;
+    padding: 3px 6px !important;
+  }
+}
+
+/* Mejoras generales para el perfil en móvil */
+@media (max-width: 768px) {
+  /* Imagen de perfil responsive */
+  #profile-img {
+    width: 80px !important;
+    height: 80px !important;
+  }
+  
+  /* Sección de datos personales */
+  .section {
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .section-title {
+    font-size: 1.1rem !important;
+    margin-bottom: 12px !important;
+    text-align: left !important;
+  }
+  
+  /* Solo centrar el título en la primera sección */
+  .section:first-child .section-title {
+    text-align: center !important;
+  }
+  
+  /* Botones en títulos de sección */
+  .section-title .btn-sm {
+    display: block;
+    margin: 8px auto 0 auto;
+    width: 100%;
+    max-width: 200px;
+  }
+  
+  /* Sección de firma digital responsive */
+  .signature-section {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  .signature-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 16px 0 !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+  }
+  
+  .signature-preview {
+    width: 100% !important;
+    text-align: center !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .signature-preview p {
+    text-align: center !important;
+    margin: 10px 0 0 0 !important;
+    width: 100% !important;
+    display: block !important;
+  }
+  
+  .signature-actions {
+    width: 100% !important;
+    text-align: center !important;
+  }
+  
+  .signature-actions button {
+    width: 100% !important;
+    max-width: 250px !important;
+    margin: 0 auto !important;
+  }
+  
+  .signature-info {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    box-sizing: border-box !important;
+  }
+  
+  .signature-info h3 {
+    text-align: center !important;
+    margin-bottom: 16px !important;
+  }
+  
+  .signature-info ul {
+    text-align: left !important;
+    max-width: 300px !important;
+    margin: 0 auto !important;
+  }
+  
+  .signature-info ul li {
+    margin-bottom: 8px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  /* Firma digital en móvil pequeño */
+  .signature-section {
+    display: block !important;
+  }
+  
+  .signature-card {
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .signature-preview {
+    min-height: 120px !important;
+  }
+  
+  .signature-preview img {
+    max-height: 100px !important;
+  }
+  
+  .signature-info {
+    padding: 12px !important;
+  }
+  
+  .signature-info h3 {
+    font-size: 1rem !important;
+    margin-bottom: 12px !important;
+  }
+  
+  .signature-info ul li {
+    font-size: 0.85rem !important;
+    margin-bottom: 6px !important;
+  }
+}
+
+/* Ajustes adicionales para mejor proporción en escritorio */
+.family-table th,
+.family-table td {
+  font-size: 0.9rem !important;
+  padding: 8px 12px !important;
+}
+
+.family-table .btn-ver,
+.family-table .btn-eliminar {
+  font-size: 0.8rem !important;
+  padding: 4px 8px !important;
+}
+
+.signature-info h3 {
+  font-size: 1.1rem !important;
+}
+
+.signature-info ul li {
+  font-size: 0.9rem !important;
+}
+
+/* Texto de confirmación de firma */
+.signature-preview p {
+  font-size: 0.9rem !important;
+}
+
+/* Asegurar que las secciones no tengan text-align center en escritorio */
+.section {
+  text-align: left !important;
+}
+
+/* ====== Recibos de Sueldo Responsive ====== */
+.recibos-container {
+  padding: 10px !important;
+  max-width: 100% !important;
+}
+
+/* Cards de resumen responsive - ESCRITORIO */
+@media (min-width: 769px) {
+  .resumen-cards {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-rows: repeat(2, auto) !important;
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+    max-width: 1000px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  .resumen-card {
+    padding: 20px !important;
+    text-align: center !important;
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    border-left: 4px solid #2563eb !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  
+  .resumen-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+  }
+  
+  /* Fila 1: Total | Firmados | Pendientes */
+  .resumen-card.total {
+    border-left-color: #6b7280 !important; /* Total - Gris */
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+  }
+  
+  .resumen-card.firmados {
+    border-left-color: #10b981 !important; /* Firmados - Verde */
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+  
+  .resumen-card.pendientes {
+    border-left-color: #f59e0b !important; /* Pendientes - Naranja */
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+  }
+  
+  /* Fila 2: Observados | Respondidos (centrados) */
+  .resumen-card.observados {
+    border-left-color: #f59e0b !important; /* Observados - Amarillo */
+    grid-column: 1 / 3 !important;
+    grid-row: 2 !important;
+    justify-self: center !important;
+  }
+  
+  .resumen-card.respondidos {
+    border-left-color: #8b5cf6 !important; /* Respondidos - Púrpura */
+    grid-column: 2 / 4 !important;
+    grid-row: 2 !important;
+    justify-self: center !important;
+  }
+  
+  /* Ocultar vencidos si existe */
+  .resumen-card.vencidos {
+    display: none !important;
+  }
+  
+  .resumen-card h3 {
+    font-size: 2.5rem !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+    color: #1f2937 !important;
+  }
+  
+  .resumen-card p {
+    color: #6b7280 !important;
+    font-size: 0.9rem !important;
+    margin: 8px 0 0 0 !important;
+    font-weight: 500 !important;
+  }
+}
+
+/* Cards de resumen responsive - TABLET */
+@media (min-width: 481px) and (max-width: 768px) {
+  .resumen-cards {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+  }
+  
+  .resumen-card {
+    padding: 18px !important;
+    text-align: center !important;
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    border-left: 4px solid #2563eb !important;
+  }
+  
+  /* Colores específicos para tablet */
+  .resumen-card.total {
+    border-left-color: #6b7280 !important; /* Total - Gris */
+  }
+  
+  .resumen-card.firmados {
+    border-left-color: #10b981 !important; /* Firmados - Verde */
+  }
+  
+  .resumen-card.pendientes {
+    border-left-color: #f59e0b !important; /* Pendientes - Naranja */
+  }
+  
+  .resumen-card.observados {
+    border-left-color: #f59e0b !important; /* Observados - Amarillo */
+  }
+  
+  .resumen-card.respondidos {
+    border-left-color: #8b5cf6 !important; /* Respondidos - Púrpura */
+  }
+  
+  /* Ocultar vencidos si existe */
+  .resumen-card.vencidos {
+    display: none !important;
+  }
+  
+  .resumen-card h3 {
+    font-size: 2.2rem !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+    color: #1f2937 !important;
+  }
+  
+  .resumen-card p {
+    color: #6b7280 !important;
+    font-size: 0.9rem !important;
+    margin: 6px 0 0 0 !important;
+    font-weight: 500 !important;
+  }
+}
+
+/* Cards de resumen responsive - MÓVIL */
+@media (max-width: 480px) {
+  .resumen-cards {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  .resumen-card {
+    padding: 16px !important;
+    text-align: center !important;
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+    border-left: 4px solid #2563eb !important;
+  }
+  
+  /* Colores específicos para móvil */
+  .resumen-card.total {
+    border-left-color: #6b7280 !important; /* Total - Gris */
+  }
+  
+  .resumen-card.firmados {
+    border-left-color: #10b981 !important; /* Firmados - Verde */
+  }
+  
+  .resumen-card.pendientes {
+    border-left-color: #f59e0b !important; /* Pendientes - Naranja */
+  }
+  
+  .resumen-card.observados {
+    border-left-color: #f59e0b !important; /* Observados - Amarillo */
+  }
+  
+  .resumen-card.respondidos {
+    border-left-color: #8b5cf6 !important; /* Respondidos - Púrpura */
+  }
+  
+  /* Ocultar vencidos si existe */
+  .resumen-card.vencidos {
+    display: none !important;
+  }
+  
+  .resumen-card h3 {
+    font-size: 2rem !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+    color: #1f2937 !important;
+  }
+  
+  .resumen-card p {
+    color: #6b7280 !important;
+    font-size: 0.9rem !important;
+    margin: 8px 0 0 0 !important;
+    font-weight: 500 !important;
+  }
+}
+
+/* Tabla de recibos responsive - SOLO EN MÓVIL */
+@media (max-width: 768px) {
+  .recibos-table {
+    display: block !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    border: none !important;
+  }
+
+  .recibos-table thead,
+  .recibos-table tbody,
+  .recibos-table th,
+  .recibos-table td,
+  .recibos-table tr {
+    display: block !important;
+  }
+
+  .recibos-table thead tr {
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+  }
+
+  .recibos-table tr {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    margin-bottom: 16px !important;
+    padding: 16px !important;
+    background: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    white-space: normal !important;
+  }
+
+  .recibos-table tr.recibo-bloqueado {
+    opacity: 0.6 !important;
+    background: #f9fafb !important;
+  }
+
+  .recibos-table td {
+    border: none !important;
+    padding: 8px 0 !important;
+    text-align: left !important;
+    position: relative !important;
+    padding-left: 45% !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    min-height: 20px !important;
+  }
+
+  .recibos-table td:before {
+    content: attr(data-label) !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 8px !important;
+    width: 40% !important;
+    padding-right: 10px !important;
+    white-space: nowrap !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    font-size: 0.8rem !important;
+  }
+
+  .recibos-table td:nth-child(1):before {
+    content: "Período:" !important;
+  }
+
+  .recibos-table td:nth-child(2):before {
+    content: "Año:" !important;
+  }
+
+  .recibos-table td:nth-child(3):before {
+    content: "Fecha Emisión:" !important;
+  }
+
+  .recibos-table td:nth-child(4):before {
+    content: "Estado:" !important;
+  }
+
+  .recibos-table td:nth-child(5):before {
+    content: "Fecha Firma:" !important;
+  }
+
+  .recibos-table td:nth-child(6):before {
+    content: "Acciones:" !important;
+  }
+
+  .recibos-table td:last-child {
+    padding-left: 0 !important;
+    text-align: center !important;
+    margin-top: 12px !important;
+  }
+
+  .recibos-table td:last-child:before {
+    display: none !important;
+  }
+
+  /* Botones en tabla de recibos */
+  .recibos-table .btn-group {
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .recibos-table .btn {
+    width: 100% !important;
+    text-align: center !important;
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+    border-radius: 6px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .recibos-table .btn-disabled {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  /* Estados responsive */
+  .estado-badge {
+    font-size: 0.75rem !important;
+    padding: 4px 8px !important;
+    display: inline-block !important;
+    border-radius: 12px !important;
+  }
+
+  /* Empty state responsive */
+  .empty-state {
+    padding: 40px 20px !important;
+  }
+
+  .empty-state .icon {
+    font-size: 3rem !important;
+    margin-bottom: 16px !important;
+  }
+
+  .empty-state h3 {
+    font-size: 1.2rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* Paginación responsive */
+  .pagination {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+
+  .pagination a,
+  .pagination span {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Alertas responsive */
+  .alert {
+    padding: 12px !important;
+    border-radius: 6px !important;
+    margin-bottom: 16px !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* ====== Reglas específicas para ESCRITORIO - Tabla de recibos ====== */
+@media (min-width: 769px) {
+  /* Forzar que la tabla de recibos se muestre como tabla normal en escritorio */
+  .recibos-table {
+    display: table !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin: 16px 0 !important;
+    font-size: 0.9rem !important;
+    overflow-x: visible !important;
+    white-space: normal !important;
+    border: 1px solid #e5e7eb !important;
+  }
+  
+  .recibos-table thead,
+  .recibos-table tbody {
+    display: table-row-group !important;
+  }
+  
+  .recibos-table th,
+  .recibos-table td {
+    display: table-cell !important;
+    padding: 12px 16px !important;
+    border: 1px solid #e5e7eb !important;
+    position: static !important;
+    text-align: left !important;
+    white-space: normal !important;
+    padding-left: 16px !important;
+    margin: 0 !important;
+  }
+  
+  .recibos-table tr {
+    display: table-row !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  
+  .recibos-table td:before {
+    display: none !important;
+    content: none !important;
+    position: static !important;
+  }
+  
+  .recibos-table thead tr {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    display: table-row !important;
+  }
+  
+  .recibos-table th {
+    background: #f3f4f6 !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .recibos-table tbody tr:nth-child(even) {
+    background: #f9fafb !important;
+  }
+  
+  .recibos-table tbody tr:hover {
+    background: #f3f4f6 !important;
+  }
+  
+  .recibos-table .btn-group {
+    flex-direction: row !important;
+    gap: 8px !important;
+    width: auto !important;
+    justify-content: center !important;
+  }
+  
+  .recibos-table .btn {
+    width: auto !important;
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+    margin: 0 !important;
+  }
+  
+  .recibos-table td:last-child {
+    text-align: center !important;
+    padding-left: 16px !important;
+    margin-top: 0 !important;
+  }
+
+  /* Empty state responsive */
+  .empty-state {
+    padding: 40px 20px !important;
+  }
+
+  .empty-state .icon {
+    font-size: 3rem !important;
+    margin-bottom: 16px !important;
+  }
+
+  .empty-state h3 {
+    font-size: 1.2rem !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* Paginación responsive */
+  .pagination {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+
+  .pagination a,
+  .pagination span {
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Alertas responsive */
+  .alert {
+    padding: 12px !important;
+    border-radius: 6px !important;
+    margin-bottom: 16px !important;
+    font-size: 0.85rem !important;
+  }
+}

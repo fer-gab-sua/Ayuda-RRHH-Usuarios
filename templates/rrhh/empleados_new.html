@@ -1,0 +1,241 @@
+{% extends 'rrhh/base_rrhh.html' %}
+
+{% block title %}Gestión de Empleados{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">Gestión de Empleados</h1>
+                <a href="{% url 'rrhh:crear_empleado' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Empleado
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Buscar</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   placeholder="Nombre, legajo, DNI..." value="{{ search }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="departamento" class="form-label">Departamento</label>
+                            <select class="form-select" id="departamento" name="departamento">
+                                <option value="">Todos</option>
+                                {% for depto in departamentos %}
+                                    <option value="{{ depto }}" {% if depto == departamento_selected %}selected{% endif %}>
+                                        {{ depto }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="tipo_contrato" class="form-label">Tipo de Contrato</label>
+                            <select class="form-select" id="tipo_contrato" name="tipo_contrato">
+                                <option value="">Todos</option>
+                                {% for key, value in tipos_contrato %}
+                                    <option value="{{ key }}" {% if key == tipo_contrato_selected %}selected{% endif %}>
+                                        {{ value }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="es_rrhh" class="form-label">RRHH</label>
+                            <select class="form-select" id="es_rrhh" name="es_rrhh">
+                                <option value="">Todos</option>
+                                <option value="true" {% if es_rrhh_selected == 'true' %}selected{% endif %}>Sí</option>
+                                <option value="false" {% if es_rrhh_selected == 'false' %}selected{% endif %}>No</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search"></i> Filtrar
+                                </button>
+                                <a href="{% url 'rrhh:empleados' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Limpiar
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de empleados -->
+    <div class="row">
+        <div class="col-12">
+            {% if empleados %}
+                <!-- Vista de tarjetas para móvil -->
+                <div class="d-block d-lg-none">
+                    <div class="row">
+                        {% for empleado in empleados %}
+                        <div class="col-12 col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="card-title mb-1">{{ empleado.user.get_full_name }}</h6>
+                                            <p class="text-muted small mb-1">{{ empleado.legajo }}</p>
+                                            <p class="text-muted small mb-1">{{ empleado.puesto|default:"-" }}</p>
+                                            <p class="text-muted small mb-2">{{ empleado.departamento|default:"-" }}</p>
+                                            {% if empleado.es_rrhh %}
+                                                <span class="badge bg-success">RRHH</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="{% url 'rrhh:empleado_detail' empleado.pk %}">
+                                                    <i class="fas fa-eye"></i> Ver Detalles
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="{% url 'rrhh:editar_empleado' empleado.pk %}">
+                                                    <i class="fas fa-edit"></i> Editar
+                                                </a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="{% url 'rrhh:eliminar_empleado' empleado.pk %}">
+                                                    <i class="fas fa-trash"></i> Eliminar
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Vista de tabla para escritorio -->
+                <div class="d-none d-lg-block">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Legajo</th>
+                                            <th>DNI</th>
+                                            <th>Puesto</th>
+                                            <th>Departamento</th>
+                                            <th>Tipo</th>
+                                            <th>RRHH</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for empleado in empleados %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if empleado.foto_perfil %}
+                                                        <img src="{{ empleado.foto_perfil.url }}" alt="Foto" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                                    {% else %}
+                                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                            <i class="fas fa-user text-white" style="font-size: 12px;"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="fw-bold">{{ empleado.user.get_full_name }}</div>
+                                                        <small class="text-muted">{{ empleado.user.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ empleado.legajo }}</td>
+                                            <td>{{ empleado.dni }}</td>
+                                            <td>{{ empleado.puesto|default:"-" }}</td>
+                                            <td>{{ empleado.departamento|default:"-" }}</td>
+                                            <td>{{ empleado.get_tipo_contrato_display }}</td>
+                                            <td>
+                                                {% if empleado.es_rrhh %}
+                                                    <span class="badge bg-success">Sí</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">No</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% url 'rrhh:empleado_detail' empleado.pk %}" class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{% url 'rrhh:editar_empleado' empleado.pk %}" class="btn btn-sm btn-outline-success" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'rrhh:eliminar_empleado' empleado.pk %}" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paginación -->
+                {% if is_paginated %}
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <nav aria-label="Paginación de empleados">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if departamento_selected %}&departamento={{ departamento_selected }}{% endif %}{% if tipo_contrato_selected %}&tipo_contrato={{ tipo_contrato_selected }}{% endif %}{% if es_rrhh_selected %}&es_rrhh={{ es_rrhh_selected }}{% endif %}">&laquo; Primera</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if departamento_selected %}&departamento={{ departamento_selected }}{% endif %}{% if tipo_contrato_selected %}&tipo_contrato={{ tipo_contrato_selected }}{% endif %}{% if es_rrhh_selected %}&es_rrhh={{ es_rrhh_selected }}{% endif %}">Anterior</a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if departamento_selected %}&departamento={{ departamento_selected }}{% endif %}{% if tipo_contrato_selected %}&tipo_contrato={{ tipo_contrato_selected }}{% endif %}{% if es_rrhh_selected %}&es_rrhh={{ es_rrhh_selected }}{% endif %}">Siguiente</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if departamento_selected %}&departamento={{ departamento_selected }}{% endif %}{% if tipo_contrato_selected %}&tipo_contrato={{ tipo_contrato_selected }}{% endif %}{% if es_rrhh_selected %}&es_rrhh={{ es_rrhh_selected }}{% endif %}">Última &raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5>No hay empleados registrados</h5>
+                        <p class="text-muted">Comience agregando empleados al sistema</p>
+                        <a href="{% url 'rrhh:crear_empleado' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Agregar Primer Empleado
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

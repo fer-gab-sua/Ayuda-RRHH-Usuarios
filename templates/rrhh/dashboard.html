@@ -1,0 +1,90 @@
+{% extends 'rrhh/base_rrhh.html' %}
+
+{% block title %}Dashboard RRHH - Portal RH{% endblock %}
+
+{% block content %}
+<div class="rrhh-dashboard-content">
+    <div class="dashboard-header">
+        <h1>Dashboard RRHH</h1>
+        <p>Bienvenido al panel de administración de Recursos Humanos</p>
+    </div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ empleados_count }}</h3>
+                <p>Empleados</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ recibos_count }}</h3>
+                <p>Recibos</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ solicitudes_count }}</h3>
+                <p>Solicitudes Pendientes</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-folder-open"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ documentos_count }}</h3>
+                <p>Documentos Pendientes</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-actions">
+        <div class="action-section">
+            <h2>Acciones Rápidas</h2>
+            <div class="action-buttons">
+                <a href="{% url 'rrhh:solicitudes' %}" class="action-btn">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Gestionar Solicitudes</span>
+                </a>
+                <a href="{% url 'rrhh:subir_recibos' %}" class="action-btn">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Subir Recibos</span>
+                </a>
+                <a href="{% url 'rrhh:documentacion_confirmar' %}" class="action-btn">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Confirmar Documentos</span>
+                </a>
+                <a href="{% url 'rrhh:empleados' %}" class="action-btn">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Gestionar Empleados</span>
+                </a>
+            </div>
+        </div>
+        
+        <div class="recent-activity">
+            <h2>Actividad Reciente</h2>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <i class="fas fa-info-circle"></i>
+                    <p>Sistema iniciado correctamente</p>
+                    <small>Hoy</small>
+                </div>
+                <!-- Aquí se pueden agregar más actividades dinámicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

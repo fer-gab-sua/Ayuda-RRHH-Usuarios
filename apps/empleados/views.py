@@ -7,6 +7,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.urls import reverse
 import json
 import base64
@@ -16,16 +17,50 @@ from .models import Empleado, DomicilioEmpleado, ObraSocialEmpleado, SolicitudCa
 from .forms import PerfilBasicoForm, DatosEmergenciaForm, FamiliarForm, DomicilioForm, ObraSocialForm, DeclaracionJuradaForm, FirmaDigitalForm, SubirFotoForm
 from .utils import generar_pdf_declaracion_domicilio, generar_pdf_declaracion_obra_social
 
+def solo_empleados(view_func):
+    """Decorador para permitir solo a empleados no-RRHH"""
+    def wrapper(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            try:
+                empleado = Empleado.objects.get(user=request.user)
+                if empleado.es_rrhh:
+                    return redirect('rrhh:dashboard')
+            except Empleado.DoesNotExist:
+                pass
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+class SoloEmpleadosMixin:
+    """Mixin para views basadas en clase que solo permite empleados no-RRHH"""
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            try:
+                empleado = Empleado.objects.get(user=request.user)
+                if empleado.es_rrhh:
+                    return redirect('rrhh:dashboard')
+            except Empleado.DoesNotExist:
+                pass
+        return super().dispatch(request, *args, **kwargs)
+
 class LoginView(AuthLoginView):
     template_name = 'empleados/login.html'
-    
+
+    def get_success_url(self):
+        try:
+            empleado = Empleado.objects.get(user=self.request.user)
+            if empleado.es_rrhh:
+                return '/rrhh/dashboard/'
+        except Empleado.DoesNotExist:
+            pass
+        return '/empleados/dashboard/'
+
 class LogoutView(AuthLogoutView):
     pass
 
-class DashboardView(LoginRequiredMixin, TemplateView):
+class DashboardView(LoginRequiredMixin, SoloEmpleadosMixin, TemplateView):
     template_name = 'empleados/dashboard.html'
 
-class PerfilView(LoginRequiredMixin, TemplateView):
+class PerfilView(LoginRequiredMixin, SoloEmpleadosMixin, TemplateView):
     template_name = 'empleados/perfil.html'
     
     def get_context_data(self, **kwargs):
@@ -99,13 +134,13 @@ class PerfilView(LoginRequiredMixin, TemplateView):
         })
         return context
 
-class EditarPerfilView(LoginRequiredMixin, TemplateView):
+class EditarPerfilView(LoginRequiredMixin, SoloEmpleadosMixin, TemplateView):
     template_name = 'empleados/editar_perfil.html'
 
-class CrearFirmaView(LoginRequiredMixin, TemplateView):
+class CrearFirmaView(LoginRequiredMixin, SoloEmpleadosMixin, TemplateView):
     template_name = 'empleados/crear_firma.html'
 
-class EditarFirmaView(LoginRequiredMixin, TemplateView):
+class EditarFirmaView(LoginRequiredMixin, SoloEmpleadosMixin, TemplateView):
     template_name = 'empleados/editar_firma.html'
 
 
@@ -551,6 +586,7 @@ def guardar_firma_digital(request):
         })
 
 @login_required
+@xframe_options_exempt
 def ver_pdf_declaracion(request, solicitud_id):
     """Ver PDF de declaración jurada"""
     try:
@@ -575,6 +611,7 @@ def ver_pdf_declaracion(request, solicitud_id):
         })
 
 @login_required
+@xframe_options_exempt
 def descargar_pdf_declaracion(request, solicitud_id):
     """Descargar PDF de declaración jurada"""
     try:
@@ -731,7 +768,6 @@ def generar_pdf_preview_obra_social(request):
                     'content': base64.b64encode(archivo_content).decode('utf-8'),
                     'size': archivo_adjunto.size
                 }
-            
             # Crear objeto temporal para generar PDF
             from types import SimpleNamespace
             solicitud_temp = SimpleNamespace(

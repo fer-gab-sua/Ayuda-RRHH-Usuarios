@@ -1,0 +1,2712 @@
+/* ====== Reset y fuentes ====== */
+body {
+  background: #f9fafb;
+  color: #1f2937;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  min-height: 100vh;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+h1 {
+  font-size: 2rem;
+  margin-bottom: 18px;
+}
+h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+/* ====== Sidebar y Navbar - Diseño Moderno ====== */
+.sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border-radius: 0 24px 24px 0;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  flex-shrink: 0;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.3) transparent;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  pointer-events: none;
+}
+
+/* Logo Section */
+.logo {
+  padding: 30px 24px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.logo img {
+  max-width: 120px;
+  max-height: 60px;
+  display: block;
+  margin: 0 auto 12px auto;
+  filter: brightness(1.2);
+}
+
+.logo h4 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.95);
+  letter-spacing: 0.5px;
+}
+
+/* User Profile Section */
+.user-profile {
+  padding: 32px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.profile-picture {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 16px auto;
+}
+
+.profile-picture img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.profile-status {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 16px;
+  height: 16px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.profile-info {
+  text-align: center;
+}
+
+.profile-info h5 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.profile-info p {
+  margin: 0 0 8px 0;
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.8);
+  font-weight: 400;
+}
+
+.employee-id {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.5px;
+}
+
+/* Navigation */
+.nav {
+  flex: 1;
+  padding: 24px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.nav-section {
+  margin-bottom: 32px;
+  padding: 0 24px;
+}
+
+.nav-section-title {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  padding: 0 8px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.9);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.nav-link:hover::before {
+  left: 100%;
+}
+
+.nav-link:hover {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.nav-link.active {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-weight: 600;
+}
+
+.nav-link i {
+  width: 20px;
+  height: 20px;
+  margin-right: 12px;
+  font-size: 1.1rem;
+  text-align: center;
+  line-height: 20px;
+}
+
+.nav-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.notification-badge {
+  margin-left: auto;
+  background: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 24px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.9);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+.logout-btn i {
+  margin-right: 8px;
+  font-size: 1rem;
+}
+
+/* ====== Mobile Menu Toggle ====== */
+.mobile-menu-toggle {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1001;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  transition: all 0.3s ease;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-menu-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+.mobile-menu-toggle:active {
+  transform: scale(0.95);
+}
+
+.mobile-menu-toggle i {
+  font-size: 18px;
+}
+
+/* ====== Responsive Design ====== */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: flex;
+  }
+  
+  .sidebar {
+    width: 100%;
+    max-width: 300px;
+    transform: translateX(-100%);
+    position: fixed;
+    z-index: 1000;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 0;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  }
+  
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 20px;
+    padding-top: 70px;
+    border-radius: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: #f8fafc;
+  }
+  
+  /* Contenido centrado */
+  .main-content > * {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .section {
+    margin-bottom: 20px;
+  }
+  
+  .welcome {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Cards centradas */
+  .cards {
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .card {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 16px auto;
+  }
+  
+  /* Overlay para cerrar el sidebar en móvil */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Ajustes específicos para el sidebar en móvil */
+  .logo {
+    padding: 20px 20px;
+    text-align: center;
+  }
+  
+  .logo h4 {
+    font-size: 1.1rem;
+    margin-top: 8px;
+  }
+  
+  .user-profile {
+    padding: 20px;
+  }
+  
+  .profile-picture {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 12px;
+  }
+  
+  .profile-info h5 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  
+  .profile-info p {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  
+  .employee-id {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+  
+  .nav-section {
+    padding: 0 20px;
+    margin-bottom: 20px;
+  }
+  
+  .nav-section-title {
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+  }
+  
+  .nav-link {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+  
+  .nav-link i {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .nav-text {
+    font-size: 0.85rem;
+  }
+  
+  .notification-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    min-width: 16px;
+  }
+  
+  .sidebar-footer {
+    padding: 20px;
+  }
+  
+  .logout-btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .logout-btn i {
+    font-size: 0.9rem;
+  }
+}
+
+/* Responsive original actualizado */
+
+/* ====== Main Content ====== */
+.main-content {
+  flex: 1;
+  padding: 40px 5vw;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 24px 0 0 24px;
+  margin-left: 280px;
+  padding-left: calc(5vw + 24px);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+}
+
+.welcome {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1e293b;
+}
+
+/* ====== Cards Home ====== */
+.cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 32px 28px;
+  min-width: 180px;
+  min-height: 120px;
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  text-align: center;
+}
+.card span {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+.card:hover {
+  box-shadow: 0 8px 24px rgba(37,99,235,0.13);
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* ====== Resumen Recibos ====== */
+.resumen {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 18px;
+}
+.resumen-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 18px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.resumen-card span {
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ====== Tablas Generales ====== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+th, td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  text-align: left;
+}
+th {
+  background: #f3f4f6;
+}
+tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ====== Tablas específicas ====== */
+.recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.recibos-section, .section {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 28px 24px;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* ====== Estados ====== */
+.estado-firmado, .estado-aprobado, .estado-cargado, .estado-leida {
+  color: #16a34a;
+  font-weight: 600;
+}
+.estado-disconforme, .estado-rechazado {
+  color: #dc2626;
+  font-weight: 600;
+}
+.estado-pendiente, .estado-noleida {
+  color: #f59e42;
+  font-weight: 600;
+}
+
+/* ====== Botones ====== */
+.btn, .btn-firmar, .btn-disconformidad, .btn-ver, .btn-eliminar, .btn-subir, .btn-leer {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.97rem;
+  margin-right: 6px;
+  transition: background 0.2s;
+}
+.btn, .btn-firmar, .btn-ver, .btn-leer {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-firmar:disabled, .btn-leer:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+.btn-disconformidad, .btn-eliminar {
+  background: #dc2626;
+  color: #fff;
+}
+.btn-disconformidad:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+.btn-subir {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-subir:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+/* ====== Botones adicionales del diseño original ====== */
+.btn-primary {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2563eb, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  color: white;
+  text-decoration: none;
+}
+
+.btn-outline {
+  padding: 10px 20px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background: #2563eb;
+  color: white;
+  text-decoration: none;
+}
+
+/* ====== Action Bar ====== */
+.action-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+/* ====== Empty States ====== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+}
+
+/* ====== Formularios ====== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+/* ====== Grids y Layouts ====== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.documents-grid, .requests-list, .receipts-list, .activity-list {
+  min-height: 200px;
+}
+
+/* ====== Signature Section ====== */
+.signature-section {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.signature-card {
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.signature-preview {
+  min-height: 150px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-info {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.signature-info h3 {
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.signature-info ul {
+  list-style: none;
+  padding: 0;
+}
+
+.signature-info li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.signature-info li:last-child {
+  border-bottom: none;
+}
+
+/* ====== Messages ====== */
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.message-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.message-error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.message-warning {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+}
+
+.message-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* ====== Responsive Cards y Grids ====== */
+@media (max-width: 900px) {
+  .cards {
+    gap: 16px;
+  }
+  
+  .card {
+    min-width: 160px;
+    padding: 24px 20px;
+  }
+  
+  .signature-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .resumen {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .resumen-card {
+    text-align: center;
+  }
+}
+
+/* ====== Responsive Tables ====== */
+@media (max-width: 768px) {
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    font-size: 0.875rem;
+  }
+  
+  .recibos-table th, .recibos-table td,
+  .docs-table th, .docs-table td,
+  .solicitudes-table th, .solicitudes-table td,
+  .cert-table th, .cert-table td,
+  .notif-table th, .notif-table td {
+    padding: 8px 6px;
+  }
+  
+  .cards {
+    flex-direction: column;
+  }
+  
+  .card {
+    min-width: 100%;
+  }
+}
+
+/* Tablas responsive centradas */
+  .recibos-section, .section {
+    text-align: center;
+  }
+  
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Botones centrados */
+  .btn, .btn-primary, .btn-outline {
+    display: block;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  /* Resumen centrado */
+  .resumen {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .resumen-card {
+    margin: 0 auto 16px auto;
+    max-width: 200px;
+  }
+  
+  /* Ajustes específicos para el sidebar en móvil */
+  .logo {
+    padding: 20px 20px;
+    text-align: center;
+  }
+  
+  .logo h4 {
+    font-size: 1.1rem;
+    margin-top: 8px;
+  }
+  
+  .user-profile {
+    padding: 20px;
+  }
+  
+  .profile-picture {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 12px;
+  }
+  
+  .profile-info h5 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  
+  .profile-info p {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  
+  .employee-id {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+  
+  .nav-section {
+    padding: 0 20px;
+    margin-bottom: 20px;
+  }
+  
+  .nav-section-title {
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+  }
+  
+  .nav-link {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+  
+  .nav-link i {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .nav-text {
+    font-size: 0.85rem;
+  }
+  
+  .notification-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    min-width: 16px;
+  }
+  
+  .sidebar-footer {
+    padding: 20px;
+  }
+  
+  .logout-btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .logout-btn i {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .main-content {
+    padding: 15px;
+    padding-top: 70px;
+  }
+  
+  .mobile-menu-toggle {
+    top: 10px;
+    left: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+  }
+  
+  .mobile-menu-toggle i {
+    font-size: 16px;
+  }
+  
+  /* Ajustes para contenido en móvil muy pequeño */
+  .section {
+    padding: 16px 12px;
+    margin-bottom: 16px;
+  }
+  
+  .welcome {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+  }
+  
+  h1 {
+    font-size: 1.3rem;
+  }
+  
+  .cards {
+    gap: 12px;
+  }
+  
+  .card {
+    padding: 20px 16px;
+    min-height: 100px;
+  }
+  
+  .card span {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+  
+  /* Tablas responsive en móvil pequeño */
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    font-size: 0.8rem;
+  }
+  
+  .recibos-table th, .recibos-table td,
+  .docs-table th, .docs-table td,
+  .solicitudes-table th, .solicitudes-table td,
+  .cert-table th, .cert-table td,
+  .notif-table th, .notif-table td {
+    padding: 6px 4px;
+  }
+}
+
+/* Responsive original actualizado */
+
+/* ====== Main Content ====== */
+.main-content {
+  flex: 1;
+  padding: 40px 5vw;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 24px 0 0 24px;
+  margin-left: 280px;
+  padding-left: calc(5vw + 24px);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+}
+
+.welcome {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1e293b;
+}
+
+/* ====== Cards Home ====== */
+.cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 32px 28px;
+  min-width: 180px;
+  min-height: 120px;
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  text-align: center;
+}
+.card span {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+.card:hover {
+  box-shadow: 0 8px 24px rgba(37,99,235,0.13);
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* ====== Resumen Recibos ====== */
+.resumen {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 18px;
+}
+.resumen-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 18px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.resumen-card span {
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ====== Tablas Generales ====== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+th, td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  text-align: left;
+}
+th {
+  background: #f3f4f6;
+}
+tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ====== Tablas específicas ====== */
+.recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.recibos-section, .section {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 28px 24px;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* ====== Estados ====== */
+.estado-firmado, .estado-aprobado, .estado-cargado, .estado-leida {
+  color: #16a34a;
+  font-weight: 600;
+}
+.estado-disconforme, .estado-rechazado {
+  color: #dc2626;
+  font-weight: 600;
+}
+.estado-pendiente, .estado-noleida {
+  color: #f59e42;
+  font-weight: 600;
+}
+
+/* ====== Botones ====== */
+.btn, .btn-firmar, .btn-disconformidad, .btn-ver, .btn-eliminar, .btn-subir, .btn-leer {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.97rem;
+  margin-right: 6px;
+  transition: background 0.2s;
+}
+.btn, .btn-firmar, .btn-ver, .btn-leer {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-firmar:disabled, .btn-leer:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+.btn-disconformidad, .btn-eliminar {
+  background: #dc2626;
+  color: #fff;
+}
+.btn-disconformidad:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+.btn-subir {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-subir:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+/* ====== Botones adicionales del diseño original ====== */
+.btn-primary {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2563eb, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  color: white;
+  text-decoration: none;
+}
+
+.btn-outline {
+  padding: 10px 20px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background: #2563eb;
+  color: white;
+  text-decoration: none;
+}
+
+/* ====== Action Bar ====== */
+.action-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+/* ====== Empty States ====== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+}
+
+/* ====== Formularios ====== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+/* ====== Grids y Layouts ====== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.documents-grid, .requests-list, .receipts-list, .activity-list {
+  min-height: 200px;
+}
+
+/* ====== Signature Section ====== */
+.signature-section {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.signature-card {
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.signature-preview {
+  min-height: 150px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-info {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.signature-info h3 {
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.signature-info ul {
+  list-style: none;
+  padding: 0;
+}
+
+.signature-info li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.signature-info li:last-child {
+  border-bottom: none;
+}
+
+/* ====== Messages ====== */
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.message-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.message-error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.message-warning {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+}
+
+.message-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* ====== Responsive Cards y Grids ====== */
+@media (max-width: 900px) {
+  .cards {
+    gap: 16px;
+  }
+  
+  .card {
+    min-width: 160px;
+    padding: 24px 20px;
+  }
+  
+  .signature-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .resumen {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .resumen-card {
+    text-align: center;
+  }
+}
+
+/* ====== Responsive Tables ====== */
+@media (max-width: 768px) {
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    font-size: 0.875rem;
+  }
+  
+  .recibos-table th, .recibos-table td,
+  .docs-table th, .docs-table td,
+  .solicitudes-table th, .solicitudes-table td,
+  .cert-table th, .cert-table td,
+  .notif-table th, .notif-table td {
+    padding: 8px 6px;
+  }
+  
+  .cards {
+    flex-direction: column;
+  }
+  
+  .card {
+    min-width: 100%;
+  }
+}
+
+/* Tablas responsive centradas */
+  .recibos-section, .section {
+    text-align: center;
+  }
+  
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Botones centrados */
+  .btn, .btn-primary, .btn-outline {
+    display: block;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  /* Resumen centrado */
+  .resumen {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .resumen-card {
+    margin: 0 auto 16px auto;
+    max-width: 200px;
+  }
+  
+  /* Ajustes específicos para el sidebar en móvil */
+  .logo {
+    padding: 20px 20px;
+    text-align: center;
+  }
+  
+  .logo h4 {
+    font-size: 1.1rem;
+    margin-top: 8px;
+  }
+  
+  .user-profile {
+    padding: 20px;
+  }
+  
+  .profile-picture {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 12px;
+  }
+  
+  .profile-info h5 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  
+  .profile-info p {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  
+  .employee-id {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+  
+  .nav-section {
+    padding: 0 20px;
+    margin-bottom: 20px;
+  }
+  
+  .nav-section-title {
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+  }
+  
+  .nav-link {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+  
+  .nav-link i {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .nav-text {
+    font-size: 0.85rem;
+  }
+  
+  .notification-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    min-width: 16px;
+  }
+  
+  .sidebar-footer {
+    padding: 20px;
+  }
+  
+  .logout-btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .logout-btn i {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .main-content {
+    padding: 15px;
+    padding-top: 70px;
+  }
+  
+  .mobile-menu-toggle {
+    top: 10px;
+    left: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+  }
+  
+  .mobile-menu-toggle i {
+    font-size: 16px;
+  }
+  
+  /* Ajustes para contenido en móvil muy pequeño */
+  .section {
+    padding: 16px 12px;
+    margin-bottom: 16px;
+  }
+  
+  .welcome {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+  }
+  
+  h1 {
+    font-size: 1.3rem;
+  }
+  
+  .cards {
+    gap: 12px;
+  }
+  
+  .card {
+    padding: 20px 16px;
+    min-height: 100px;
+  }
+  
+  .card span {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+  
+  /* Tablas responsive en móvil muy pequeño */
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    font-size: 0.8rem;
+  }
+  
+  .recibos-table th, .recibos-table td,
+  .docs-table th, .docs-table td,
+  .solicitudes-table th, .solicitudes-table td,
+  .cert-table th, .cert-table td,
+  .notif-table th, .notif-table td {
+    padding: 6px 4px;
+  }
+}
+
+/* Responsive original actualizado */
+
+/* ====== Main Content ====== */
+.main-content {
+  flex: 1;
+  padding: 40px 5vw;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 24px 0 0 24px;
+  margin-left: 280px;
+  padding-left: calc(5vw + 24px);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+}
+
+.welcome {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1e293b;
+}
+
+/* ====== Cards Home ====== */
+.cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 32px 28px;
+  min-width: 180px;
+  min-height: 120px;
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  text-align: center;
+}
+.card span {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+.card:hover {
+  box-shadow: 0 8px 24px rgba(37,99,235,0.13);
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* ====== Resumen Recibos ====== */
+.resumen {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 18px;
+}
+.resumen-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 18px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.resumen-card span {
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ====== Tablas Generales ====== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+th, td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  text-align: left;
+}
+th {
+  background: #f3f4f6;
+}
+tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ====== Tablas específicas ====== */
+.recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.recibos-section, .section {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 28px 24px;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* ====== Estados ====== */
+.estado-firmado, .estado-aprobado, .estado-cargado, .estado-leida {
+  color: #16a34a;
+  font-weight: 600;
+}
+.estado-disconforme, .estado-rechazado {
+  color: #dc2626;
+  font-weight: 600;
+}
+.estado-pendiente, .estado-noleida {
+  color: #f59e42;
+  font-weight: 600;
+}
+
+/* ====== Botones ====== */
+.btn, .btn-firmar, .btn-disconformidad, .btn-ver, .btn-eliminar, .btn-subir, .btn-leer {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.97rem;
+  margin-right: 6px;
+  transition: background 0.2s;
+}
+.btn, .btn-firmar, .btn-ver, .btn-leer {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-firmar:disabled, .btn-leer:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+.btn-disconformidad, .btn-eliminar {
+  background: #dc2626;
+  color: #fff;
+}
+.btn-disconformidad:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+.btn-subir {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-subir:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+/* ====== Botones adicionales del diseño original ====== */
+.btn-primary {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2563eb, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  color: white;
+  text-decoration: none;
+}
+
+.btn-outline {
+  padding: 10px 20px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background: #2563eb;
+  color: white;
+  text-decoration: none;
+}
+
+/* ====== Action Bar ====== */
+.action-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+/* ====== Empty States ====== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+}
+
+/* ====== Formularios ====== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+/* ====== Grids y Layouts ====== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.documents-grid, .requests-list, .receipts-list, .activity-list {
+  min-height: 200px;
+}
+
+/* ====== Signature Section ====== */
+.signature-section {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.signature-card {
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.signature-preview {
+  min-height: 150px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-info {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.signature-info h3 {
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.signature-info ul {
+  list-style: none;
+  padding: 0;
+}
+
+.signature-info li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.signature-info li:last-child {
+  border-bottom: none;
+}
+
+/* ====== Messages ====== */
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.message-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.message-error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.message-warning {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+}
+
+.message-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* ====== Responsive Cards y Grids ====== */
+@media (max-width: 900px) {
+  .cards {
+    gap: 16px;
+  }
+  
+  .card {
+    min-width: 160px;
+    padding: 24px 20px;
+  }
+  
+  .signature-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .resumen {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .resumen-card {
+    text-align: center;
+  }
+}
+
+/* ====== Responsive Tables ====== */
+@media (max-width: 768px) {
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    font-size: 0.875rem;
+  }
+  
+  .recibos-table th, .recibos-table td,
+  .docs-table th, .docs-table td,
+  .solicitudes-table th, .solicitudes-table td,
+  .cert-table th, .cert-table td,
+  .notif-table th, .notif-table td {
+    padding: 8px 6px;
+  }
+  
+  .cards {
+    flex-direction: column;
+  }
+  
+  .card {
+    min-width: 100%;
+  }
+}
+
+/* Tablas responsive centradas */
+  .recibos-section, .section {
+    text-align: center;
+  }
+  
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .section-title {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Botones centrados */
+  .btn, .btn-primary, .btn-outline {
+    display: block;
+    margin: 10px auto;
+    text-align: center;
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  /* Resumen centrado */
+  .resumen {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .resumen-card {
+    margin: 0 auto 16px auto;
+    max-width: 200px;
+  }
+  
+  /* Ajustes específicos para el sidebar en móvil */
+  .logo {
+    padding: 20px 20px;
+    text-align: center;
+  }
+  
+  .logo h4 {
+    font-size: 1.1rem;
+    margin-top: 8px;
+  }
+  
+  .user-profile {
+    padding: 20px;
+  }
+  
+  .profile-picture {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 12px;
+  }
+  
+  .profile-info h5 {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  
+  .profile-info p {
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+  }
+  
+  .employee-id {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+  
+  .nav-section {
+    padding: 0 20px;
+    margin-bottom: 20px;
+  }
+  
+  .nav-section-title {
+    font-size: 0.7rem;
+    margin-bottom: 10px;
+  }
+  
+  .nav-link {
+    padding: 12px 16px;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+  
+  .nav-link i {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    font-size: 0.9rem;
+  }
+  
+  .nav-text {
+    font-size: 0.85rem;
+  }
+  
+  .notification-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    min-width: 16px;
+  }
+  
+  .sidebar-footer {
+    padding: 20px;
+  }
+  
+  .logout-btn {
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .logout-btn i {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100%;
+    max-width: 280px;
+  }
+  
+  .main-content {
+    padding: 15px;
+    padding-top: 70px;
+  }
+  
+  .mobile-menu-toggle {
+    top: 10px;
+    left: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 42px;
+    height: 42px;
+    display: flex;
+  }
+  
+  .mobile-menu-toggle i {
+    font-size: 16px;
+  }
+  
+  /* Ajustes para contenido en móvil muy pequeño */
+  .section {
+    padding: 16px 12px;
+    margin-bottom: 16px;
+  }
+  
+  .welcome {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+  }
+  
+  h1 {
+    font-size: 1.3rem;
+  }
+  
+  .cards {
+    gap: 12px;
+  }
+  
+  .card {
+    padding: 20px 16px;
+    min-height: 100px;
+  }
+  
+  .card span {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+  
+  /* Tablas responsive en móvil muy pequeño */
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    font-size: 0.8rem;
+  }
+  
+  .recibos-table th, .recibos-table td,
+  .docs-table th, .docs-table td,
+  .solicitudes-table th, .solicitudes-table td,
+  .cert-table th, .cert-table td,
+  .notif-table th, .notif-table td {
+    padding: 6px 4px;
+  }
+}
+
+/* Responsive original actualizado */
+
+/* ====== Main Content ====== */
+.main-content {
+  flex: 1;
+  padding: 40px 5vw;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 24px 0 0 24px;
+  margin-left: 280px;
+  padding-left: calc(5vw + 24px);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+}
+
+.welcome {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #1e293b;
+}
+
+/* ====== Cards Home ====== */
+.cards {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 32px 28px;
+  min-width: 180px;
+  min-height: 120px;
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  text-align: center;
+}
+.card span {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+}
+.card:hover {
+  box-shadow: 0 8px 24px rgba(37,99,235,0.13);
+  transform: translateY(-4px) scale(1.03);
+}
+
+/* ====== Resumen Recibos ====== */
+.resumen {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 18px;
+}
+.resumen-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 18px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2563eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.resumen-card span {
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ====== Tablas Generales ====== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+th, td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  text-align: left;
+}
+th {
+  background: #f3f4f6;
+}
+tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* ====== Tablas específicas ====== */
+.recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.recibos-section, .section {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+  padding: 28px 24px;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* ====== Estados ====== */
+.estado-firmado, .estado-aprobado, .estado-cargado, .estado-leida {
+  color: #16a34a;
+  font-weight: 600;
+}
+.estado-disconforme, .estado-rechazado {
+  color: #dc2626;
+  font-weight: 600;
+}
+.estado-pendiente, .estado-noleida {
+  color: #f59e42;
+  font-weight: 600;
+}
+
+/* ====== Botones ====== */
+.btn, .btn-firmar, .btn-disconformidad, .btn-ver, .btn-eliminar, .btn-subir, .btn-leer {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.97rem;
+  margin-right: 6px;
+  transition: background 0.2s;
+}
+.btn, .btn-firmar, .btn-ver, .btn-leer {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-firmar:disabled, .btn-leer:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+.btn-disconformidad, .btn-eliminar {
+  background: #dc2626;
+  color: #fff;
+}
+.btn-disconformidad:disabled {
+  background: #fca5a5;
+  cursor: not-allowed;
+}
+.btn-subir {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-subir:disabled {
+  background: #a5b4fc;
+  cursor: not-allowed;
+}
+
+/* ====== Botones adicionales del diseño original ====== */
+.btn-primary {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2563eb, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  color: white;
+  text-decoration: none;
+}
+
+.btn-outline {
+  padding: 10px 20px;
+  background: white;
+  color: #2563eb;
+  border: 2px solid #2563eb;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background: #2563eb;
+  color: white;
+  text-decoration: none;
+}
+
+/* ====== Action Bar ====== */
+.action-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+/* ====== Empty States ====== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  margin-bottom: 20px;
+}
+
+/* ====== Formularios ====== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 6px;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  box-sizing: border-box;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  font-family: 'Inter', sans-serif;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+/* ====== Grids y Layouts ====== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.documents-grid, .requests-list, .receipts-list, .activity-list {
+  min-height: 200px;
+}
+
+/* ====== Signature Section ====== */
+.signature-section {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.signature-card {
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.signature-preview {
+  min-height: 150px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signature-info {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.signature-info h3 {
+  margin-bottom: 12px;
+  color: #374151;
+}
+
+.signature-info ul {
+  list-style: none;
+  padding: 0;
+}
+
+.signature-info li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.signature-info li:last-child {
+  border-bottom: none;
+}
+
+/* ====== Messages ====== */
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.message-success {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.message-error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.message-warning {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fed7aa;
+}
+
+.message-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* ====== Responsive Cards y Grids ====== */
+@media (max-width: 900px) {
+  .cards {
+    gap: 16px;
+  }
+  
+  .card {
+    min-width: 160px;
+    padding: 24px 20px;
+  }
+  
+  .signature-section {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .resumen {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .resumen-card {
+    text-align: center;
+  }
+}
+
+/* ====== Responsive Tables ====== */
+@media (max-width: 768px) {
+  .recibos-table, .docs-table, .solicitudes-table, .cert-table, .notif-table {
+    font-size: 0.875rem;
+  }
+  
+  .rec

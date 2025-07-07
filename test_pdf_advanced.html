@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PDF Advanced - Múltiples Estrategias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #6c757d;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .tab-button:hover {
+            color: #3498db;
+            background-color: #f8f9fa;
+        }
+        .tab-button.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .pdf-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .pdf-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            z-index: 2;
+        }
+        .pdf-fallback {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            z-index: 3;
+        }
+        .fallback-content {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .fallback-content i {
+            font-size: 48px;
+            color: #ffc107;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .log-panel {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px;
+        }
+        .log-error {
+            color: #dc3545;
+        }
+        .log-success {
+            color: #28a745;
+        }
+        .log-info {
+            color: #007bff;
+        }
+        .log-warning {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test PDF Advanced - Múltiples Estrategias</h1>
+        <p>Este test intenta cargar un PDF usando diferentes estrategias para determinar cuál funciona mejor.</p>
+        
+        <!-- Pestañas -->
+        <div class="tabs">
+            <button class="tab-button active" data-tab="embedded">Vista Embebida</button>
+            <button class="tab-button" data-tab="direct">Carga Directa</button>
+            <button class="tab-button" data-tab="blob">Carga con Blob</button>
+        </div>
+        
+        <!-- Contenido de pestaña embebida -->
+        <div id="embedded-tab" class="tab-content active">
+            <h3>Vista Embebida (Estrategias Múltiples)</h3>
+            <div class="pdf-container">
+                <div id="pdf-loading" class="pdf-loading">
+                    <div>
+                        <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                        <div>Cargando PDF...</div>
+                    </div>
+                </div>
+                <iframe 
+                    id="pdfViewer" 
+                    src="" 
+                    width="100%" 
+                    height="600px" 
+                    frameborder="0" 
+                    style="display: none;">
+                </iframe>
+                <div id="pdf-fallback" class="pdf-fallback" style="display: none;">
+                    <div class="fallback-content">
+                        <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+                        <h4>Vista embebida no disponible</h4>
+                        <p>El PDF no se puede mostrar embebido en este navegador.</p>
+                        <div>
+                            <button class="btn btn-success" onclick="openPDFInNewWindow()">
+                                Abrir en Nueva Ventana
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <button class="btn" onclick="loadPDFEmbedded()">Intentar Carga Embebida</button>
+                <button class="btn btn-success" onclick="openPDFInNewWindow()">Abrir en Nueva Ventana</button>
+            </div>
+        </div>
+        
+        <!-- Contenido de pestaña directa -->
+        <div id="direct-tab" class="tab-content">
+            <h3>Carga Directa</h3>
+            <div class="pdf-container">
+                <iframe 
+                    id="pdfViewerDirect" 
+                    src="" 
+                    width="100%" 
+                    height="600px" 
+                    frameborder="0">
+                </iframe>
+            </div>
+            <div>
+                <button class="btn" onclick="loadPDFDirect()">Cargar PDF Directamente</button>
+                <button class="btn btn-warning" onclick="clearPDFDirect()">Limpiar</button>
+            </div>
+        </div>
+        
+        <!-- Contenido de pestaña blob -->
+        <div id="blob-tab" class="tab-content">
+            <h3>Carga con Blob</h3>
+            <div class="pdf-container">
+                <iframe 
+                    id="pdfViewerBlob" 
+                    src="" 
+                    width="100%" 
+                    height="600px" 
+                    frameborder="0">
+                </iframe>
+            </div>
+            <div>
+                <button class="btn" onclick="loadPDFBlob()">Cargar PDF con Blob</button>
+                <button class="btn btn-warning" onclick="clearPDFBlob()">Limpiar</button>
+            </div>
+        </div>
+        
+        <!-- Panel de logs -->
+        <div class="log-panel" id="logPanel">
+            <strong>Logs de debugging:</strong><br>
+        </div>
+    </div>
+
+    <script>
+        // URL del PDF para testing (debe ser una URL válida)
+        const PDF_URL = '/rrhh/servir_pdf_declaracion/1/';  // Cambiar por la URL real
+        
+        // Funciones de logging
+        function log(message, type = 'info') {
+            const logPanel = document.getElementById('logPanel');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logPanel.appendChild(logEntry);
+            logPanel.scrollTop = logPanel.scrollHeight;
+            
+            // También log en consola
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        // Funciones para pestañas
+        function initializeTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetTab = this.dataset.tab;
+                    
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(targetTab + '-tab').classList.add('active');
+                });
+            });
+        }
+        
+        // Carga embebida con múltiples estrategias
+        function loadPDFEmbedded() {
+            log('Iniciando carga embebida con múltiples estrategias', 'info');
+            
+            const pdfViewer = document.getElementById('pdfViewer');
+            const pdfLoading = document.getElementById('pdf-loading');
+            const pdfFallback = document.getElementById('pdf-fallback');
+            
+            // Mostrar loading
+            pdfLoading.style.display = 'flex';
+            pdfViewer.style.display = 'none';
+            pdfFallback.style.display = 'none';
+            
+            // Estrategia 1: Carga directa
+            function tryDirectLoad() {
+                log('Estrategia 1: Intentando carga directa', 'info');
+                
+                let loadAttempted = false;
+                
+                pdfViewer.onload = function() {
+                    if (!loadAttempted) {
+                        log('PDF cargado directamente - ÉXITO', 'success');
+                        pdfLoading.style.display = 'none';
+                        pdfViewer.style.display = 'block';
+                        loadAttempted = true;
+                    }
+                };
+                
+                pdfViewer.onerror = function() {
+                    if (!loadAttempted) {
+                        log('Error en carga directa, intentando blob', 'warning');
+                        loadAttempted = true;
+                        tryBlobLoad();
+                    }
+                };
+                
+                setTimeout(() => {
+                    if (!loadAttempted) {
+                        log('Timeout en carga directa, intentando blob', 'warning');
+                        loadAttempted = true;
+                        tryBlobLoad();
+                    }
+                }, 3000);
+                
+                pdfViewer.src = PDF_URL;
+            }
+            
+            // Estrategia 2: Carga con blob
+            function tryBlobLoad() {
+                log('Estrategia 2: Intentando carga con blob', 'info');
+                
+                fetch(PDF_URL)
+                .then(response => {
+                    log(`Respuesta fetch: ${response.status} ${response.statusText}`, 'info');
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    return response.blob();
+                })
+                .then(pdfBlob => {
+                    log(`PDF obtenido como blob: ${pdfBlob.size} bytes`, 'success');
+                    
+                    if (pdfBlob.size === 0) {
+                        throw new Error('El PDF está vacío');
+                    }
+                    
+                    const blobUrl = URL.createObjectURL(pdfBlob);
+                    log('URL blob creada exitosamente', 'success');
+                    
+                    let blobLoadAttempted = false;
+                    
+                    pdfViewer.onload = function() {
+                        if (!blobLoadAttempted) {
+                            log('PDF cargado con blob - ÉXITO', 'success');
+                            pdfLoading.style.display = 'none';
+                            pdfViewer.style.display = 'block';
+                            blobLoadAttempted = true;
+                            
+                            setTimeout(() => {
+                                URL.revokeObjectURL(blobUrl);
+                                log('URL blob liberada', 'info');
+                            }, 60000);
+                        }
+                    };
+                    
+                    pdfViewer.onerror = function() {
+                        if (!blobLoadAttempted) {
+                            log('Error con blob, mostrando fallback', 'error');
+                            blobLoadAttempted = true;
+                            showFallback();
+                        }
+                    };
+                    
+                    setTimeout(() => {
+                        if (!blobLoadAttempted) {
+                            log('Timeout con blob, mostrando fallback', 'warning');
+                            blobLoadAttempted = true;
+                            showFallback();
+                        }
+                    }, 3000);
+                    
+                    pdfViewer.src = blobUrl;
+                })
+                .catch(error => {
+                    log(`Error al cargar PDF con blob: ${error.message}`, 'error');
+                    showFallback();
+                });
+            }
+            
+            // Estrategia 3: Mostrar fallback
+            function showFallback() {
+                log('Mostrando fallback - Vista embebida no disponible', 'warning');
+                pdfLoading.style.display = 'none';
+                pdfViewer.style.display = 'none';
+                pdfFallback.style.display = 'flex';
+            }
+            
+            // Comenzar con estrategia 1
+            tryDirectLoad();
+        }
+        
+        // Carga directa simple
+        function loadPDFDirect() {
+            log('Cargando PDF directamente', 'info');
+            const pdfViewer = document.getElementById('pdfViewerDirect');
+            
+            pdfViewer.onload = function() {
+                log('PDF cargado directamente - ÉXITO', 'success');
+            };
+            
+            pdfViewer.onerror = function() {
+                log('Error al cargar PDF directamente', 'error');
+            };
+            
+            pdfViewer.src = PDF_URL;
+        }
+        
+        // Carga con blob
+        function loadPDFBlob() {
+            log('Cargando PDF con blob', 'info');
+            const pdfViewer = document.getElementById('pdfViewerBlob');
+            
+            fetch(PDF_URL)
+            .then(response => {
+                log(`Respuesta fetch: ${response.status} ${response.statusText}`, 'info');
+                
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                
+                return response.blob();
+            })
+            .then(pdfBlob => {
+                log(`PDF obtenido como blob: ${pdfBlob.size} bytes`, 'success');
+                
+                const blobUrl = URL.createObjectURL(pdfBlob);
+                log('URL blob creada', 'success');
+                
+                pdfViewer.onload = function() {
+                    log('PDF cargado con blob - ÉXITO', 'success');
+                };
+                
+                pdfViewer.onerror = function() {
+                    log('Error al cargar PDF con blob', 'error');
+                };
+                
+                pdfViewer.src = blobUrl;
+                
+                setTimeout(() => {
+                    URL.revokeObjectURL(blobUrl);
+                    log('URL blob liberada', 'info');
+                }, 60000);
+            })
+            .catch(error => {
+                log(`Error: ${error.message}`, 'error');
+            });
+        }
+        
+        // Limpiar PDFs
+        function clearPDFDirect() {
+            document.getElementById('pdfViewerDirect').src = '';
+            log('PDF directo limpiado', 'info');
+        }
+        
+        function clearPDFBlob() {
+            document.getElementById('pdfViewerBlob').src = '';
+            log('PDF blob limpiado', 'info');
+        }
+        
+        // Abrir en nueva ventana
+        function openPDFInNewWindow() {
+            log('Abriendo PDF en nueva ventana', 'info');
+            window.open(PDF_URL, '_blank');
+        }
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            log('Test PDF Advanced inicializado', 'info');
+            log(`URL del PDF: ${PDF_URL}`, 'info');
+        });
+    </script>
+</body>
+</html>

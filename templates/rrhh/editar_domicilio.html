@@ -1,0 +1,204 @@
+{% extends 'rrhh/base_rrhh.html' %}
+
+{% block title %}Editar Domicilio - {{ empleado.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3">Domicilio de {{ empleado.user.get_full_name }}</h1>
+                <a href="{% url 'rrhh:empleado_detail' empleado.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Empleado
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12 col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Información de Domicilio</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Dirección Principal -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2">Dirección Principal</h6>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="{{ form.calle.id_for_label }}" class="form-label">{{ form.calle.label }}</label>
+                                    {{ form.calle }}
+                                    {% if form.calle.errors %}
+                                        <div class="text-danger small">{{ form.calle.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.numero.id_for_label }}" class="form-label">{{ form.numero.label }}</label>
+                                    {{ form.numero }}
+                                    {% if form.numero.errors %}
+                                        <div class="text-danger small">{{ form.numero.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.piso.id_for_label }}" class="form-label">{{ form.piso.label }}</label>
+                                    {{ form.piso }}
+                                    {% if form.piso.errors %}
+                                        <div class="text-danger small">{{ form.piso.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.depto.id_for_label }}" class="form-label">{{ form.depto.label }}</label>
+                                    {{ form.depto }}
+                                    {% if form.depto.errors %}
+                                        <div class="text-danger small">{{ form.depto.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ubicación -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2">Ubicación</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.barrio.id_for_label }}" class="form-label">{{ form.barrio.label }}</label>
+                                    {{ form.barrio }}
+                                    {% if form.barrio.errors %}
+                                        <div class="text-danger small">{{ form.barrio.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.localidad.id_for_label }}" class="form-label">{{ form.localidad.label }}</label>
+                                    {{ form.localidad }}
+                                    {% if form.localidad.errors %}
+                                        <div class="text-danger small">{{ form.localidad.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.provincia.id_for_label }}" class="form-label">{{ form.provincia.label }}</label>
+                                    {{ form.provincia }}
+                                    {% if form.provincia.errors %}
+                                        <div class="text-danger small">{{ form.provincia.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.codigo_postal.id_for_label }}" class="form-label">{{ form.codigo_postal.label }}</label>
+                                    {{ form.codigo_postal }}
+                                    {% if form.codigo_postal.errors %}
+                                        <div class="text-danger small">{{ form.codigo_postal.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información Adicional -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary border-bottom pb-2">Información Adicional</h6>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.entre_calles.id_for_label }}" class="form-label">{{ form.entre_calles.label }}</label>
+                                    {{ form.entre_calles }}
+                                    {% if form.entre_calles.errors %}
+                                        <div class="text-danger small">{{ form.entre_calles.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="{{ form.observaciones.id_for_label }}" class="form-label">{{ form.observaciones.label }}</label>
+                                    {{ form.observaciones }}
+                                    {% if form.observaciones.errors %}
+                                        <div class="text-danger small">{{ form.observaciones.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'rrhh:empleado_detail' empleado.pk %}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Domicilio
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Información del Empleado</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Nombre:</strong></td>
+                            <td>{{ empleado.user.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Legajo:</strong></td>
+                            <td>{{ empleado.legajo }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DNI:</strong></td>
+                            <td>{{ empleado.dni }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Puesto:</strong></td>
+                            <td>{{ empleado.puesto|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select {
+        border-radius: 0.375rem;
+        border: 1px solid #d1d5db;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .text-danger {
+        font-size: 0.875rem;
+    }
+
+    .border-bottom {
+        border-bottom: 2px solid #e5e7eb !important;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'rrhh/base_rrhh.html' %}
+
+{% block title %}Eliminar Empleado{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-times fa-3x text-danger mb-3"></i>
+                        <h4>¿Está seguro que desea eliminar este empleado?</h4>
+                        <p class="text-muted">Esta acción no se puede deshacer.</p>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nombre:</strong> {{ empleado.user.get_full_name }}</p>
+                                    <p><strong>Legajo:</strong> {{ empleado.legajo }}</p>
+                                    <p><strong>DNI:</strong> {{ empleado.dni }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Puesto:</strong> {{ empleado.puesto|default:"-" }}</p>
+                                    <p><strong>Departamento:</strong> {{ empleado.departamento|default:"-" }}</p>
+                                    <p><strong>Email:</strong> {{ empleado.user.email }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Importante:</strong> Al eliminar este empleado también se eliminarán:
+                        <ul class="mb-0 mt-2">
+                            <li>Su cuenta de usuario</li>
+                            <li>Todos sus recibos de sueldo</li>
+                            <li>Todos sus documentos</li>
+                            <li>Todas sus solicitudes</li>
+                        </ul>
+                    </div>
+
+                    <form method="post" class="d-flex justify-content-between">
+                        {% csrf_token %}
+                        <a href="{% url 'rrhh:empleados' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar Empleado
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

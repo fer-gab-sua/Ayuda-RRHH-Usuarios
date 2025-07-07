@@ -1,0 +1,217 @@
+/* ====== Reglas específicas para tablas responsive ====== */
+
+/* ESCRITORIO: Tabla normal */
+@media screen and (min-width: 769px) {
+  .recibos-table {
+    display: table !important;
+    border-collapse: collapse !important;
+  }
+  
+  .recibos-table thead,
+  .recibos-table tbody {
+    display: table-row-group !important;
+  }
+  
+  .recibos-table tr {
+    display: table-row !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  
+  .recibos-table th,
+  .recibos-table td {
+    display: table-cell !important;
+    border: 1px solid #e5e7eb !important;
+    padding: 8px 12px !important;
+    position: static !important;
+    white-space: normal !important;
+    text-align: left !important;
+  }
+  
+  .recibos-table td:before {
+    display: none !important;
+    content: none !important;
+  }
+  
+  .recibos-table thead tr {
+    position: static !important;
+    display: table-row !important;
+  }
+  
+  .recibos-table th {
+    background: #f3f4f6 !important;
+  }
+  
+  /* Botones en la tabla de recibos - escritorio */
+  .recibos-table .btn-ver,
+  .recibos-table .btn-firmar,
+  .recibos-table .btn-descargar {
+    display: inline-block !important;
+    padding: 8px 12px !important;
+    margin: 2px !important;
+    border-radius: 6px !important;
+    border: none !important;
+    font-size: 0.8rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+  }
+  
+  .recibos-table .btn-ver {
+    background: #3b82f6 !important;
+    color: white !important;
+  }
+  
+  .recibos-table .btn-firmar {
+    background: #10b981 !important;
+    color: white !important;
+  }
+  
+  .recibos-table .btn-descargar {
+    background: #8b5cf6 !important;
+    color: white !important;
+  }
+  
+  /* Estados en la tabla de recibos - escritorio */
+  .recibos-table .estado-firmado {
+    color: #16a34a !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+  }
+  
+  .recibos-table .estado-pendiente {
+    color: #ea580c !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+  }
+}
+
+/* MÓVIL: Formato de tarjetas */
+@media screen and (max-width: 768px) {
+  .recibos-table {
+    display: block !important;
+    width: 100% !important;
+  }
+  
+  .recibos-table thead,
+  .recibos-table tbody,
+  .recibos-table th,
+  .recibos-table td,
+  .recibos-table tr {
+    display: block !important;
+  }
+  
+  .recibos-table thead tr {
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+  }
+  
+  .recibos-table tr {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+    padding: 12px !important;
+    background: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  }
+  
+  .recibos-table td {
+    border: none !important;
+    padding: 8px 0 !important;
+    position: relative !important;
+    padding-left: 40% !important;
+    text-align: left !important;
+  }
+  
+  .recibos-table td:before {
+    position: absolute !important;
+    left: 0 !important;
+    width: 35% !important;
+    padding-right: 10px !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .recibos-table td:first-child:before {
+    content: "Mes/Año: " !important;
+  }
+  
+  .recibos-table td:nth-child(2):before {
+    content: "Bruto: " !important;
+  }
+  
+  .recibos-table td:nth-child(3):before {
+    content: "Descuentos: " !important;
+  }
+  
+  .recibos-table td:nth-child(4):before {
+    content: "Neto: " !important;
+  }
+  
+  .recibos-table td:nth-child(5):before {
+    content: "Estado: " !important;
+  }
+  
+  .recibos-table td:nth-child(6):before {
+    content: "Acciones: " !important;
+  }
+  
+  .recibos-table td:last-child {
+    padding-left: 0 !important;
+    text-align: center !important;
+    margin-top: 12px !important;
+  }
+  
+  .recibos-table td:last-child:before {
+    display: none !important;
+  }
+  
+  /* Botones en la tabla de recibos */
+  .recibos-table .btn-ver,
+  .recibos-table .btn-firmar,
+  .recibos-table .btn-descargar {
+    display: inline-block !important;
+    padding: 6px 10px !important;
+    margin: 2px !important;
+    border-radius: 6px !important;
+    border: none !important;
+    font-size: 0.7rem !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+  }
+  
+  .recibos-table .btn-ver {
+    background: #3b82f6 !important;
+    color: white !important;
+  }
+  
+  .recibos-table .btn-firmar {
+    background: #10b981 !important;
+    color: white !important;
+  }
+  
+  .recibos-table .btn-descargar {
+    background: #8b5cf6 !important;
+    color: white !important;
+  }
+  
+  /* Estados en la tabla de recibos */
+  .recibos-table .estado-firmado {
+    color: #16a34a !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .recibos-table .estado-pendiente {
+    color: #ea580c !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+  }
+}
