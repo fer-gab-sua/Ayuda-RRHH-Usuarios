@@ -91,9 +91,8 @@ class MisRecibosView(LoginRequiredMixin, ListView):
 
 
 @login_required
-@login_required
 def ver_recibo_pdf(request, recibo_id):
-    """Ver el PDF del recibo"""
+    """Ver el PDF del recibo - muestra el firmado por Centromédica si existe, sino el original"""
     try:
         empleado = Empleado.objects.get(user=request.user)
         recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
@@ -103,7 +102,25 @@ def ver_recibo_pdf(request, recibo_id):
             messages.error(request, 'No puedes ver este recibo. Debes firmar el recibo anterior primero.')
             return redirect('recibos:mis_recibos')
         
-        if not recibo.archivo_pdf:
+        # Priorizar mostrar el PDF firmado por el empleado si existe, 
+        # luego el firmado por Centromédica, y finalmente el original
+        archivo_a_mostrar = None
+        archivo_tipo = ""
+        
+        if recibo.estado == 'firmado' and recibo.archivo_firmado:
+            archivo_a_mostrar = recibo.archivo_firmado
+            archivo_tipo = "firmado por empleado"
+            print(f"Mostrando PDF firmado por empleado para {empleado.legajo}")
+        elif recibo.archivo_pdf_centromedica:
+            archivo_a_mostrar = recibo.archivo_pdf_centromedica
+            archivo_tipo = "firmado por Centromédica"
+            print(f"Mostrando PDF de Centromédica para {empleado.legajo}")
+        elif recibo.archivo_pdf:
+            archivo_a_mostrar = recibo.archivo_pdf
+            archivo_tipo = "original"
+            print(f"Mostrando PDF original para {empleado.legajo}")
+        
+        if not archivo_a_mostrar:
             raise Http404("Archivo no encontrado")
         
         # Registrar actividad
@@ -114,7 +131,7 @@ def ver_recibo_pdf(request, recibo_id):
         
         # Leer el contenido del archivo
         try:
-            archivo_content = recibo.archivo_pdf.read()
+            archivo_content = archivo_a_mostrar.read()
         except Exception as e:
             raise Http404(f"Error al leer el archivo: {str(e)}")
         
@@ -286,11 +303,11 @@ def procesar_firma_recibo(request, recibo_id):
         recibo.fecha_firma = timezone.now()
         recibo.save()
         
-        # Generar PDF firmado
+        # Generar PDF firmado usando el PDF original
         try:
             # Las observaciones vienen del recibo si fue observado previamente
             observaciones_para_pdf = recibo.observaciones_empleado if recibo.observaciones_empleado else ''
-            pdf_firmado = generar_pdf_firmado(recibo, empleado, tipo_firma, observaciones_para_pdf)
+            pdf_firmado = generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observaciones_para_pdf)
             pdf_filename = f"recibo_firmado_{recibo.periodo}_{recibo.anio}_{empleado.legajo}.pdf"
             recibo.archivo_firmado.save(pdf_filename, ContentFile(pdf_firmado), save=True)
         except Exception as e:
@@ -486,6 +503,247 @@ def generar_pdf_firmado(recibo, empleado, tipo_firma, observaciones):
     return pdf_content
 
 
+def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observaciones):
+    """Generar PDF firmado usando el PDF original como base y agregando la firma"""
+    try:
+        from PyPDF2 import PdfReader, PdfWriter
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.utils import ImageReader
+        import base64
+        import os
+        
+        print(f"Iniciando generación de PDF firmado para recibo {recibo.id}")
+        
+        # Usar el PDF original como base
+        if not recibo.archivo_pdf:
+            print("Error: No hay PDF original para firmar")
+            raise Exception("No hay PDF original para firmar")
+        
+        print(f"PDF original encontrado: {recibo.archivo_pdf.name}")
+        
+        # Leer el PDF original
+        recibo.archivo_pdf.seek(0)
+        reader = PdfReader(recibo.archivo_pdf)
+        writer = PdfWriter()
+        
+        print(f"PDF original leído exitosamente, {len(reader.pages)} páginas")
+        
+        # Obtener el tamaño de la primera página del PDF original
+        first_page = reader.pages[0]
+        mediabox = first_page.mediabox
+        page_width = float(mediabox.width)
+        page_height = float(mediabox.height)
+        
+        print(f"Tamaño de página: {page_width} x {page_height}")
+        
+        # Crear overlay con la firma
+        overlay_buffer = BytesIO()
+        
+        # Usar el tamaño de la página original o A4 como fallback
+        if page_width > 0 and page_height > 0:
+            page_size = (page_width, page_height)
+        else:
+            page_size = A4
+            page_width, page_height = A4
+        
+        c = canvas.Canvas(overlay_buffer, pagesize=page_size)
+        
+        # Posición para la firma (pegado al margen derecho)
+        firma_x = page_width - 160  # Más pegado al margen derecho
+        firma_y = 195  # Subido medio centímetro más
+        
+        # Asegurarse de que la firma no se salga de la página
+        if firma_x < 50:
+            firma_x = 50
+        if firma_y < 120:
+            firma_y = 120
+        
+        print(f"Posición de firma: x={firma_x}, y={firma_y}")
+        
+        # Configurar fuente
+        c.setFont("Helvetica-Bold", 9)
+        
+        # NO crear fondo ni recuadro - firma transparente
+        # (comentado para hacer la firma completamente transparente)
+        # c.setFillColorRGB(0.99, 0.99, 0.99, alpha=0.9)  
+        # c.setStrokeColorRGB(0.7, 0.7, 0.7)  
+        # c.rect(firma_x - 5, firma_y - 100, 155, 140, fill=1, stroke=1)
+        
+        # Agregar información de la firma con texto más pequeño
+        c.setFillColorRGB(0, 0, 0)  # Texto negro
+        c.setFont("Helvetica-Bold", 7)  # Más pequeño
+        c.drawString(firma_x, firma_y + 60, "FIRMADO DIGITALMENTE")
+        
+        c.setFont("Helvetica", 6)  # Aún más pequeño para detalles
+        c.drawString(firma_x, firma_y + 48, f"Empleado: {empleado.user.get_full_name()}")
+        c.drawString(firma_x, firma_y + 38, f"Legajo: {empleado.legajo}")
+        c.drawString(firma_x, firma_y + 28, f"Fecha: {timezone.now().strftime('%d/%m/%Y %H:%M')}")
+        
+        # Estado de la firma
+        c.setFont("Helvetica-Bold", 6)
+        if tipo_firma == 'conforme':
+            c.setFillColorRGB(0, 0.5, 0)  # Verde
+            estado_texto = "CONFORME"
+        else:
+            c.setFillColorRGB(0.8, 0.4, 0)  # Naranja
+            estado_texto = "CON OBSERVACIONES"
+        
+        c.drawString(firma_x, firma_y + 18, f"Estado: {estado_texto}")
+        
+        # Resetear color para el resto del contenido
+        c.setFillColorRGB(0, 0, 0)
+        
+        # Agregar imagen de firma si existe
+        if empleado.firma_imagen:
+            try:
+                # Verificar si es un string base64 o un archivo de imagen
+                if hasattr(empleado.firma_imagen, 'read'):
+                    # Es un ImageFieldFile, leer el contenido
+                    empleado.firma_imagen.seek(0)
+                    image_bytes = empleado.firma_imagen.read()
+                    temp_image = BytesIO(image_bytes)
+                    img_reader = ImageReader(temp_image)
+                    
+                    # Agregar la imagen al PDF con fondo transparente
+                    c.drawImage(img_reader, firma_x + 2, firma_y - 25, width=100, height=35, 
+                               preserveAspectRatio=True, mask='auto')
+                    
+                    temp_image.close()
+                    print("Imagen de firma agregada exitosamente (desde archivo)")
+                
+                elif isinstance(empleado.firma_imagen, str):
+                    # Es un string, procesar como base64
+                    if empleado.firma_imagen.startswith("data:image/"):
+                        header, image_data = empleado.firma_imagen.split(',', 1)
+                        image_bytes = base64.b64decode(image_data)
+                        
+                        # Crear un ImageReader desde los bytes
+                        temp_image = BytesIO(image_bytes)
+                        img_reader = ImageReader(temp_image)
+                        
+                        # Agregar la imagen al PDF con tamaño más compacto
+                        c.drawImage(img_reader, firma_x + 2, firma_y - 30, width=100, height=35, 
+                                   preserveAspectRatio=True, mask='auto')
+                        
+                        temp_image.close()
+                        print("Imagen de firma agregada exitosamente (desde base64)")
+                        
+                    elif empleado.firma_imagen.strip():
+                        # Si no tiene el formato data:image/, intentar decodificar directamente
+                        try:
+                            image_bytes = base64.b64decode(empleado.firma_imagen)
+                            temp_image = BytesIO(image_bytes)
+                            img_reader = ImageReader(temp_image)
+                            
+                            c.drawImage(img_reader, firma_x + 2, firma_y - 25, width=100, height=35, 
+                                       preserveAspectRatio=True, mask='auto')
+                            
+                            temp_image.close()
+                            print("Imagen de firma agregada exitosamente (formato alternativo)")
+                        except Exception as decode_error:
+                            print(f"Error al decodificar imagen alternativa: {str(decode_error)}")
+                            raise decode_error
+                    else:
+                        print("String de firma vacío o solo espacios")
+                        raise ValueError("Firma imagen vacía")
+                else:
+                    print(f"Tipo de firma_imagen no reconocido: {type(empleado.firma_imagen)}")
+                    raise ValueError("Tipo de firma imagen no válido")
+                    
+            except Exception as img_error:
+                print(f"Error al agregar imagen de firma: {str(img_error)}")
+                print(f"Tipo de firma_imagen: {type(empleado.firma_imagen)}")
+                
+                # Agregar texto alternativo si falla la imagen
+                c.setFillColorRGB(0, 0, 0)
+                c.setFont("Helvetica-Oblique", 9)
+                c.drawString(firma_x + 2, firma_y - 10, "[Firma Digital]")
+        else:
+            # Si no hay imagen de firma, mostrar texto alternativo
+            c.setFillColorRGB(0, 0, 0)
+            c.setFont("Helvetica-Oblique", 9)
+            c.drawString(firma_x + 2, firma_y - 10, "[Firma Digital - Sin imagen]")
+        
+        # Agregar observaciones si existen
+        if observaciones:
+            c.setFont("Helvetica", 6)  # Texto más pequeño para observaciones
+            y_obs = firma_y - 40
+            c.drawString(firma_x, y_obs, "Observaciones:")
+            
+            # Dividir observaciones en líneas que quepan en el espacio
+            max_chars_per_line = 35
+            words = observaciones.split()
+            line = ""
+            y_current = y_obs - 8
+            
+            for word in words:
+                if len(line + word) < max_chars_per_line:
+                    line += word + " "
+                else:
+                    if line.strip():
+                        c.drawString(firma_x, y_current, line.strip())
+                        y_current -= 7  # Espaciado más compacto
+                    line = word + " "
+                    
+                    # Evitar que el texto se salga de la página
+                    if y_current < 20:
+                        c.drawString(firma_x, y_current, "...")
+                        break
+            
+            if line.strip() and y_current > 20:
+                c.drawString(firma_x, y_current, line.strip())
+        
+        c.save()
+        
+        # Crear el overlay PDF
+        overlay_buffer.seek(0)
+        overlay_reader = PdfReader(overlay_buffer)
+        overlay_page = overlay_reader.pages[0]
+        
+        # Combinar cada página del PDF original con el overlay
+        for page_num, page in enumerate(reader.pages):
+            if page_num == 0:  # Solo agregar firma en la primera página
+                try:
+                    page.merge_page(overlay_page)
+                except Exception as merge_error:
+                    print(f"Error al hacer merge de la página: {str(merge_error)}")
+                    # Continuar sin el overlay si falla
+            writer.add_page(page)
+        
+        # Generar el PDF final
+        output_buffer = BytesIO()
+        writer.write(output_buffer)
+        output_buffer.seek(0)
+        
+        pdf_content = output_buffer.getvalue()
+        
+        # Limpiar buffers
+        overlay_buffer.close()
+        output_buffer.close()
+        
+        return pdf_content
+        
+    except Exception as e:
+        print(f"Error en generar_pdf_firmado_sobre_original: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Fallback: Si hay PDF original, devolverlo sin modificar
+        if recibo.archivo_pdf:
+            try:
+                recibo.archivo_pdf.seek(0)
+                original_content = recibo.archivo_pdf.read()
+                print("Usando PDF original sin modificar como fallback")
+                return original_content
+            except Exception as fallback_error:
+                print(f"Error al leer PDF original: {str(fallback_error)}")
+        
+        # Último recurso: generar PDF básico
+        print("Generando PDF básico como último recurso")
+        return generar_pdf_firmado(recibo, empleado, tipo_firma, observaciones)
+
+
 def get_client_ip(request):
     """Obtener IP del cliente"""
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -494,3 +752,48 @@ def get_client_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+@login_required
+def ver_recibo_firmado(request, recibo_id):
+    """Ver el PDF firmado por el empleado"""
+    try:
+        empleado = Empleado.objects.get(user=request.user)
+        recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
+        
+        # Verificar que pueda ver este recibo
+        if not recibo.puede_ver:
+            messages.error(request, 'No puedes ver este recibo. Debes firmar el recibo anterior primero.')
+            return redirect('recibos:mis_recibos')
+        
+        # Verificar que el recibo esté firmado
+        if recibo.estado != 'firmado':
+            messages.error(request, 'Este recibo no ha sido firmado aún.')
+            return redirect('recibos:mis_recibos')
+        
+        # Verificar que existe el archivo firmado
+        if not recibo.archivo_firmado:
+            messages.error(request, 'No se encontró el archivo firmado.')
+            return redirect('recibos:mis_recibos')
+        
+        # Registrar actividad
+        ActividadEmpleado.objects.create(
+            empleado=empleado,
+            descripcion=f"Consultó el recibo firmado de {recibo.get_periodo_display()} {recibo.anio}"
+        )
+        
+        # Leer el contenido del archivo firmado
+        try:
+            recibo.archivo_firmado.seek(0)
+            archivo_content = recibo.archivo_firmado.read()
+        except Exception as e:
+            raise Http404(f"Error al leer el archivo firmado: {str(e)}")
+        
+        response = HttpResponse(archivo_content, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="recibo_firmado_{recibo.periodo}_{recibo.anio}_{empleado.legajo}.pdf"'
+        response['X-Frame-Options'] = 'SAMEORIGIN'
+        response['Content-Security-Policy'] = "frame-ancestors 'self'"
+        return response
+        
+    except Empleado.DoesNotExist:
+        raise Http404("Empleado no encontrado")

@@ -29,11 +29,35 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         meses = options['meses']
-        empleados = Empleado.objects.all()
+        
+        # Filtrar solo empleados con datos válidos
+        empleados = Empleado.objects.exclude(
+            legajo__isnull=True
+        ).exclude(
+            legajo=''
+        ).exclude(
+            user__first_name__isnull=True
+        ).exclude(
+            user__first_name=''
+        ).exclude(
+            user__last_name__isnull=True
+        ).exclude(
+            user__last_name=''
+        )
+        
+        total_empleados = Empleado.objects.count()
+        empleados_validos = empleados.count()
+        
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'Total empleados en sistema: {total_empleados}\n'
+                f'Empleados válidos para recibos: {empleados_validos}'
+            )
+        )
         
         if not empleados.exists():
             self.stdout.write(
-                self.style.ERROR('No hay empleados en el sistema. Crear empleados primero.')
+                self.style.ERROR('No hay empleados válidos en el sistema. Verificar datos de empleados.')
             )
             return
         
@@ -50,7 +74,20 @@ class Command(BaseCommand):
         recibos_creados = 0
         
         for empleado in empleados:
-            self.stdout.write(f'Creando recibos para {empleado.user.get_full_name()}...')
+            # Verificación adicional de datos válidos
+            if not empleado.legajo or not empleado.legajo.strip():
+                self.stdout.write(
+                    self.style.WARNING(f'Saltando empleado sin legajo: {empleado.user.get_full_name()}')
+                )
+                continue
+            
+            if not empleado.user.first_name or not empleado.user.last_name:
+                self.stdout.write(
+                    self.style.WARNING(f'Saltando empleado sin nombre completo: {empleado.legajo}')
+                )
+                continue
+            
+            self.stdout.write(f'Creando recibos para {empleado.user.get_full_name()} (Legajo: {empleado.legajo})...')
             
             for i in range(meses):
                 # Calcular mes y año

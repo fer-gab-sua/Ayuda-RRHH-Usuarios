@@ -1,0 +1,258 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Lista de Cargas Masivas - RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-list"></i> Lista de Cargas Masivas</h2>
+                <div>
+                    <a href="{% url 'rrhh:cargar_recibos_masivo' %}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Nueva Carga
+                    </a>
+                    <a href="{% url 'rrhh:recibos_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if cargas %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Período</th>
+                                        <th>Estado</th>
+                                        <th>Validación</th>
+                                        <th>Fecha Carga</th>
+                                        <th>Usuario</th>
+                                        <th>Empleados</th>
+                                        <th>Recibos Generados</th>
+                                        <th>Días Vencimiento</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for carga in cargas %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ carga.get_periodo_display }} {{ carga.anio }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if carga.estado == 'completado' %}
+                                                <span class="badge badge-sm bg-success">
+                                                    <i class="fas fa-check"></i> {{ carga.get_estado_display }}
+                                                </span>
+                                            {% elif carga.estado == 'error' %}
+                                                <span class="badge badge-sm bg-danger">
+                                                    <i class="fas fa-times"></i> {{ carga.get_estado_display }}
+                                                </span>
+                                            {% elif carga.estado == 'procesando' %}
+                                                <span class="badge badge-sm bg-warning">
+                                                    <i class="fas fa-spinner fa-spin"></i> {{ carga.get_estado_display }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge badge-sm bg-secondary">
+                                                    <i class="fas fa-clock"></i> {{ carga.get_estado_display }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if carga.validado %}
+                                                {% if carga.visible_empleados %}
+                                                    <span class="badge badge-sm bg-success">
+                                                        <i class="fas fa-eye"></i> Visible
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge badge-sm bg-primary">
+                                                        <i class="fas fa-check"></i> Validado
+                                                    </span>
+                                                {% endif %}
+                                            {% elif carga.estado == 'completado' %}
+                                                <span class="badge badge-sm bg-warning">
+                                                    <i class="fas fa-clock"></i> Pendiente
+                                                </span>
+                                            {% else %}
+                                                <span class="badge badge-sm bg-secondary">
+                                                    <i class="fas fa-minus"></i> N/A
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {{ carga.fecha_carga|date:"d/m/Y H:i" }}
+                                            {% if carga.fecha_procesamiento %}
+                                                <br><small class="text-muted">
+                                                    Procesado: {{ carga.fecha_procesamiento|date:"d/m/Y H:i" }}
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ carga.usuario_carga.get_full_name|default:carga.usuario_carga.username }}</td>
+                                        <td>
+                                            <span class="badge badge-sm bg-info">{{ carga.total_empleados }}</span>
+                                        </td>
+                                        <td>
+                                            {% if carga.estado == 'completado' %}
+                                                <span class="badge badge-sm bg-success">{{ carga.recibos_generados }}</span>
+                                            {% elif carga.estado == 'error' %}
+                                                <span class="badge badge-sm bg-danger">{{ carga.recibos_generados }}</span>
+                                            {% else %}
+                                                <span class="badge badge-sm bg-secondary">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ carga.dias_vencimiento }} días</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'rrhh:detalle_carga_masiva' carga.pk %}" 
+                                                   class="btn btn-outline-primary" 
+                                                   title="Ver Detalles">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if carga.archivo_pdf %}
+                                                <a href="{{ carga.archivo_pdf.url }}" 
+                                                   class="btn btn-outline-secondary" 
+                                                   target="_blank"
+                                                   title="Descargar PDF Original">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                {% endif %}
+                                                {% if carga.estado == 'error' %}
+                                                <button class="btn btn-outline-warning" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#modalErrores{{ carga.pk }}"
+                                                        title="Ver Errores">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if carga.puede_eliminar %}
+                                                <button class="btn btn-outline-danger" 
+                                                        onclick="eliminarCargaFromList({{ carga.pk }}, '{{ carga.get_periodo_display }} {{ carga.anio }}', {{ carga.recibos_generados }})"
+                                                        title="Eliminar Carga">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if is_paginated %}
+                        <nav aria-label="Navegación de páginas">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1">&laquo; Primera</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-inbox fa-4x mb-3"></i>
+                                <h4>No hay cargas masivas</h4>
+                                <p>Aún no se han realizado cargas masivas de recibos.</p>
+                                <a href="{% url 'rrhh:cargar_recibos_masivo' %}" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Realizar Primera Carga
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para mostrar errores -->
+{% for carga in cargas %}
+    {% if carga.estado == 'error' and carga.errores_procesamiento %}
+    <div class="modal fade" id="modalErrores{{ carga.pk }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        Errores de Procesamiento - {{ carga.get_periodo_display }} {{ carga.anio }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>Los siguientes errores ocurrieron durante el procesamiento:</strong>
+                    </div>
+                    <pre class="bg-light p-3 rounded">{{ carga.errores_procesamiento }}</pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+<form style="display: none;">
+    {% csrf_token %}
+</form>
+
+<script>
+function eliminarCargaFromList(cargaId, periodoAnio, recibosGenerados) {
+    if (confirm('⚠️ ATENCIÓN: Esta acción eliminará TODA la carga de ' + periodoAnio + ' y TODOS los ' + recibosGenerados + ' recibos generados.\n\n¿Estás completamente seguro de que quieres eliminar esta carga? Esta acción NO se puede deshacer.')) {
+        if (confirm('🗑️ CONFIRMACIÓN FINAL: Se eliminarán ' + recibosGenerados + ' recibos.\n\n¿Proceder con la eliminación?')) {
+            fetch('/rrhh/recibos/carga/' + cargaId + '/eliminar/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar la carga');
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -398,7 +398,7 @@
                                         </a>
                                         
                                         {% if recibo.estado == 'firmado' and recibo.archivo_firmado %}
-                                            <a href="{{ recibo.archivo_firmado.url }}" 
+                                            <a href="{% url 'recibos:ver_recibo_firmado' recibo.id %}" 
                                                class="btn btn-success" 
                                                target="_blank">
                                                 📋 Ver Firmado

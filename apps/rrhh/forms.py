@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth.models import User
 from apps.empleados.models import Empleado, DomicilioEmpleado
 from django.core.exceptions import ValidationError
+from .models import CargaMasivaRecibos
+import datetime
 
 class SubirRecibosForm(forms.Form):
     archivo = forms.FileField(label="Archivo de Recibos de Sueldo (PDF o TXT)", required=True)
@@ -265,3 +267,69 @@ class EditarEmpleadoForm(forms.ModelForm):
         if Empleado.objects.filter(dni=dni).exclude(id=self.instance.id).exists():
             raise ValidationError("Este DNI ya está registrado")
         return dni
+
+class CargaMasivaRecibosForm(forms.ModelForm):
+    """Formulario para cargar recibos masivamente"""
+    
+    class Meta:
+        model = CargaMasivaRecibos
+        fields = ['periodo', 'anio', 'archivo_pdf', 'dias_vencimiento']
+        widgets = {
+            'periodo': forms.Select(attrs={
+                'class': 'form-select',
+                'required': True
+            }),
+            'anio': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 2020,
+                'max': 2030,
+                'value': datetime.datetime.now().year,
+                'required': True
+            }),
+            'archivo_pdf': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf',
+                'required': True
+            }),
+            'dias_vencimiento': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 365,
+                'value': 30,
+                'required': True
+            })
+        }
+        labels = {
+            'periodo': 'Período',
+            'anio': 'Año',
+            'archivo_pdf': 'Archivo PDF con Recibos',
+            'dias_vencimiento': 'Días para Vencimiento'
+        }
+        help_texts = {
+            'archivo_pdf': 'Selecciona el archivo PDF que contiene todos los recibos del período',
+            'dias_vencimiento': 'Número de días desde la carga hasta el vencimiento de la firma'
+        }
+    
+    def clean_archivo_pdf(self):
+        archivo = self.cleaned_data.get('archivo_pdf')
+        if archivo:
+            if not archivo.name.lower().endswith('.pdf'):
+                raise ValidationError('El archivo debe ser un PDF.')
+            
+            # Verificar tamaño del archivo (máximo 50MB)
+            if archivo.size > 50 * 1024 * 1024:
+                raise ValidationError('El archivo no puede ser mayor a 50MB.')
+        
+        return archivo
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        periodo = cleaned_data.get('periodo')
+        anio = cleaned_data.get('anio')
+        
+        if periodo and anio:
+            # Verificar que no exista ya una carga para este período y año
+            if CargaMasivaRecibos.objects.filter(periodo=periodo, anio=anio).exists():
+                raise ValidationError(f'Ya existe una carga para {periodo} {anio}. Elimina la anterior antes de crear una nueva.')
+        
+        return cleaned_data

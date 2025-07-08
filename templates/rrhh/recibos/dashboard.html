@@ -1,0 +1,266 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+{% load math_filters %}
+
+{% block title %}Gestión de Recibos de Sueldo - RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-file-invoice-dollar"></i> Gestión de Recibos de Sueldo</h2>
+                <div>
+                    <a href="{% url 'rrhh:cargar_recibos_masivo' %}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Cargar Recibos Masivo
+                    </a>
+                    <a href="{% url 'rrhh:lista_cargas_masivas' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> Ver Todas las Cargas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_cargas }}</h4>
+                            <p class="card-text">Total Cargas</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-upload fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ cargas_pendientes }}</h4>
+                            <p class="card-text">Cargas Pendientes</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ cargas_error }}</h4>
+                            <p class="card-text">Cargas con Error</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_recibos }}</h4>
+                            <p class="card-text">Total Recibos</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-invoice fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas de Recibos -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Recibos Pendientes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recibos_pendientes }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-hourglass-half fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Recibos Firmados</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recibos_firmados }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Recibos Observados</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recibos_observados }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tasa de Conformidad</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {% if total_recibos > 0 %}
+                                    {{ recibos_firmados|percentage:total_recibos }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cargas Recientes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history"></i> Cargas Recientes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if cargas_recientes %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Período</th>
+                                        <th>Estado</th>
+                                        <th>Fecha Carga</th>
+                                        <th>Empleados</th>
+                                        <th>Recibos Generados</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for carga in cargas_recientes %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ carga.get_periodo_display }} {{ carga.anio }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if carga.estado == 'completado' %}
+                                                <span class="badge bg-success">{{ carga.get_estado_display }}</span>
+                                            {% elif carga.estado == 'error' %}
+                                                <span class="badge bg-danger">{{ carga.get_estado_display }}</span>
+                                            {% elif carga.estado == 'procesando' %}
+                                                <span class="badge bg-warning">{{ carga.get_estado_display }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ carga.get_estado_display }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ carga.fecha_carga|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ carga.total_empleados }}</td>
+                                        <td>{{ carga.recibos_generados }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'rrhh:detalle_carga_masiva' carga.pk %}" 
+                                                   class="btn btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if carga.archivo_pdf %}
+                                                <a href="{{ carga.archivo_pdf.url }}" 
+                                                   class="btn btn-outline-secondary" 
+                                                   target="_blank">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>No hay cargas recientes.</p>
+                                <a href="{% url 'rrhh:cargar_recibos_masivo' %}" class="btn btn-primary">
+                                    <i class="fas fa-upload"></i> Realizar Primera Carga
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+.text-xs {
+    font-size: 0.7rem;
+}
+</style>
+{% endblock %}

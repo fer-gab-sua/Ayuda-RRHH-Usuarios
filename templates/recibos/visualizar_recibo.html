@@ -377,6 +377,25 @@
                         <span class="estado-badge estado-vencido">Vencido</span>
                     {% endif %}
                 </p>
+                {% if recibo.archivo_pdf_centromedica %}
+                    <p><strong>Vista:</strong> 
+                        <span class="badge bg-info">
+                            <i class="fas fa-certificate"></i> 
+                            Recibo validado por Centromédica
+                        </span>
+                    </p>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Estás viendo el recibo ya validado. Al firmar, tu firma se aplicará sobre el recibo original.
+                    </small>
+                {% else %}
+                    <p><strong>Vista:</strong> 
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-file-pdf"></i> 
+                            Recibo original
+                        </span>
+                    </p>
+                {% endif %}
             </div>
             <div class="recibo-actions">
                 <!-- Alertas de estado -->

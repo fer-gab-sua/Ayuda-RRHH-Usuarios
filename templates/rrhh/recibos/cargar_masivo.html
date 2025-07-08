@@ -1,0 +1,167 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cargar Recibos Masivo - RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-upload"></i> Cargar Recibos Masivo</h2>
+                <a href="{% url 'rrhh:recibos_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-upload"></i> Subir Archivo PDF con Recibos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Información importante -->
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle"></i> Información Importante:</h6>
+                        <ul class="mb-0">
+                            <li>El archivo PDF debe contener todos los recibos del período seleccionado</li>
+                            <li>Cada página debe corresponder a un empleado</li>
+                            <li>Los recibos deben estar ordenados alfabéticamente por apellido</li>
+                            <li>El sistema buscará automáticamente el recibo de cada empleado por legajo o nombre</li>
+                            <li>Tamaño máximo del archivo: 50MB</li>
+                        </ul>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" id="form-carga-masiva">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.periodo|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.anio|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form.archivo_pdf|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.dias_vencimiento|as_crispy_field }}
+                            </div>
+                        </div>
+
+                        <!-- Área de preview del archivo -->
+                        <div id="pdf-preview" class="mt-3" style="display: none;">
+                            <div class="alert alert-success">
+                                <h6><i class="fas fa-file-pdf"></i> Archivo Seleccionado:</h6>
+                                <p id="file-info" class="mb-0"></p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'rrhh:recibos_dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="btn-submit">
+                                <i class="fas fa-upload"></i> Cargar y Procesar Recibos
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Guía de uso -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-question-circle"></i> Guía de Uso
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-check-circle text-success"></i> Qué sucede al cargar:</h6>
+                            <ul>
+                                <li>El sistema analizará cada página del PDF</li>
+                                <li>Buscará el legajo o nombre de cada empleado</li>
+                                <li>Creará un recibo individual para cada empleado</li>
+                                <li>Notificará a los empleados sobre el nuevo recibo</li>
+                                <li>Configurará las fechas de vencimiento automáticamente</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-exclamation-triangle text-warning"></i> Consideraciones:</h6>
+                            <ul>
+                                <li>Solo se puede cargar un período por vez</li>
+                                <li>Si ya existe un recibo para el período, se marcará como error</li>
+                                <li>El procesamiento puede tomar varios minutos</li>
+                                <li>Recibirás una notificación cuando termine</li>
+                                <li>Podrás ver el log detallado del procesamiento</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de procesamiento -->
+<div class="modal fade" id="modalProcesando" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <h5 class="mt-3">Procesando archivo...</h5>
+                <p class="text-muted">Por favor espere mientras procesamos los recibos. Este proceso puede tomar varios minutos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('id_archivo_pdf');
+    const preview = document.getElementById('pdf-preview');
+    const fileInfo = document.getElementById('file-info');
+    const form = document.getElementById('form-carga-masiva');
+    const btnSubmit = document.getElementById('btn-submit');
+    const modalProcesando = new bootstrap.Modal(document.getElementById('modalProcesando'));
+
+    // Preview del archivo seleccionado
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            fileInfo.innerHTML = `
+                <strong>${file.name}</strong><br>
+                <small>Tamaño: ${fileSize} MB | Tipo: ${file.type}</small>
+            `;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+
+    // Mostrar modal al enviar el formulario
+    form.addEventListener('submit', function(e) {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        modalProcesando.show();
+    });
+});
+</script>
+{% endblock %}

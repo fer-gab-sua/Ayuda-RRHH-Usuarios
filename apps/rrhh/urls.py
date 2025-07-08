@@ -27,6 +27,13 @@ urlpatterns = [
     path('solicitudes/<int:solicitud_id>/pdf/', views.servir_pdf_declaracion, name='servir_pdf_declaracion'),
     
     # Recibos
-    path('recibos/', views.RecibosRRHHListView.as_view(), name='recibos'),
+    path('recibos/', views.RRHHRecibosView.as_view(), name='recibos_dashboard'),
+    path('recibos/cargar/', views.CargaMasivaCreateView.as_view(), name='cargar_recibos_masivo'),
+    path('recibos/lista/', views.CargaMasivaListView.as_view(), name='lista_cargas_masivas'),
+    path('recibos/carga/<int:pk>/', views.CargaMasivaDetailView.as_view(), name='detalle_carga_masiva'),
+    path('recibos/carga/<int:pk>/validar/', views.validar_carga_masiva, name='validar_carga_masiva'),
+    path('recibos/carga/<int:pk>/hacer-visible/', views.hacer_visible_recibos, name='hacer_visible_recibos'),
+    path('recibos/carga/<int:pk>/eliminar/', views.eliminar_carga_masiva, name='eliminar_carga_masiva'),
+    path('recibos/recibo/<int:pk>/corregir/', views.corregir_recibo_no_encontrado, name='corregir_recibo_no_encontrado'),
     path('recibos/subir/', views.SubirRecibosView.as_view(), name='subir_recibos'),
 ]

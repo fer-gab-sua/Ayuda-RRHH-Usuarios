@@ -72,7 +72,7 @@
       
       <div class="nav-section">
         <span class="nav-section-title">Gestión</span>
-        <a href="{% url 'rrhh:recibos' %}" class="nav-link {% if request.resolver_match.url_name == 'recibos' %}active{% endif %}">
+        <a href="{% url 'rrhh:recibos_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'recibos_dashboard' %}active{% endif %}">
           <i class="fas fa-file-invoice-dollar"></i>
           <span class="nav-text">Recibos de Sueldo</span>
         </a>

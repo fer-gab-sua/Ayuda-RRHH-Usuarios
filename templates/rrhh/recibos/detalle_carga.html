@@ -1,0 +1,840 @@
+{% extends 'base/base.html' %}
+{% load math_filters %}
+
+{% block title %}Detalles de Carga - {{ carga.get_periodo_display }} {{ carga.anio }}{% endblock %}
+
+{% block content %}
+<form style="display: none;">
+    {% csrf_token %}
+</form>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-file-invoice-dollar"></i> 
+                    Carga {{ carga.get_periodo_display }} {{ carga.anio }}
+                </h2>
+                <div>
+                    <a href="{% url 'rrhh:lista_cargas_masivas' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver a Lista
+                    </a>
+                    <a href="{% url 'rrhh:recibos_dashboard' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información General -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Información General
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Período:</dt>
+                                <dd class="col-sm-7">{{ carga.get_periodo_display }} {{ carga.anio }}</dd>
+                                
+                                <dt class="col-sm-5">Estado:</dt>
+                                <dd class="col-sm-7">
+                                    {% if carga.estado == 'completado' %}
+                                        <span class="badge bg-success badge-sm" title="Procesamiento completado exitosamente">
+                                            <i class="fas fa-check"></i> Completado
+                                        </span>
+                                    {% elif carga.estado == 'error' %}
+                                        <span class="badge bg-danger badge-sm" title="Error durante el procesamiento">
+                                            <i class="fas fa-times"></i> Error
+                                        </span>
+                                    {% elif carga.estado == 'procesando' %}
+                                        <span class="badge bg-warning badge-sm" title="Procesamiento en curso">
+                                            <i class="fas fa-spinner fa-spin"></i> Procesando
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary badge-sm" title="Pendiente de procesamiento">
+                                            <i class="fas fa-clock"></i> Pendiente
+                                        </span>
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-5">Usuario:</dt>
+                                <dd class="col-sm-7">{{ carga.usuario_carga.get_full_name|default:carga.usuario_carga.username }}</dd>
+                            </dl>
+                        </div>
+                        <div class="col-sm-6">
+                            <dl class="row">
+                                <dt class="col-sm-5">Fecha Carga:</dt>
+                                <dd class="col-sm-7">{{ carga.fecha_carga|date:"d/m/Y H:i" }}</dd>
+                                
+                                {% if carga.fecha_procesamiento %}
+                                <dt class="col-sm-5">Fecha Proc.:</dt>
+                                <dd class="col-sm-7">{{ carga.fecha_procesamiento|date:"d/m/Y H:i" }}</dd>
+                                {% endif %}
+                                
+                                <dt class="col-sm-5">Días Vencimiento:</dt>
+                                <dd class="col-sm-7">{{ carga.dias_vencimiento }} días</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    {% if carga.archivo_pdf %}
+                    <div class="mt-3">
+                        <a href="{{ carga.archivo_pdf.url }}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-file-pdf"></i> Ver PDF Original
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Acciones de validación -->
+                    <div class="mt-4">
+                        <h6><i class="fas fa-tasks"></i> Acciones de Validación</h6>
+                        {% if carga.estado == 'completado' %}
+                            {% if not carga.validado %}
+                                <div class="alert alert-warning border-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Validación Pendiente:</strong> Revisa los recibos generados y valida la carga antes de hacerla visible a los empleados.
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success btn-lg" onclick="validarCarga()">
+                                        <i class="fas fa-check-circle"></i> Validar Carga
+                                    </button>
+                                    <button class="btn btn-danger btn-lg" onclick="eliminarCarga()">
+                                        <i class="fas fa-trash"></i> Eliminar Carga
+                                    </button>
+                                </div>
+                            {% elif not carga.visible_empleados %}
+                                <div class="alert alert-info border-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Carga Validada:</strong> La carga fue validada el {{ carga.fecha_validacion|date:"d/m/Y H:i" }} por {{ carga.validado_por.get_full_name }}.
+                                    <br>Ahora puedes hacer visibles los recibos para los empleados.
+                                </div>
+                                <button class="btn btn-primary btn-lg" onclick="hacerVisible()">
+                                    <i class="fas fa-eye"></i> Hacer Visible para Empleados
+                                </button>
+                            {% else %}
+                                <div class="alert alert-success border-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Recibos Visibles:</strong> Los recibos están disponibles para los empleados desde el {{ carga.fecha_validacion|date:"d/m/Y H:i" }}.
+                                    <br><small class="text-muted">Validado por {{ carga.validado_por.get_full_name }}</small>
+                                </div>
+                            {% endif %}
+                        {% elif carga.estado == 'error' and carga.recibos_generados > 0 %}
+                            {% if not carga.validado %}
+                                <div class="alert alert-warning border-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Validación Pendiente:</strong> Aunque hubo errores en el procesamiento, se generaron {{ carga.recibos_generados }} recibos exitosamente. Revisa los logs y valida la carga.
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success btn-lg" onclick="validarCarga()">
+                                        <i class="fas fa-check-circle"></i> Validar Carga
+                                    </button>
+                                    <button class="btn btn-danger btn-lg" onclick="eliminarCarga()">
+                                        <i class="fas fa-trash"></i> Eliminar Carga
+                                    </button>
+                                </div>
+                            {% elif not carga.visible_empleados %}
+                                <div class="alert alert-info border-info">
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Carga Validada:</strong> La carga fue validada el {{ carga.fecha_validacion|date:"d/m/Y H:i" }} por {{ carga.validado_por.get_full_name }}.
+                                    <br>Ahora puedes hacer visibles los recibos para los empleados.
+                                </div>
+                                <button class="btn btn-primary btn-lg" onclick="hacerVisible()">
+                                    <i class="fas fa-eye"></i> Hacer Visible para Empleados
+                                </button>
+                            {% else %}
+                                <div class="alert alert-success border-success">
+                                    <i class="fas fa-check-circle"></i>
+                                    <strong>Recibos Visibles:</strong> Los recibos están disponibles para los empleados desde el {{ carga.fecha_validacion|date:"d/m/Y H:i" }}.
+                                    <br><small class="text-muted">Validado por {{ carga.validado_por.get_full_name }}</small>
+                                </div>
+                            {% endif %}
+                        {% elif carga.estado == 'error' %}
+                            <div class="alert alert-danger border-danger">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <strong>Error en Procesamiento:</strong> La carga presentó errores durante el procesamiento. Revisa los logs y considera eliminar la carga.
+                            </div>
+                            <button class="btn btn-danger btn-lg" onclick="eliminarCarga()">
+                                <i class="fas fa-trash"></i> Eliminar Carga
+                            </button>
+                        {% elif carga.estado == 'procesando' %}
+                            <div class="alert alert-info border-info">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <strong>Procesando:</strong> La carga está siendo procesada. Por favor espera a que termine.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-secondary border-secondary">
+                                <i class="fas fa-clock"></i>
+                                <strong>Pendiente:</strong> La carga está pendiente de procesamiento.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar"></i> Estadísticas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-3">
+                            <h3 class="text-primary">{{ carga.total_empleados }}</h3>
+                            <small class="text-muted">Total Empleados</small>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <h3 class="text-success">{{ carga.recibos_generados }}</h3>
+                            <small class="text-muted">Recibos Generados</small>
+                        </div>
+                        {% if carga.total_empleados > 0 %}
+                        <div class="col-12">
+                            {% with porcentaje=carga.recibos_generados|percentage:carga.total_empleados %}
+                            <div class="progress mb-2" style="height: 20px;">
+                                <div class="progress-bar bg-success progress-bar-striped" 
+                                     role="progressbar" 
+                                     style="width: {{ porcentaje }}%; display: flex; align-items: center; justify-content: center;"
+                                     aria-valuenow="{{ porcentaje }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    <span style="font-size: 0.5rem; font-weight: 600; color: white; text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);">{{ porcentaje }}%</span>
+                                </div>
+                            </div>
+                            <!-- Debug info -->
+                            <div class="text-muted small">
+                                {{ carga.recibos_generados }} de {{ carga.total_empleados }} empleados
+                            </div>
+                            {% endwith %}
+                            <small class="text-muted">Tasa de Éxito</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Errores de Procesamiento -->
+    {% if carga.errores_procesamiento %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle"></i> Errores de Procesamiento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded">{{ carga.errores_procesamiento }}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Log Detallado -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list-alt"></i> Log Detallado de Procesamiento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if logs %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="8%">Legajo</th>
+                                        <th width="25%">Empleado</th>
+                                        <th width="12%">Estado</th>
+                                        <th width="45%">Mensaje</th>
+                                        <th width="10%">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for log in logs %}
+                                    <tr>
+                                        <td><strong>{{ log.legajo_empleado }}</strong></td>
+                                        <td>{{ log.nombre_empleado }}</td>
+                                        <td>
+                                            {% if log.estado == 'exitoso' %}
+                                                <span class="badge bg-success badge-sm" title="{{ log.get_estado_display }}">
+                                                    <i class="fas fa-check"></i>
+                                                </span>
+                                            {% elif log.estado == 'error' %}
+                                                <span class="badge bg-danger badge-sm" title="{{ log.get_estado_display }}">
+                                                    <i class="fas fa-times"></i>
+                                                </span>
+                                            {% elif log.estado == 'empleado_no_encontrado' %}
+                                                <span class="badge bg-warning badge-sm" title="{{ log.get_estado_display }}">
+                                                    <i class="fas fa-user-slash"></i>
+                                                </span>
+                                            {% elif log.estado == 'no_encontrado' %}
+                                                <span class="badge bg-warning badge-sm" title="{{ log.get_estado_display }}">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary badge-sm" title="{{ log.get_estado_display }}">
+                                                    <i class="fas fa-question"></i>
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if log.mensaje|length > 100 %}
+                                                <div class="log-message-container">
+                                                    <div class="log-message-short">
+                                                        {{ log.mensaje|truncatechars:100 }}
+                                                    </div>
+                                                    <div class="log-message-full" style="display: none;">
+                                                        {{ log.mensaje }}
+                                                    </div>
+                                                    <button class="btn btn-sm btn-outline-info toggle-log-message" 
+                                                            type="button" 
+                                                            onclick="toggleLogMessage(this)">
+                                                        <i class="fas fa-expand-alt"></i>
+                                                    </button>
+                                                </div>
+                                            {% else %}
+                                                <div class="log-message">{{ log.mensaje }}</div>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-nowrap">{{ log.fecha_procesamiento|date:"d/m/Y H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if logs|length >= 50 %}
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i>
+                            Se muestran los primeros 50 registros. El procesamiento completo está disponible en los archivos de log del sistema.
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                                <p>No hay logs de procesamiento disponibles.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recibos Generados -->
+    {% if recibos %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-invoice-dollar"></i> Recibos Generados ({{ recibos|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="10%">Legajo</th>
+                                    <th width="30%">Empleado</th>
+                                    <th width="15%">Estado</th>
+                                    <th width="15%">Fecha Venc.</th>
+                                    <th width="15%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for recibo in recibos %}
+                                <tr>
+                                    <td><strong>{{ recibo.empleado.legajo }}</strong></td>
+                                    <td>{{ recibo.empleado.user.get_full_name }}</td>
+                                    <td>
+                                        {% if recibo.estado == 'firmado' %}
+                                            <span class="badge bg-success badge-sm" title="Recibo firmado">
+                                                <i class="fas fa-check"></i> Firmado
+                                            </span>
+                                        {% elif recibo.estado == 'pendiente' %}
+                                            <span class="badge bg-warning badge-sm" title="Pendiente de firma">
+                                                <i class="fas fa-clock"></i> Pendiente
+                                            </span>
+                                        {% elif recibo.estado == 'observado' %}
+                                            <span class="badge bg-info badge-sm" title="Con observaciones">
+                                                <i class="fas fa-eye"></i> Observado
+                                            </span>
+                                        {% elif recibo.estado == 'respondido' %}
+                                            <span class="badge bg-primary badge-sm" title="Observación respondida">
+                                                <i class="fas fa-reply"></i> Respondido
+                                            </span>
+                                        {% elif recibo.estado == 'no_encontrado' %}
+                                            <span class="badge bg-warning badge-sm" title="Recibo no encontrado en PDF - Requiere revisión manual">
+                                                <i class="fas fa-exclamation-triangle"></i> No Encontrado
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary badge-sm">{{ recibo.get_estado_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-nowrap">{{ recibo.fecha_vencimiento|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            {% if recibo.archivo_pdf %}
+                                            <a href="{{ recibo.archivo_pdf.url }}" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               target="_blank"
+                                               title="Ver PDF">
+                                                <i class="fas fa-file-pdf"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if recibo.estado == 'no_encontrado' %}
+                                            <button class="btn btn-outline-success btn-sm" 
+                                                    onclick="corregirRecibo({{ recibo.pk }}, '{{ recibo.empleado.user.get_full_name }}')"
+                                                    title="Marcar como Corregido">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function validarCarga() {
+    if (confirm('¿Estás seguro de que quieres validar esta carga? Una vez validada, podrás hacer visibles los recibos para los empleados.')) {
+        fetch('{% url "rrhh:validar_carga_masiva" carga.pk %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al validar la carga');
+        });
+    }
+}
+
+function hacerVisible() {
+    if (confirm('¿Estás seguro de que quieres hacer visibles estos recibos para los empleados? Una vez visibles, los empleados podrán verlos y firmarlos.')) {
+        fetch('{% url "rrhh:hacer_visible_recibos" carga.pk %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al hacer visibles los recibos');
+        });
+    }
+}
+
+function validarCarga() {
+    if (confirm('¿Confirmas que has revisado todos los recibos y quieres validar esta carga?\n\nDespués de validar podrás hacer visibles los recibos para los empleados.')) {
+        // Desactivar botón durante el proceso
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
+        
+        fetch('{% url "rrhh:validar_carga_masiva" carga.pk %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✓ ' + data.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al validar la carga');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+}
+
+function hacerVisible() {
+    if (confirm('¿Confirmas que quieres hacer visibles estos recibos para los empleados?\n\nLos empleados podrán ver y firmar sus recibos después de esta acción.')) {
+        // Desactivar botón durante el proceso
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+        
+        fetch('{% url "rrhh:hacer_visible_recibos" carga.pk %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✓ ' + data.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al hacer visible los recibos');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+}
+
+function eliminarCarga() {
+    if (confirm('⚠️ ATENCIÓN: Esta acción eliminará TODA la carga y TODOS los recibos generados.\n\n¿Estás completamente seguro de que quieres eliminar esta carga? Esta acción NO se puede deshacer.')) {
+        if (confirm('🗑️ CONFIRMACIÓN FINAL: Se eliminarán {{ carga.recibos_generados }} recibos.\n\n¿Proceder con la eliminación?')) {
+            fetch('{% url "rrhh:eliminar_carga_masiva" carga.pk %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al eliminar la carga');
+            });
+        }
+    }
+}
+
+function corregirRecibo(reciboId, nombreEmpleado) {
+    if (confirm('¿Confirmas que el PDF asignado para ' + nombreEmpleado + ' es correcto?\n\nEsto cambiará el estado del recibo de "No Encontrado" a "Pendiente" y será visible para el empleado.')) {
+        // Desactivar botón durante el proceso
+        const btn = event.target;
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        
+        fetch('/rrhh/recibos/recibo/' + reciboId + '/corregir/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('✓ ' + data.message);
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.message);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al corregir el recibo');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        });
+    }
+}
+
+function toggleLogMessage(button) {
+    const container = button.closest('.log-message-container');
+    const shortMessage = container.querySelector('.log-message-short');
+    const fullMessage = container.querySelector('.log-message-full');
+    const icon = button.querySelector('i');
+    
+    if (fullMessage.style.display === 'none') {
+        shortMessage.style.display = 'none';
+        fullMessage.style.display = 'block';
+        icon.className = 'fas fa-compress-alt';
+        button.title = 'Contraer mensaje';
+    } else {
+        shortMessage.style.display = 'block';
+        fullMessage.style.display = 'none';
+        icon.className = 'fas fa-expand-alt';
+        button.title = 'Expandir mensaje';
+    }
+}
+</script>
+
+<style>
+.badge-sm {
+    font-size: 0.75em !important;
+    padding: 0.25em 0.5em !important;
+    border-radius: 0.25rem !important;
+}
+
+.badge-sm i {
+    font-size: 0.8em;
+}
+
+.log-message {
+    max-width: 400px;
+    word-wrap: break-word;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.log-message-container {
+    position: relative;
+    max-width: 400px;
+}
+
+.log-message-short,
+.log-message-full {
+    word-wrap: break-word;
+    font-size: 0.9em;
+    line-height: 1.4;
+    padding-right: 30px;
+}
+
+.log-message-full {
+    background-color: #f8f9fa;
+    padding: 8px 30px 8px 8px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    margin-top: 4px;
+}
+
+.toggle-log-message {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 2px 6px;
+    font-size: 0.7em;
+    line-height: 1.2;
+    min-width: 24px;
+    height: 24px;
+}
+
+.log-message:hover,
+.log-message-container:hover {
+    cursor: default;
+}
+
+.alert-success.border-success {
+    border-left: 4px solid #28a745;
+}
+
+.alert-warning.border-warning {
+    border-left: 4px solid #ffc107;
+}
+
+.alert-info.border-info {
+    border-left: 4px solid #17a2b8;
+}
+
+.d-flex.gap-2 {
+    gap: 0.5rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+}
+
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.progress {
+    height: 20px;
+    border-radius: 10px;
+    background-color: #e9ecef;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.6s ease;
+}
+
+.progress-text {
+    font-size: 0.55rem;
+    font-weight: 600;
+    color: white;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-lg {
+    padding: 0.5rem 1rem;
+    font-size: 1.125rem;
+    border-radius: 0.5rem;
+}
+
+.text-center.py-4 {
+    padding: 3rem 0;
+}
+
+.text-muted i {
+    opacity: 0.6;
+}
+
+/* Mejoras en el progress bar */
+.progress {
+    height: 24px;
+    border-radius: 12px;
+    background-color: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    transition: width 0.3s ease;
+}
+
+/* Alertas mejoradas */
+.alert {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.alert-success.border-success {
+    border-left: 4px solid #28a745;
+    background-color: #d4edda;
+}
+
+.alert-warning.border-warning {
+    border-left: 4px solid #ffc107;
+    background-color: #fff3cd;
+}
+
+.alert-info.border-info {
+    border-left: 4px solid #17a2b8;
+    background-color: #d1ecf1;
+}
+
+.alert-danger.border-danger {
+    border-left: 4px solid #dc3545;
+    background-color: #f8d7da;
+}
+
+/* Animaciones para botones */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Espaciado mejorado */
+.d-flex.gap-2 {
+    gap: 0.75rem;
+}
+
+/* Tabla responsiva mejorada */
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.025);
+    transition: background-color 0.2s ease;
+}
+
+@media (max-width: 768px) {
+    .log-message-container {
+        max-width: 250px;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}

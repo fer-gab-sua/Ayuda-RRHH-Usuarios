@@ -10,6 +10,7 @@ class ReciboSueldo(models.Model):
         ('respondido', 'Observación Respondida por RRHH'),
         ('firmado', 'Firmado'),
         ('vencido', 'Vencido'),
+        ('no_encontrado', 'Recibo No Encontrado'),
     ]
     
     PERIODO_CHOICES = [
@@ -35,8 +36,9 @@ class ReciboSueldo(models.Model):
     fecha_firma = models.DateTimeField(null=True, blank=True)
     
     # Archivos
-    archivo_pdf = models.FileField(upload_to='recibos_sueldo/', help_text='PDF del recibo original')
-    archivo_firmado = models.FileField(upload_to='recibos_firmados/', blank=True, null=True, help_text='PDF firmado digitalmente')
+    archivo_pdf = models.FileField(upload_to='recibos_sueldo/', help_text='PDF del recibo original para firmar')
+    archivo_pdf_centromedica = models.FileField(upload_to='recibos_centromedica/', blank=True, null=True, help_text='PDF firmado por Centromédica que el empleado visualiza')
+    archivo_firmado = models.FileField(upload_to='recibos_firmados/', blank=True, null=True, help_text='PDF firmado digitalmente por el empleado')
     
     # Estado y observaciones
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
@@ -75,6 +77,22 @@ class ReciboSueldo(models.Model):
     @property
     def puede_ver(self):
         """Verifica si el empleado puede ver este recibo"""
+        # Verificar si la carga masiva está visible para empleados
+        if self.subido_por:
+            from apps.rrhh.models import CargaMasivaRecibos
+            carga_masiva = CargaMasivaRecibos.objects.filter(
+                periodo=self.periodo,
+                anio=self.anio,
+                usuario_carga=self.subido_por
+            ).first()
+            
+            if carga_masiva and not carga_masiva.visible_empleados:
+                return False
+        
+        # Los recibos no encontrados no son visibles hasta que RRHH los revise y corrija
+        if self.estado == 'no_encontrado':
+            return False
+        
         # Obtener todos los recibos del empleado y ordenarlos cronológicamente
         recibos_ordenados = ReciboSueldo.objects.filter(
             empleado=self.empleado
