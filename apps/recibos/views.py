@@ -551,7 +551,7 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
         
         # Posición para la firma (pegado al margen derecho)
         firma_x = page_width - 160  # Más pegado al margen derecho
-        firma_y = 195  # Subido medio centímetro más
+        firma_y = 180  # Altura apropiada
         
         # Asegurarse de que la firma no se salga de la página
         if firma_x < 50:
@@ -564,24 +564,23 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
         # Configurar fuente
         c.setFont("Helvetica-Bold", 9)
         
-        # NO crear fondo ni recuadro - firma transparente
-        # (comentado para hacer la firma completamente transparente)
-        # c.setFillColorRGB(0.99, 0.99, 0.99, alpha=0.9)  
-        # c.setStrokeColorRGB(0.7, 0.7, 0.7)  
-        # c.rect(firma_x - 5, firma_y - 100, 155, 140, fill=1, stroke=1)
+        # Crear un fondo sutil para la firma (sin tapar contenido)
+        c.setFillColorRGB(0.99, 0.99, 0.99, alpha=0.9)  # Fondo blanco casi transparente
+        c.setStrokeColorRGB(0.7, 0.7, 0.7)  # Borde gris muy suave
+        c.rect(firma_x - 5, firma_y - 100, 155, 140, fill=1, stroke=1)  # Caja más compacta
         
-        # Agregar información de la firma con texto más pequeño
+        # Agregar información de la firma
         c.setFillColorRGB(0, 0, 0)  # Texto negro
-        c.setFont("Helvetica-Bold", 7)  # Más pequeño
-        c.drawString(firma_x, firma_y + 60, "FIRMADO DIGITALMENTE")
+        c.setFont("Helvetica-Bold", 9)
+        c.drawString(firma_x, firma_y + 80, "FIRMADO DIGITALMENTE")
         
-        c.setFont("Helvetica", 6)  # Aún más pequeño para detalles
-        c.drawString(firma_x, firma_y + 48, f"Empleado: {empleado.user.get_full_name()}")
-        c.drawString(firma_x, firma_y + 38, f"Legajo: {empleado.legajo}")
-        c.drawString(firma_x, firma_y + 28, f"Fecha: {timezone.now().strftime('%d/%m/%Y %H:%M')}")
+        c.setFont("Helvetica", 7)
+        c.drawString(firma_x, firma_y + 65, f"Empleado: {empleado.user.get_full_name()}")
+        c.drawString(firma_x, firma_y + 52, f"Legajo: {empleado.legajo}")
+        c.drawString(firma_x, firma_y + 39, f"Fecha: {timezone.now().strftime('%d/%m/%Y %H:%M')}")
         
         # Estado de la firma
-        c.setFont("Helvetica-Bold", 6)
+        c.setFont("Helvetica-Bold", 7)
         if tipo_firma == 'conforme':
             c.setFillColorRGB(0, 0.5, 0)  # Verde
             estado_texto = "CONFORME"
@@ -589,7 +588,7 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
             c.setFillColorRGB(0.8, 0.4, 0)  # Naranja
             estado_texto = "CON OBSERVACIONES"
         
-        c.drawString(firma_x, firma_y + 18, f"Estado: {estado_texto}")
+        c.drawString(firma_x, firma_y + 26, f"Estado: {estado_texto}")
         
         # Resetear color para el resto del contenido
         c.setFillColorRGB(0, 0, 0)
@@ -605,8 +604,8 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
                     temp_image = BytesIO(image_bytes)
                     img_reader = ImageReader(temp_image)
                     
-                    # Agregar la imagen al PDF con fondo transparente
-                    c.drawImage(img_reader, firma_x + 2, firma_y - 25, width=100, height=35, 
+                    # Agregar la imagen al PDF con tamaño más compacto
+                    c.drawImage(img_reader, firma_x + 2, firma_y - 30, width=100, height=35, 
                                preserveAspectRatio=True, mask='auto')
                     
                     temp_image.close()
@@ -636,7 +635,7 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
                             temp_image = BytesIO(image_bytes)
                             img_reader = ImageReader(temp_image)
                             
-                            c.drawImage(img_reader, firma_x + 2, firma_y - 25, width=100, height=35, 
+                            c.drawImage(img_reader, firma_x + 2, firma_y - 30, width=100, height=35, 
                                        preserveAspectRatio=True, mask='auto')
                             
                             temp_image.close()
@@ -667,15 +666,15 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
         
         # Agregar observaciones si existen
         if observaciones:
-            c.setFont("Helvetica", 6)  # Texto más pequeño para observaciones
-            y_obs = firma_y - 40
+            c.setFont("Helvetica", 7)
+            y_obs = firma_y - 55
             c.drawString(firma_x, y_obs, "Observaciones:")
             
             # Dividir observaciones en líneas que quepan en el espacio
             max_chars_per_line = 35
             words = observaciones.split()
             line = ""
-            y_current = y_obs - 8
+            y_current = y_obs - 10
             
             for word in words:
                 if len(line + word) < max_chars_per_line:
@@ -683,7 +682,7 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
                 else:
                     if line.strip():
                         c.drawString(firma_x, y_current, line.strip())
-                        y_current -= 7  # Espaciado más compacto
+                        y_current -= 8
                     line = word + " "
                     
                     # Evitar que el texto se salga de la página
