@@ -796,3 +796,348 @@ def ver_recibo_firmado(request, recibo_id):
         
     except Empleado.DoesNotExist:
         raise Http404("Empleado no encontrado")
+
+
+def aplicar_formato_centromedica_a_pdf_original(recibo, empleado):
+    """Aplica el formato visual de Centromédica al PDF original manteniendo el contenido"""
+    try:
+        print(f"Aplicando formato de Centromédica para {empleado.user.get_full_name()}")
+        
+        # Usar la función que aplica formato al PDF original
+        pdf_formateado = generar_formato_centromedica_completo(recibo, empleado)
+        
+        if pdf_formateado:
+            return pdf_formateado
+        else:
+            print("Error aplicando formato, devolviendo PDF original")
+            # Fallback: devolver el PDF original sin modificar
+            if recibo.archivo_pdf:
+                recibo.archivo_pdf.seek(0)
+                return recibo.archivo_pdf.read()
+            return None
+        
+    except Exception as e:
+        print(f"Error en aplicar_formato_centromedica_a_pdf_original: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def generar_formato_centromedica_completo(recibo, empleado):
+    """Genera el formato completo de Centromédica al PDF original manteniendo el contenido"""
+    try:
+        from PyPDF2 import PdfReader, PdfWriter
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib import colors
+        
+        print(f"Aplicando formato Centromédica completo al PDF original para {empleado.user.get_full_name()}")
+        
+        # Verificar que existe el PDF original
+        if not recibo.archivo_pdf:
+            print("Error: No hay PDF original para formatear")
+            return None
+        
+        # Leer el PDF original
+        recibo.archivo_pdf.seek(0)
+        reader = PdfReader(recibo.archivo_pdf)
+        writer = PdfWriter()
+        
+        print(f"PDF original leído exitosamente, {len(reader.pages)} páginas")
+        
+        # Obtener el tamaño de la primera página del PDF original
+        first_page = reader.pages[0]
+        mediabox = first_page.mediabox
+        page_width = float(mediabox.width)
+        page_height = float(mediabox.height)
+        
+        print(f"Tamaño de página original: {page_width} x {page_height}")
+        
+        # Crear overlay con el formato de Centromédica
+        overlay_buffer = BytesIO()
+        
+        # Usar el tamaño de la página original
+        page_size = (page_width, page_height)
+        c = canvas.Canvas(overlay_buffer, pagesize=page_size)
+        
+        # =====================================
+        # SECCIÓN 1: ENCABEZADO Y LOGO
+        # =====================================
+        c.setStrokeColor(colors.blue)
+        c.setLineWidth(0.5)
+        
+        # Logo desde archivo de imagen
+        logo_x = 25
+        logo_y = page_height - 100  # Ajustado para acomodar la imagen
+        
+        try:
+            from reportlab.lib.utils import ImageReader
+            import os
+            
+            # Ruta al logo
+            logo_path = r"C:\Repositorys\Ayuda-RRHH-Usuarios\static\img\logo.png"
+            
+            if os.path.exists(logo_path):
+                # Cargar y agregar la imagen del logo
+                img_reader = ImageReader(logo_path)
+                # Ajustar el tamaño del logo (ancho x alto)
+                c.drawImage(img_reader, logo_x, logo_y, width=150, 
+                           preserveAspectRatio=True, mask='auto')
+                print(f"Logo cargado desde: {logo_path}")
+            else:
+                # Fallback: texto si no se encuentra la imagen
+                c.setFillColor(colors.red)
+                c.setFont("Helvetica-Bold", 16)
+                c.drawString(logo_x, logo_y + 15, "Ayuda")
+                c.setFillColor(colors.blue)
+                c.drawString(logo_x + 48, logo_y + 15, "Médica")
+                print(f"Logo no encontrado en: {logo_path}, usando texto como fallback")
+                
+        except Exception as e:
+            # Fallback en caso de error: usar texto
+            print(f"Error cargando logo: {str(e)}")
+            c.setFillColor(colors.red)
+            c.setFont("Helvetica-Bold", 16)
+            c.drawString(logo_x, logo_y + 15, "Ayuda")
+            c.setFillColor(colors.blue)
+            c.drawString(logo_x + 48, logo_y + 15, "Médica")
+        
+        # Título "RECIBO DE SUELDO" en la parte superior derecha (más prominente)
+        c.setFillColor(colors.blue)
+        c.setFont("Helvetica-Bold", 14)
+        titulo_x = page_width - 160
+        c.drawString(titulo_x, page_height - 80, "RECIBO DE SUELDO")
+        
+
+        
+        # =====================================
+        # ESTRUCTURA PRINCIPAL DE LA TABLA
+        # =====================================
+        c.setLineWidth(0.5)
+        c.setStrokeColor(colors.blue)
+
+        # Definir las dimensiones de la tabla principal
+        tabla_x = 25  # Margen izquierdo
+        tabla_width = page_width - 50  # Ancho total menos márgenes
+        tabla_y_inicio = page_height - 95  # Posición Y de inicio
+        tabla_height_total = 600  # Altura total de toda la tabla
+
+        # Rectángulo principal que contiene toda la estructura
+        c.rect(tabla_x, tabla_y_inicio - tabla_height_total, tabla_width, tabla_height_total, fill=0, stroke=1)
+
+        # =====================================
+        # COLORES DE FONDO (DIBUJAR PRIMERO - ANTES QUE LAS LÍNEAS)
+        # =====================================
+        # Ejemplo: Dar color rosa al área de CONCEPTOS
+        c.setFillColorRGB(1.0, 0.85, 0.9)  # Rosa claro (R, G, B entre 0 y 1)
+        # Nota: Las coordenadas se definirán después cuando tengamos las variables division5_y, etc.
+        
+        # =====================================
+        # LÍNEAS DIVISORIAS HORIZONTALES
+        # =====================================
+        # Primera división: después del campo CUIT
+        division1_y = tabla_y_inicio - 20
+        c.line(tabla_x, division1_y, tabla_x + tabla_width, division1_y)
+
+        # Segunda división: después de los datos del domicilio
+        division2_y = tabla_y_inicio - 40
+        c.line(tabla_x, division2_y, tabla_x + tabla_width, division2_y)
+
+        # Tercera división: después de la tabla de conceptos
+        division3_y = tabla_y_inicio - 55
+        c.line(tabla_x, division3_y, tabla_x + tabla_width, division3_y)
+
+        # Cuarta división: después de totales
+        division4_y = tabla_y_inicio - 80
+        c.line(tabla_x, division4_y, tabla_x + tabla_width, division4_y)
+
+        # Para la tabla de conceptos
+        col1_x = tabla_x + 470  # Después de CONCEPTO
+
+        c.line(col1_x, division2_y, col1_x, division4_y)
+
+        # Cuarta división: después de totales
+        division5_y = tabla_y_inicio - 163
+        c.line(tabla_x, division5_y, tabla_x + tabla_width, division5_y)
+
+        # Cuarta división: después de totales
+        division6_y = tabla_y_inicio - 175
+        c.line(tabla_x, division6_y, tabla_x + tabla_width, division6_y)
+
+        # Para la tabla de conceptos
+        col1_x = tabla_x + 250  # Después de CONCEPTO
+
+        c.line(col1_x, division4_y, col1_x, division5_y)
+
+        division6a_y = tabla_y_inicio - 95
+        
+        # NUEVA LÍNEA HORIZONTAL: Desde col1_x hasta el final de la tabla
+        c.line(col1_x, division6a_y, tabla_x + tabla_width, division6a_y)
+        
+        division6a_y = tabla_y_inicio - 110
+        
+        # NUEVA LÍNEA HORIZONTAL: Desde col1_x hasta el final de la tabla
+        c.line(col1_x, division6a_y, tabla_x + tabla_width, division6a_y)
+
+        division6a_y = tabla_y_inicio - 140
+        
+        # NUEVA LÍNEA HORIZONTAL: Desde col1_x hasta el final de la tabla
+        c.line(col1_x, division6a_y, tabla_x + tabla_width, division6a_y)
+
+
+        
+    
+        # Cuarta división: después de totales
+        division16_y = tabla_y_inicio - 385
+        c.line(tabla_x, division16_y, tabla_x + tabla_width, division16_y)
+
+
+
+        # =====================================
+        # LÍNEAS DIVISORIAS VERTICALES
+        # =====================================
+        # Para la tabla de conceptos
+        col1_x = tabla_x + 270  # Después de CONCEPTO
+        col2_x = tabla_x + 320  # UNIDADES
+        col3_x = tabla_x + 400  # REMUNERACIONES
+        col4_x = tabla_x + 480  # DESCUENTOS
+
+         # Cuarta división: después de totales
+        division17_y = tabla_y_inicio - 405
+        c.line(tabla_x, division17_y, tabla_x + tabla_width, division17_y)
+
+         # Cuarta división: después de totales
+        division18_y = tabla_y_inicio - 425
+        c.line(tabla_x, division18_y, tabla_x + tabla_width, division18_y)
+        # Líneas verticales en la sección de conceptos
+        c.line(col1_x, division5_y, col1_x, division16_y)
+        c.line(col2_x, division5_y, col2_x, division17_y)
+        c.line(col3_x, division5_y, col3_x, division17_y)
+        c.line(col4_x, division5_y, col4_x, division18_y)
+
+        division19_y = tabla_y_inicio - 455
+        c.line(tabla_x, division19_y, tabla_x + tabla_width, division19_y)
+
+        division20_y = tabla_y_inicio - 485 
+        c.line(tabla_x, division20_y, tabla_x + tabla_width, division20_y)
+
+        division21_y = tabla_y_inicio - 520 
+        c.line(tabla_x, division21_y, tabla_x + tabla_width, division21_y)
+
+        col1_x = tabla_x + 210  # Después de CONCEPTO
+        c.line(col1_x, division21_y, col1_x, division21_y -80)
+
+
+
+        # =====================================
+        # ETIQUETAS Y CAMPOS
+        # =====================================
+        # Campo CUIT ocupando casi todo el ancho de la página
+        c.setFillColor(colors.blue)
+        c.setFont("Helvetica", 5)
+        c.drawString(page_width - 140, page_height - 106, "CUIT")
+        # Más etiquetas...
+
+        c.drawString(page_width - 565, page_height - 146, "APELLIDO Y NOMBRE")
+        c.drawString(page_width - 165, page_height - 146, "CUIL")
+        c.drawString(page_width - 70, page_height - 146, "LEGAJO")
+
+
+
+        c.drawString(page_width - 300, page_height - 186, "FECHA DE INGRESO")
+        c.drawString(page_width - 225, page_height - 186, "REMUNERACION ASIGNADA")
+        c.drawString(page_width - 70, page_height - 186, "RECIBO Nº")
+
+
+
+        c.drawString(page_width - 565, page_height - 190, "SECCION")
+        c.drawString(page_width - 565, page_height - 215, "CATEGORIA")
+        c.drawString(page_width - 565, page_height - 240, "CALIFICACION PROFESIONAL")
+        
+        
+        c.drawString(page_width - 310, page_height - 215, "PERIODO DE PAGO")
+        c.drawString(page_width - 310, page_height - 240, "CONTRATACION")
+
+
+        c.drawString(page_width - 470, page_height - 266, "CONCEPTOS")
+        c.drawString(page_width - 288, page_height - 266, "UNIDADES")
+        c.drawString(page_width - 235, page_height - 264, "REMUNERACIONES")
+        c.drawString(page_width - 240, page_height - 269, "SUJETAS A RETENCION")
+        c.drawString(page_width - 153, page_height - 264, "REMUNERACIONES")
+        c.drawString(page_width - 142, page_height - 269, "EXENTAS")
+        c.drawString(page_width - 73, page_height - 266, "DESCUENTOS")
+
+
+        c.drawString(page_width - 565, page_height - 516, "LUGAR Y FECHA DE PAGO")
+        c.drawString(page_width - 288, page_height - 516, "FORMA DE PAGO")
+        c.drawString(page_width - 153, page_height - 516, "TOTAL NETO")
+
+
+
+        c.drawString(page_width - 565, page_height - 556, "SON PESOS")
+
+
+        c.drawString(page_width - 565, page_height - 630, "ART.12 LEY 17250")
+        c.drawString(page_width - 565, page_height - 640, "MES")
+        c.drawString(page_width - 565, page_height - 650, "BANCO")
+        c.drawString(page_width - 565, page_height - 660, "FECHA DEPOSITO")
+
+
+        # Guardar el overlay
+        c.save()
+        
+        # Combinar el PDF original con el overlay de formato
+        overlay_buffer.seek(0)
+        overlay_reader = PdfReader(overlay_buffer)
+        overlay_page = overlay_reader.pages[0]
+        
+        # Aplicar el overlay a cada página del PDF original
+        for page_num, page in enumerate(reader.pages):
+            # Crear una página combinada: overlay de fondo + contenido original encima
+            page.merge_page(overlay_page)  # El overlay va debajo del contenido original
+            writer.add_page(page)
+        
+        # Generar el PDF final
+        output_buffer = BytesIO()
+        writer.write(output_buffer)
+        output_buffer.seek(0)
+        
+        pdf_content = output_buffer.getvalue()
+        
+        # Limpiar buffers
+        overlay_buffer.close()
+        output_buffer.close()
+        
+        print(f"Formato aplicado exitosamente al PDF original")
+        return pdf_content
+        
+    except Exception as e:
+        print(f"Error aplicando formato Centromédica: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def generar_pdf_formato_centromedica_test(recibo, empleado):
+    """Función de prueba para aplicar formato profesional de Centromédica al PDF original"""
+    try:
+        print(f"Aplicando formato de prueba para {empleado.user.get_full_name()}")
+        
+        # Usar la función que aplica formato al PDF original
+        pdf_formateado = aplicar_formato_centromedica_a_pdf_original(recibo, empleado)
+        
+        if pdf_formateado:
+            return pdf_formateado
+        else:
+            print("Error aplicando formato, devolviendo PDF original")
+            # Fallback: devolver el PDF original sin modificar
+            if recibo.archivo_pdf:
+                recibo.archivo_pdf.seek(0)
+                return recibo.archivo_pdf.read()
+            return None
+        
+    except Exception as e:
+        print(f"Error en generar_pdf_formato_centromedica_test: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None

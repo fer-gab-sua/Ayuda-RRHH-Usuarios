@@ -23,6 +23,7 @@ from datetime import timedelta
 from apps.empleados.models import Empleado, SolicitudCambio, DomicilioEmpleado
 from apps.documentos.models import Documento
 from apps.recibos.models import ReciboSueldo
+from apps.recibos.views import aplicar_formato_centromedica_a_pdf_original  # Importar función de formato
 from .models import CargaMasivaRecibos, LogProcesamientoRecibo
 from .forms import SubirRecibosForm, CrearEmpleadoForm, EditarEmpleadoForm, DomicilioEmpleadoForm, CargaMasivaRecibosForm
 from reportlab.lib.pagesizes import A4
@@ -431,7 +432,9 @@ class SubirRecibosView(LoginRequiredMixin, SoloRRHHMixin, FormView):
             buffer.seek(0)
             nombre_archivo = f"recibo_{periodo}_{anio}_{legajo}.pdf"
             archivo_pdf = ContentFile(buffer.read(), name=nombre_archivo)
-            ReciboSueldo.objects.create(
+            
+            # Crear el recibo
+            recibo = ReciboSueldo.objects.create(
                 empleado=empleado,
                 periodo=periodo,
                 anio=anio,
@@ -439,6 +442,30 @@ class SubirRecibosView(LoginRequiredMixin, SoloRRHHMixin, FormView):
                 archivo_pdf=archivo_pdf,
                 subido_por=self.request.user
             )
+            
+            # ===================================================================
+            # APLICAR FORMATO CENTROMÉDICA AL PDF GENERADO
+            # ===================================================================
+            try:
+                print(f"Aplicando formato Centromédica a recibo de {empleado.legajo}")
+                pdf_con_formato = aplicar_formato_centromedica_a_pdf_original(recibo, empleado)
+                
+                if pdf_con_formato:
+                    # Guardar el PDF con formato como archivo_pdf_centromedica
+                    nombre_archivo_con_formato = f"recibo_centromedica_{legajo}_{periodo}_{anio}.pdf"
+                    recibo.archivo_pdf_centromedica.save(
+                        nombre_archivo_con_formato,
+                        ContentFile(pdf_con_formato),
+                        save=True
+                    )
+                    print(f"✅ Formato Centromédica aplicado exitosamente a {empleado.legajo}")
+                else:
+                    print(f"⚠️ No se pudo aplicar formato Centromédica a {empleado.legajo}")
+                    
+            except Exception as format_error:
+                print(f"❌ Error aplicando formato Centromédica a {empleado.legajo}: {str(format_error)}")
+                # El proceso continúa aunque falle el formato
+            
             procesados += 1
         messages.success(self.request, f'Recibos procesados: {procesados}')
         return super().form_valid(form)
@@ -803,28 +830,57 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
             )
             output_buffer_original.close()
             
-            # Generar PDF de Centromédica (para visualizar) si existe
-            if pagina_centromedica is not None and pagina_centromedica < len(reader.pages):
-                writer_centromedica = PdfWriter()
-                writer_centromedica.add_page(reader.pages[pagina_centromedica])
+            # ===================================================================
+            # NUEVA FUNCIONALIDAD: APLICAR FORMATO CENTROMÉDICA AL PDF ORIGINAL
+            # ===================================================================
+            try:
+                print(f"Aplicando formato Centromédica a recibo de {recibo.empleado.legajo}")
+                pdf_con_formato = aplicar_formato_centromedica_a_pdf_original(recibo, recibo.empleado)
                 
-                # Guardar PDF de Centromédica
-                output_buffer_centromedica = BytesIO()
-                writer_centromedica.write(output_buffer_centromedica)
-                output_buffer_centromedica.seek(0)
-                
-                nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
-                recibo.archivo_pdf_centromedica.save(
-                    nombre_archivo_centromedica,
-                    ContentFile(output_buffer_centromedica.getvalue()),
-                    save=True
-                )
-                output_buffer_centromedica.close()
-                
-                print(f"PDF original y de Centromédica generados para {recibo.empleado.legajo}")
-            else:
-                print(f"Solo PDF original generado para {recibo.empleado.legajo} (no se encontró página de Centromédica)")
+                if pdf_con_formato:
+                    # Guardar el PDF con formato como archivo_pdf_centromedica
+                    nombre_archivo_con_formato = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+                    recibo.archivo_pdf_centromedica.save(
+                        nombre_archivo_con_formato,
+                        ContentFile(pdf_con_formato),
+                        save=True
+                    )
+                    print(f"✅ Formato Centromédica aplicado exitosamente a {recibo.empleado.legajo}")
+                else:
+                    print(f"⚠️ No se pudo aplicar formato Centromédica a {recibo.empleado.legajo}")
+                    
+            except Exception as format_error:
+                print(f"❌ Error aplicando formato Centromédica a {recibo.empleado.legajo}: {str(format_error)}")
+                # El proceso continúa aunque falle el formato, ya que el PDF original está guardado
             
+            # ===================================================================
+            # MANTENER COMPATIBILIDAD CON PDFs QUE YA TIENEN FORMATO CENTROMÉDICA
+            # ===================================================================
+            # Si el PDF masivo ya incluía una página de Centromédica, respetarla
+            if pagina_centromedica is not None and pagina_centromedica < len(reader.pages):
+                # Si ya tenemos archivo_pdf_centromedica del formato automático, conservarlo
+                # Pero también guardamos la página original de Centromédica como respaldo
+                if not recibo.archivo_pdf_centromedica:
+                    writer_centromedica = PdfWriter()
+                    writer_centromedica.add_page(reader.pages[pagina_centromedica])
+                    
+                    # Guardar PDF de Centromédica del archivo masivo
+                    output_buffer_centromedica = BytesIO()
+                    writer_centromedica.write(output_buffer_centromedica)
+                    output_buffer_centromedica.seek(0)
+                    
+                    nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+                    recibo.archivo_pdf_centromedica.save(
+                        nombre_archivo_centromedica,
+                        ContentFile(output_buffer_centromedica.getvalue()),
+                        save=True
+                    )
+                    output_buffer_centromedica.close()
+                    print(f"PDF de Centromédica del archivo masivo guardado para {recibo.empleado.legajo}")
+                else:
+                    print(f"Ya existe PDF con formato Centromédica generado automáticamente para {recibo.empleado.legajo}")
+            
+            print(f"✅ Procesamiento completo para empleado {recibo.empleado.legajo}")
             return True
             
         except Exception as e:
