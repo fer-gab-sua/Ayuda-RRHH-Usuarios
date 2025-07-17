@@ -861,8 +861,7 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
         except Exception as e:
             print(f"Error buscando empleado en PDF: {str(e)}")
             return None
-            print(f"Error buscando empleado en PDF: {str(e)}")
-            return None
+
     
     def generar_pdf_individual_desde_pagina(self, recibo, archivo_masivo, paginas_info):
         """Genera PDFs individuales extrayendo las páginas específicas del PDF masivo"""
