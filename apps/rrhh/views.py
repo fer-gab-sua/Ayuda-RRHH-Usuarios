@@ -897,17 +897,17 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
             print(f"📄 PDF temporal guardado para aplicar formato a {recibo.empleado.legajo}")
             
             # ===================================================================
-            # PASO 2: APLICAR FORMATO CENTROMÉDICA A TODOS LOS ARCHIVOS
+            # PASO 2: APLICAR FORMATO A LA PÁGINA DEL EMPLEADO (archivo_pdf)
             # ===================================================================
             try:
-                print(f"🔄 Aplicando formato Centromédica a TODOS los archivos de {recibo.empleado.legajo}")
+                print(f"🔄 Aplicando formato Centromédica a página del empleado de {recibo.empleado.legajo}")
                 
                 from apps.recibos.views import generar_pdf_formato_centromedica_test
                 
-                # Aplicar formato usando el archivo que acabamos de guardar
-                pdf_con_formato = generar_pdf_formato_centromedica_test(recibo, recibo.empleado)
+                # Aplicar formato usando el archivo que acabamos de guardar (página 1)
+                pdf_empleado_con_formato = generar_pdf_formato_centromedica_test(recibo, recibo.empleado)
                 
-                if pdf_con_formato and len(pdf_con_formato) > 1000:
+                if pdf_empleado_con_formato and len(pdf_empleado_con_formato) > 1000:
                     # REEMPLAZAR el archivo_pdf original con la versión formateada
                     if recibo.archivo_pdf:
                         recibo.archivo_pdf.delete(save=False)
@@ -915,98 +915,105 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
                     # Guardar PDF CON FORMATO como archivo principal (archivo_pdf)
                     recibo.archivo_pdf.save(
                         nombre_archivo_empleado,
-                        ContentFile(pdf_con_formato),
+                        ContentFile(pdf_empleado_con_formato),
                         save=True
                     )
                     
-                    # También guardarlo como archivo_pdf_centromedica para compatibilidad
-                    nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
-                    recibo.archivo_pdf_centromedica.save(
-                        nombre_archivo_centromedica,
-                        ContentFile(pdf_con_formato),
-                        save=True
-                    )
-                    
-                    print(f"✅ PDF CON FORMATO CENTROMÉDICA aplicado a TODOS los archivos: {nombre_archivo_empleado}")
-                    print(f"💾 Archivo principal formateado: {nombre_archivo_empleado}")
-                    print(f"💾 Archivo Centromédica formateado: {nombre_archivo_centromedica}")
-                    print(f"📊 Tamaño PDF con formato: {len(pdf_con_formato)} bytes")
+                    print(f"✅ PDF del empleado CON FORMATO guardado: {nombre_archivo_empleado}")
+                    print(f"📊 Tamaño PDF empleado con formato: {len(pdf_empleado_con_formato)} bytes")
                 else:
-                    print(f"⚠️ Error aplicando formato, conservando PDF sin formato para {recibo.empleado.legajo}")
+                    print(f"⚠️ Error aplicando formato a página del empleado para {recibo.empleado.legajo}")
                     
             except Exception as format_error:
-                print(f"❌ Error aplicando formato a {recibo.empleado.legajo}: {str(format_error)}")
-                print(f"📋 Conservando PDF sin formato para {recibo.empleado.legajo}")
+                print(f"❌ Error aplicando formato a página del empleado {recibo.empleado.legajo}: {str(format_error)}")
             
             # ===================================================================
-            # OPCIONAL: PROCESAR PÁGINA 2 SI EXISTE (pero ya no es necesaria)
+            # PASO 3: PROCESAR PÁGINA 2 DE CENTROMÉDICA (archivo_pdf_centromedica)
             # ===================================================================
-            pagina_centromedica = pagina_original + 1
-            if pagina_centromedica < len(reader.pages):
-                print(f"📄 Página {pagina_centromedica + 1} encontrada pero no se procesará (ya tenemos formato aplicado)")
+            pagina_centromedica_real = paginas_info.get('pagina_centromedica')
+            if pagina_centromedica_real is not None and pagina_centromedica_real < len(reader.pages):
+                print(f"📄 Procesando página {pagina_centromedica_real + 1} (firmada por Centromédica)")
+                
+                try:
+                    # Extraer la página de Centromédica del archivo masivo
+                    writer_centromedica = PdfWriter()
+                    writer_centromedica.add_page(reader.pages[pagina_centromedica_real])
+                    
+                    # Crear PDF en memoria
+                    output_buffer_centromedica = BytesIO()
+                    writer_centromedica.write(output_buffer_centromedica)
+                    output_buffer_centromedica.seek(0)
+                    
+                    # Crear un objeto temporal para aplicar formato a la página de Centromédica
+                    class TempArchivoPDF:
+                        def __init__(self, buffer):
+                            self.buffer = buffer
+                        
+                        def read(self, size=-1):
+                            if size == -1:
+                                return self.buffer.getvalue()
+                            else:
+                                current_pos = self.buffer.tell()
+                                data = self.buffer.read(size)
+                                return data
+                        
+                        def seek(self, pos, whence=0):
+                            return self.buffer.seek(pos, whence)
+                        
+                        def tell(self):
+                            return self.buffer.tell()
+                    
+                    recibo_temp_centromedica = type('ReciboCentromedica', (), {})()
+                    recibo_temp_centromedica.archivo_pdf = TempArchivoPDF(output_buffer_centromedica)
+                    
+                    # Aplicar formato a la página de Centromédica
+                    print(f"🎨 Aplicando formato a la página firmada por Centromédica")
+                    pdf_centromedica_con_formato = generar_pdf_formato_centromedica_test(recibo_temp_centromedica, recibo.empleado)
+                    
+                    if pdf_centromedica_con_formato and len(pdf_centromedica_con_formato) > 1000:
+                        # Guardar la página de Centromédica formateada
+                        nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+                        recibo.archivo_pdf_centromedica.save(
+                            nombre_archivo_centromedica,
+                            ContentFile(pdf_centromedica_con_formato),
+                            save=True
+                        )
+                        print(f"✅ PDF de Centromédica CON FORMATO guardado: {nombre_archivo_centromedica}")
+                        print(f"📊 Tamaño PDF Centromédica con formato: {len(pdf_centromedica_con_formato)} bytes")
+                    else:
+                        # Fallback: guardar la página de Centromédica sin formato
+                        print(f"⚠️ Error aplicando formato, guardando página de Centromédica sin formato")
+                        nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+                        recibo.archivo_pdf_centromedica.save(
+                            nombre_archivo_centromedica,
+                            ContentFile(output_buffer_centromedica.getvalue()),
+                            save=True
+                        )
+                        
+                    output_buffer_centromedica.close()
+                    
+                except Exception as centromedica_error:
+                    print(f"❌ Error procesando página de Centromédica: {str(centromedica_error)}")
+                    
             else:
-                print(f"📄 Solo hay una página por empleado, formato aplicado correctamente")
+                print(f"� Solo hay una página por empleado, no hay página firmada por Centromédica")
+                # Si no hay página 2, crear una copia del archivo del empleado para compatibilidad
+                if recibo.archivo_pdf:
+                    try:
+                        recibo.archivo_pdf.seek(0)
+                        pdf_empleado_content = recibo.archivo_pdf.read()
+                        nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+                        recibo.archivo_pdf_centromedica.save(
+                            nombre_archivo_centromedica,
+                            ContentFile(pdf_empleado_content),
+                            save=True
+                        )
+                        print(f"📋 Archivo de compatibilidad creado: {nombre_archivo_centromedica}")
+                    except Exception as copy_error:
+                        print(f"⚠️ Error creando archivo de compatibilidad: {str(copy_error)}")
             
             # Limpiar buffer empleado
             output_buffer_empleado.close()
-            
-            # ===================================================================
-            # PROCESAR PÁGINAS DE CENTROMÉDICA DEL ARCHIVO MASIVO (SI EXISTEN)
-            # ===================================================================
-            # Si el PDF masivo ya incluía una página de Centromédica, extraerla y también aplicarle formato
-            if pagina_centromedica is not None and pagina_centromedica < len(reader.pages):
-                print(f"📄 Procesando página de Centromédica del archivo masivo (página {pagina_centromedica + 1})")
-                
-                # Extraer la página de Centromédica del archivo masivo
-                writer_centromedica_original = PdfWriter()
-                writer_centromedica_original.add_page(reader.pages[pagina_centromedica])
-                
-                # Crear PDF en memoria (sin guardar archivos temporales)
-                output_buffer_centromedica_temp = BytesIO()
-                writer_centromedica_original.write(output_buffer_centromedica_temp)
-                output_buffer_centromedica_temp.seek(0)
-                
-                # Crear un objeto de recibo temporal en memoria para el formato de Centromédica
-                recibo_centromedica_temporal = type('TempReciboCentromedica', (), {})()
-                recibo_centromedica_temporal.archivo_pdf = type('TempFile', (), {})()
-                recibo_centromedica_temporal.archivo_pdf.read = lambda: output_buffer_centromedica_temp.getvalue()
-                recibo_centromedica_temporal.archivo_pdf.seek = lambda pos: output_buffer_centromedica_temp.seek(pos)
-                
-                try:
-                    # Aplicar el formato de test también a la página de Centromédica
-                    print(f"🎨 Aplicando formato mejorado a la página de Centromédica del archivo masivo")
-                    pdf_centromedica_con_formato = generar_pdf_formato_centromedica_test(recibo_centromedica_temporal, recibo.empleado)
-                    
-                    if pdf_centromedica_con_formato:
-                        # Si no tenemos archivo_pdf_centromedica del proceso anterior, usar este
-                        if not recibo.archivo_pdf_centromedica:
-                            nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
-                            recibo.archivo_pdf_centromedica.save(
-                                nombre_archivo_centromedica,
-                                ContentFile(pdf_centromedica_con_formato),
-                                save=True
-                            )
-                            print(f"✅ Formato aplicado a página de Centromédica del archivo masivo para {recibo.empleado.legajo}")
-                        else:
-                            print(f"ℹ️ Ya existe PDF con formato aplicado, conservando el formato del PDF original individual")
-                    else:
-                        print(f"⚠️ Error aplicando formato a página de Centromédica")
-                        
-                except Exception as centromedica_error:
-                    print(f"❌ Error procesando página de Centromédica: {str(centromedica_error)}")
-                    # Fallback: guardar la página original de Centromédica sin formato
-                    if not recibo.archivo_pdf_centromedica:
-                        nombre_archivo_centromedica = f"recibo_centromedica_original_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
-                        recibo.archivo_pdf_centromedica.save(
-                            nombre_archivo_centromedica,
-                            ContentFile(output_buffer_centromedica_temp.getvalue()),
-                            save=True
-                        )
-                        print(f"📋 Página de Centromédica original guardada como fallback para {recibo.empleado.legajo}")
-                
-                output_buffer_centromedica_temp.close()
-            else:
-                print(f"ℹ️ No hay página de Centromédica adicional en el archivo masivo para {recibo.empleado.legajo}")
             
             # ===================================================================
             # LIMPIEZA DE ARCHIVOS TEMPORALES EXISTENTES (POR SEGURIDAD)
