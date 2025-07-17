@@ -1124,10 +1124,10 @@ def generar_formato_centromedica_completo(recibo, empleado):
             try:
                 # Aplicar overlay profesional con formato Centromédica
                 
-                print(f"� Procesando página {page_num + 1} con método overlay-encima...")
+                print(f"🔗 Procesando página {page_num + 1} con método overlay-debajo...")
                 
-                overlay_page.merge_page(page)  # Formato ENCIMA del contenido original
-                writer.add_page(overlay_page)
+                page.merge_page(overlay_page)  # Formato DEBAJO del contenido original
+                writer.add_page(page)
                 
                 print(f"✅ Página {page_num + 1} procesada exitosamente")
                         
