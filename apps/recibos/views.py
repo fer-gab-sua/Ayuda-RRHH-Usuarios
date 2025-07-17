@@ -102,23 +102,54 @@ def ver_recibo_pdf(request, recibo_id):
             messages.error(request, 'No puedes ver este recibo. Debes firmar el recibo anterior primero.')
             return redirect('recibos:mis_recibos')
         
-        # Priorizar mostrar el PDF firmado por el empleado si existe, 
-        # luego el firmado por Centromédica, y finalmente el original
+        # DIAGNÓSTICO DETALLADO: Verificar qué archivos tiene el recibo
+        print(f"\n🔍 DIAGNÓSTICO PARA RECIBO {recibo.id} - LEGAJO {empleado.legajo}")
+        print(f"📋 Estado del recibo: {recibo.estado}")
+        print(f"📄 archivo_pdf existe: {bool(recibo.archivo_pdf)}")
+        print(f"📄 archivo_pdf_centromedica existe: {bool(recibo.archivo_pdf_centromedica)}")
+        print(f"📄 archivo_firmado existe: {bool(recibo.archivo_firmado)}")
+        
+        if recibo.archivo_pdf:
+            print(f"📄 archivo_pdf nombre: {recibo.archivo_pdf.name}")
+            print(f"📄 archivo_pdf tamaño: {recibo.archivo_pdf.size} bytes")
+        
+        if recibo.archivo_pdf_centromedica:
+            print(f"📄 archivo_pdf_centromedica nombre: {recibo.archivo_pdf_centromedica.name}")
+            print(f"📄 archivo_pdf_centromedica tamaño: {recibo.archivo_pdf_centromedica.size} bytes")
+        else:
+            print(f"❌ archivo_pdf_centromedica NO EXISTE - se generará automáticamente si es necesario")
+        
+        # LÓGICA SIMPLIFICADA DE VISUALIZACIÓN:
+        # Ahora TODOS los archivos tienen formato aplicado, así que la prioridad es:
+        # 1. Si está firmado → mostrar archivo_firmado (tiene formato + firma)
+        # 2. Si existe archivo_pdf → mostrar archivo_pdf (ya tiene formato aplicado)
+        # 3. Como último recurso → mostrar archivo_pdf_centromedica (compatibilidad)
         archivo_a_mostrar = None
         archivo_tipo = ""
         
+        # 1. Si está firmado, mostrar archivo firmado (contiene formato + firma)
         if recibo.estado == 'firmado' and recibo.archivo_firmado:
             archivo_a_mostrar = recibo.archivo_firmado
-            archivo_tipo = "firmado por empleado"
-            print(f"Mostrando PDF firmado por empleado para {empleado.legajo}")
-        elif recibo.archivo_pdf_centromedica:
-            archivo_a_mostrar = recibo.archivo_pdf_centromedica
-            archivo_tipo = "firmado por Centromédica"
-            print(f"Mostrando PDF de Centromédica para {empleado.legajo}")
+            archivo_tipo = "firmado por empleado (con formato + firma)"
+            print(f"➡️ Mostrando PDF firmado por empleado para {empleado.legajo}")
+        
+        # 2. Si existe archivo_pdf, mostrarlo (ya tiene formato aplicado)
         elif recibo.archivo_pdf:
             archivo_a_mostrar = recibo.archivo_pdf
-            archivo_tipo = "original"
-            print(f"Mostrando PDF original para {empleado.legajo}")
+            archivo_tipo = "con formato Centromédica aplicado (archivo principal)"
+            print(f"➡️ Mostrando PDF principal con formato para {empleado.legajo}")
+        
+        # 3. Fallback: mostrar archivo_pdf_centromedica si existe
+        elif recibo.archivo_pdf_centromedica:
+            archivo_a_mostrar = recibo.archivo_pdf_centromedica
+            archivo_tipo = "con formato Centromédica aplicado (archivo compatibilidad)"
+            print(f"➡️ Mostrando PDF de compatibilidad con formato para {empleado.legajo}")
+        
+        # 4. No hay archivos disponibles
+        else:
+            print(f"❌ No hay archivos PDF disponibles para el recibo {recibo.id}")
+        
+        print(f"🎯 RESULTADO: Mostrando archivo {archivo_tipo}")
         
         if not archivo_a_mostrar:
             raise Http404("Archivo no encontrado")
@@ -515,21 +546,21 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
         
         print(f"Iniciando generación de PDF firmado para recibo {recibo.id}")
         
-        # Usar el PDF original como base
+        # Usar el PDF con formato como base (ya que ahora todos tienen formato)
         if not recibo.archivo_pdf:
-            print("Error: No hay PDF original para firmar")
-            raise Exception("No hay PDF original para firmar")
+            print("Error: No hay PDF con formato para firmar")
+            raise Exception("No hay PDF con formato para firmar")
         
-        print(f"PDF original encontrado: {recibo.archivo_pdf.name}")
+        print(f"PDF con formato encontrado: {recibo.archivo_pdf.name}")
         
-        # Leer el PDF original
+        # Leer el PDF con formato
         recibo.archivo_pdf.seek(0)
         reader = PdfReader(recibo.archivo_pdf)
         writer = PdfWriter()
         
-        print(f"PDF original leído exitosamente, {len(reader.pages)} páginas")
+        print(f"PDF con formato leído exitosamente, {len(reader.pages)} páginas")
         
-        # Obtener el tamaño de la primera página del PDF original
+        # Obtener el tamaño de la primera página del PDF con formato
         first_page = reader.pages[0]
         mediabox = first_page.mediabox
         page_width = float(mediabox.width)
@@ -728,15 +759,15 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
         import traceback
         traceback.print_exc()
         
-        # Fallback: Si hay PDF original, devolverlo sin modificar
+        # Fallback: Si hay PDF con formato, devolverlo sin modificar
         if recibo.archivo_pdf:
             try:
                 recibo.archivo_pdf.seek(0)
-                original_content = recibo.archivo_pdf.read()
-                print("Usando PDF original sin modificar como fallback")
-                return original_content
+                formatted_content = recibo.archivo_pdf.read()
+                print("Usando PDF con formato sin modificar como fallback")
+                return formatted_content
             except Exception as fallback_error:
-                print(f"Error al leer PDF original: {str(fallback_error)}")
+                print(f"Error al leer PDF con formato: {str(fallback_error)}")
         
         # Último recurso: generar PDF básico
         print("Generando PDF básico como último recurso")
@@ -799,25 +830,28 @@ def ver_recibo_firmado(request, recibo_id):
 
 
 def aplicar_formato_centromedica_a_pdf_original(recibo, empleado):
-    """Aplica el formato visual de Centromédica al PDF original manteniendo el contenido"""
+    """Aplica el formato visual de Centromédica al PDF manteniendo el contenido - USANDO FUNCIÓN DE TEST"""
     try:
-        print(f"Aplicando formato de Centromédica para {empleado.user.get_full_name()}")
+        print(f"🔄 Aplicando formato de Centromédica COMPLETO para {empleado.user.get_full_name()}")
         
-        # Usar la función que aplica formato al PDF original
-        pdf_formateado = generar_formato_centromedica_completo(recibo, empleado)
+        # USAR la función de TEST que sabemos que funciona
+        pdf_formateado = generar_pdf_formato_centromedica_test(recibo, empleado)
         
-        if pdf_formateado:
+        if pdf_formateado and len(pdf_formateado) > 1000:
+            print(f"✅ Formato aplicado exitosamente: {len(pdf_formateado)} bytes")
             return pdf_formateado
         else:
-            print("Error aplicando formato, devolviendo PDF original")
+            print(f"⚠️ Error aplicando formato (tamaño: {len(pdf_formateado) if pdf_formateado else 'None'} bytes)")
             # Fallback: devolver el PDF original sin modificar
             if recibo.archivo_pdf:
                 recibo.archivo_pdf.seek(0)
-                return recibo.archivo_pdf.read()
+                original_content = recibo.archivo_pdf.read()
+                print(f"📋 Devolviendo PDF original como fallback: {len(original_content)} bytes")
+                return original_content
             return None
         
     except Exception as e:
-        print(f"Error en aplicar_formato_centromedica_a_pdf_original: {str(e)}")
+        print(f"❌ Error en aplicar_formato_centromedica_a_pdf_original: {str(e)}")
         import traceback
         traceback.print_exc()
         return None
@@ -861,7 +895,7 @@ def generar_formato_centromedica_completo(recibo, empleado):
         c = canvas.Canvas(overlay_buffer, pagesize=page_size)
         
         # =====================================
-        # SECCIÓN 1: ENCABEZADO Y LOGO
+        # SECCIÓN 1: ENCABEZADO Y LOGO  
         # =====================================
         c.setStrokeColor(colors.blue)
         c.setLineWidth(0.5)
@@ -881,7 +915,7 @@ def generar_formato_centromedica_completo(recibo, empleado):
                 # Cargar y agregar la imagen del logo
                 img_reader = ImageReader(logo_path)
                 # Ajustar el tamaño del logo (ancho x alto)
-                c.drawImage(img_reader, logo_x, logo_y, width=150, 
+                c.drawImage(img_reader, logo_x, logo_y, width=150, height=60,
                            preserveAspectRatio=True, mask='auto')
                 print(f"Logo cargado desde: {logo_path}")
             else:
@@ -902,11 +936,11 @@ def generar_formato_centromedica_completo(recibo, empleado):
             c.setFillColor(colors.blue)
             c.drawString(logo_x + 48, logo_y + 15, "Médica")
         
-        # Título "RECIBO DE SUELDO" en la parte superior derecha (más prominente)
+        # Título "RECIBO DE SUELDO" en la parte superior derecha
         c.setFillColor(colors.blue)
-        c.setFont("Helvetica-Bold", 14)
-        titulo_x = page_width - 160
-        c.drawString(titulo_x, page_height - 80, "RECIBO DE SUELDO")
+        c.setFont("Helvetica-Bold", 12)
+        titulo_x = page_width - 180
+        c.drawString(titulo_x, page_height - 75, "RECIBO DE SUELDO")
         
 
         
@@ -923,7 +957,9 @@ def generar_formato_centromedica_completo(recibo, empleado):
         tabla_height_total = 600  # Altura total de toda la tabla
 
         # Rectángulo principal que contiene toda la estructura
+        c.setLineWidth(1.0)  
         c.rect(tabla_x, tabla_y_inicio - tabla_height_total, tabla_width, tabla_height_total, fill=0, stroke=1)
+        c.setLineWidth(0.5)
 
         # =====================================
         # COLORES DE FONDO (DIBUJAR PRIMERO - ANTES QUE LAS LÍNEAS)
@@ -1034,7 +1070,7 @@ def generar_formato_centromedica_completo(recibo, empleado):
         # =====================================
         # Campo CUIT ocupando casi todo el ancho de la página
         c.setFillColor(colors.blue)
-        c.setFont("Helvetica", 5)
+        c.setFont("Helvetica-Bold", 6)
         c.drawString(page_width - 140, page_height - 106, "CUIT")
         # Más etiquetas...
 
@@ -1042,23 +1078,18 @@ def generar_formato_centromedica_completo(recibo, empleado):
         c.drawString(page_width - 165, page_height - 146, "CUIL")
         c.drawString(page_width - 70, page_height - 146, "LEGAJO")
 
-
-
         c.drawString(page_width - 300, page_height - 186, "FECHA DE INGRESO")
         c.drawString(page_width - 225, page_height - 186, "REMUNERACION ASIGNADA")
         c.drawString(page_width - 70, page_height - 186, "RECIBO Nº")
-
-
 
         c.drawString(page_width - 565, page_height - 190, "SECCION")
         c.drawString(page_width - 565, page_height - 215, "CATEGORIA")
         c.drawString(page_width - 565, page_height - 240, "CALIFICACION PROFESIONAL")
         
-        
         c.drawString(page_width - 310, page_height - 215, "PERIODO DE PAGO")
         c.drawString(page_width - 310, page_height - 240, "CONTRATACION")
 
-
+        c.setFont("Helvetica-Bold", 6)
         c.drawString(page_width - 470, page_height - 266, "CONCEPTOS")
         c.drawString(page_width - 288, page_height - 266, "UNIDADES")
         c.drawString(page_width - 235, page_height - 264, "REMUNERACIONES")
@@ -1067,15 +1098,12 @@ def generar_formato_centromedica_completo(recibo, empleado):
         c.drawString(page_width - 142, page_height - 269, "EXENTAS")
         c.drawString(page_width - 73, page_height - 266, "DESCUENTOS")
 
-
+        c.setFont("Helvetica-Bold", 6)
         c.drawString(page_width - 565, page_height - 516, "LUGAR Y FECHA DE PAGO")
         c.drawString(page_width - 288, page_height - 516, "FORMA DE PAGO")
         c.drawString(page_width - 153, page_height - 516, "TOTAL NETO")
 
-
-
         c.drawString(page_width - 565, page_height - 556, "SON PESOS")
-
 
         c.drawString(page_width - 565, page_height - 630, "ART.12 LEY 17250")
         c.drawString(page_width - 565, page_height - 640, "MES")
@@ -1093,9 +1121,21 @@ def generar_formato_centromedica_completo(recibo, empleado):
         
         # Aplicar el overlay a cada página del PDF original
         for page_num, page in enumerate(reader.pages):
-            # Crear una página combinada: overlay de fondo + contenido original encima
-            page.merge_page(overlay_page)  # El overlay va debajo del contenido original
-            writer.add_page(page)
+            try:
+                # Aplicar overlay profesional con formato Centromédica
+                
+                print(f"� Procesando página {page_num + 1} con método overlay-encima...")
+                
+                overlay_page.merge_page(page)  # Formato ENCIMA del contenido original
+                writer.add_page(overlay_page)
+                
+                print(f"✅ Página {page_num + 1} procesada exitosamente")
+                        
+            except Exception as page_error:
+                print(f"⚠️ Error procesando página {page_num + 1}: {str(page_error)}")
+                # Si falla, agregar solo el overlay como fallback
+                writer.add_page(overlay_page)
+                print(f"📄 Página {page_num + 1} agregada como fallback")
         
         # Generar el PDF final
         output_buffer = BytesIO()
@@ -1119,25 +1159,41 @@ def generar_formato_centromedica_completo(recibo, empleado):
 
 
 def generar_pdf_formato_centromedica_test(recibo, empleado):
-    """Función de prueba para aplicar formato profesional de Centromédica al PDF original"""
+    """Función de prueba para aplicar formato profesional de Centromédica al PDF original - VERSIÓN MEJORADA"""
     try:
-        print(f"Aplicando formato de prueba para {empleado.user.get_full_name()}")
+        print(f"🔄 Iniciando formato de prueba para {empleado.user.get_full_name()}")
         
-        # Usar la función que aplica formato al PDF original
-        pdf_formateado = aplicar_formato_centromedica_a_pdf_original(recibo, empleado)
+        # Verificar que el PDF original existe
+        if not recibo.archivo_pdf:
+            print("❌ Error: No existe archivo PDF original")
+            return None
+            
+        # Leer el PDF original
+        recibo.archivo_pdf.seek(0)
+        pdf_original_data = recibo.archivo_pdf.read()
+        print(f"📄 PDF original leído: {len(pdf_original_data)} bytes")
         
-        if pdf_formateado:
+        # Usar la función completa de formato
+        pdf_formateado = generar_formato_centromedica_completo(recibo, empleado)
+        
+        if pdf_formateado and len(pdf_formateado) > 1000:  # Verificar que tenga contenido significativo
+            print(f"✅ Formato aplicado exitosamente: {len(pdf_formateado)} bytes")
             return pdf_formateado
         else:
-            print("Error aplicando formato, devolviendo PDF original")
-            # Fallback: devolver el PDF original sin modificar
+            print(f"⚠️ Formato retornó datos insuficientes: {len(pdf_formateado) if pdf_formateado else 'None'} bytes")
+            print("📋 Devolviendo PDF original como fallback")
+            return pdf_original_data
+        
+    except Exception as e:
+        print(f"❌ Error en generar_pdf_formato_centromedica_test: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        # Fallback: devolver el PDF original
+        try:
             if recibo.archivo_pdf:
                 recibo.archivo_pdf.seek(0)
                 return recibo.archivo_pdf.read()
-            return None
-        
-    except Exception as e:
-        print(f"Error en generar_pdf_formato_centromedica_test: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        except:
+            pass
         return None

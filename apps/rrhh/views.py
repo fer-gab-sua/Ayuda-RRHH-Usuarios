@@ -15,6 +15,7 @@ from django.core.files.base import ContentFile
 import os
 import mimetypes
 import re
+import traceback
 import PyPDF2
 from PyPDF2 import PdfReader, PdfWriter
 from io import BytesIO
@@ -444,26 +445,49 @@ class SubirRecibosView(LoginRequiredMixin, SoloRRHHMixin, FormView):
             )
             
             # ===================================================================
-            # APLICAR FORMATO CENTROMÉDICA AL PDF GENERADO
+            # APLICAR FORMATO CENTROMÉDICA A TODOS LOS PDFs
             # ===================================================================
             try:
-                print(f"Aplicando formato Centromédica a recibo de {empleado.legajo}")
+                print(f"🔄 Aplicando formato Centromédica a TODOS los archivos para legajo: {empleado.legajo}")
+                print(f"📄 PDF original disponible: {bool(recibo.archivo_pdf)}")
+                print(f"📄 Tamaño PDF original: {recibo.archivo_pdf.size if recibo.archivo_pdf else 'N/A'} bytes")
+                
                 pdf_con_formato = aplicar_formato_centromedica_a_pdf_original(recibo, empleado)
                 
                 if pdf_con_formato:
-                    # Guardar el PDF con formato como archivo_pdf_centromedica
-                    nombre_archivo_con_formato = f"recibo_centromedica_{legajo}_{periodo}_{anio}.pdf"
-                    recibo.archivo_pdf_centromedica.save(
+                    # REEMPLAZAR el archivo_pdf original con la versión formateada
+                    nombre_archivo_con_formato = f"recibo_{periodo}_{anio}_{legajo}.pdf"
+                    
+                    # Eliminar el archivo original sin formato
+                    if recibo.archivo_pdf:
+                        recibo.archivo_pdf.delete(save=False)
+                    
+                    # Guardar el PDF CON FORMATO como archivo principal
+                    recibo.archivo_pdf.save(
                         nombre_archivo_con_formato,
                         ContentFile(pdf_con_formato),
                         save=True
                     )
-                    print(f"✅ Formato Centromédica aplicado exitosamente a {empleado.legajo}")
+                    
+                    # También guardarlo como archivo_pdf_centromedica para compatibilidad
+                    nombre_archivo_centromedica = f"recibo_centromedica_{legajo}_{periodo}_{anio}.pdf"
+                    recibo.archivo_pdf_centromedica.save(
+                        nombre_archivo_centromedica,
+                        ContentFile(pdf_con_formato),
+                        save=True
+                    )
+                    
+                    print(f"✅ Formato Centromédica aplicado a TODOS los archivos de {empleado.legajo}")
+                    print(f"💾 Archivo principal: {nombre_archivo_con_formato}")
+                    print(f"💾 Archivo Centromédica: {nombre_archivo_centromedica}")
+                    print(f"📊 Tamaño PDF con formato: {len(pdf_con_formato)} bytes")
                 else:
-                    print(f"⚠️ No se pudo aplicar formato Centromédica a {empleado.legajo}")
+                    print(f"⚠️ No se pudo aplicar formato Centromédica a {empleado.legajo} - función retornó None")
                     
             except Exception as format_error:
                 print(f"❌ Error aplicando formato Centromédica a {empleado.legajo}: {str(format_error)}")
+                import traceback
+                traceback.print_exc()
                 # El proceso continúa aunque falle el formato
             
             procesados += 1
@@ -709,6 +733,45 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
             carga_masiva.estado = 'completado' if not errores else 'error'
             carga_masiva.save()
             
+            # ===================================================================
+            # LIMPIEZA GENERAL DE ARCHIVOS TEMPORALES
+            # ===================================================================
+            try:
+                import os
+                import glob
+                from django.conf import settings
+                
+                media_root = getattr(settings, 'MEDIA_ROOT', None)
+                if media_root:
+                    recibos_dir = os.path.join(media_root, 'recibos_sueldos')
+                    if os.path.exists(recibos_dir):
+                        # Buscar todos los archivos temporales con patrones específicos
+                        temp_patterns = [
+                            'temp_original_*.pdf',
+                            'temp_centromedica_*.pdf'
+                        ]
+                        
+                        archivos_eliminados = 0
+                        for pattern in temp_patterns:
+                            pattern_path = os.path.join(recibos_dir, pattern)
+                            temp_files = glob.glob(pattern_path)
+                            
+                            for temp_file in temp_files:
+                                try:
+                                    os.remove(temp_file)
+                                    archivos_eliminados += 1
+                                    print(f"🗑️ Archivo temporal eliminado: {os.path.basename(temp_file)}")
+                                except Exception as cleanup_error:
+                                    print(f"⚠️ Error eliminando {os.path.basename(temp_file)}: {str(cleanup_error)}")
+                        
+                        if archivos_eliminados > 0:
+                            print(f"🧹 Limpieza completada: {archivos_eliminados} archivos temporales eliminados")
+                        else:
+                            print(f"ℹ️ No se encontraron archivos temporales para eliminar")
+                            
+            except Exception as cleanup_error:
+                print(f"⚠️ Error durante limpieza general de archivos temporales: {str(cleanup_error)}")
+            
         except Exception as e:
             carga_masiva.estado = 'error'
             carga_masiva.errores_procesamiento = str(e)
@@ -813,72 +876,169 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
             if pagina_original >= len(reader.pages):
                 return False
             
-            # Generar PDF original (para firmar)
-            writer_original = PdfWriter()
-            writer_original.add_page(reader.pages[pagina_original])
+            # ===================================================================
+            # EXTRAER PÁGINA 1: PARA EL EMPLEADO
+            # ===================================================================
             
-            # Guardar PDF original
-            output_buffer_original = BytesIO()
-            writer_original.write(output_buffer_original)
-            output_buffer_original.seek(0)
+            # PASO 1: Extraer página sin formato para que firme el empleado
+            writer_empleado = PdfWriter()
+            writer_empleado.add_page(reader.pages[pagina_original])
             
-            nombre_archivo_original = f"recibo_original_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+            output_buffer_empleado = BytesIO()
+            writer_empleado.write(output_buffer_empleado)
+            output_buffer_empleado.seek(0)
+            
+            # Guardar temporalmente para aplicar formato después
+            nombre_archivo_empleado = f"recibo_empleado_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
             recibo.archivo_pdf.save(
-                nombre_archivo_original,
-                ContentFile(output_buffer_original.getvalue()),
+                nombre_archivo_empleado,
+                ContentFile(output_buffer_empleado.getvalue()),
                 save=True
             )
-            output_buffer_original.close()
+            print(f"📄 PDF temporal guardado para aplicar formato a {recibo.empleado.legajo}")
             
             # ===================================================================
-            # NUEVA FUNCIONALIDAD: APLICAR FORMATO CENTROMÉDICA AL PDF ORIGINAL
+            # PASO 2: APLICAR FORMATO CENTROMÉDICA A TODOS LOS ARCHIVOS
             # ===================================================================
             try:
-                print(f"Aplicando formato Centromédica a recibo de {recibo.empleado.legajo}")
-                pdf_con_formato = aplicar_formato_centromedica_a_pdf_original(recibo, recibo.empleado)
+                print(f"🔄 Aplicando formato Centromédica a TODOS los archivos de {recibo.empleado.legajo}")
                 
-                if pdf_con_formato:
-                    # Guardar el PDF con formato como archivo_pdf_centromedica
-                    nombre_archivo_con_formato = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
-                    recibo.archivo_pdf_centromedica.save(
-                        nombre_archivo_con_formato,
+                from apps.recibos.views import generar_pdf_formato_centromedica_test
+                
+                # Aplicar formato usando el archivo que acabamos de guardar
+                pdf_con_formato = generar_pdf_formato_centromedica_test(recibo, recibo.empleado)
+                
+                if pdf_con_formato and len(pdf_con_formato) > 1000:
+                    # REEMPLAZAR el archivo_pdf original con la versión formateada
+                    if recibo.archivo_pdf:
+                        recibo.archivo_pdf.delete(save=False)
+                    
+                    # Guardar PDF CON FORMATO como archivo principal (archivo_pdf)
+                    recibo.archivo_pdf.save(
+                        nombre_archivo_empleado,
                         ContentFile(pdf_con_formato),
                         save=True
                     )
-                    print(f"✅ Formato Centromédica aplicado exitosamente a {recibo.empleado.legajo}")
-                else:
-                    print(f"⚠️ No se pudo aplicar formato Centromédica a {recibo.empleado.legajo}")
                     
-            except Exception as format_error:
-                print(f"❌ Error aplicando formato Centromédica a {recibo.empleado.legajo}: {str(format_error)}")
-                # El proceso continúa aunque falle el formato, ya que el PDF original está guardado
-            
-            # ===================================================================
-            # MANTENER COMPATIBILIDAD CON PDFs QUE YA TIENEN FORMATO CENTROMÉDICA
-            # ===================================================================
-            # Si el PDF masivo ya incluía una página de Centromédica, respetarla
-            if pagina_centromedica is not None and pagina_centromedica < len(reader.pages):
-                # Si ya tenemos archivo_pdf_centromedica del formato automático, conservarlo
-                # Pero también guardamos la página original de Centromédica como respaldo
-                if not recibo.archivo_pdf_centromedica:
-                    writer_centromedica = PdfWriter()
-                    writer_centromedica.add_page(reader.pages[pagina_centromedica])
-                    
-                    # Guardar PDF de Centromédica del archivo masivo
-                    output_buffer_centromedica = BytesIO()
-                    writer_centromedica.write(output_buffer_centromedica)
-                    output_buffer_centromedica.seek(0)
-                    
+                    # También guardarlo como archivo_pdf_centromedica para compatibilidad
                     nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
                     recibo.archivo_pdf_centromedica.save(
                         nombre_archivo_centromedica,
-                        ContentFile(output_buffer_centromedica.getvalue()),
+                        ContentFile(pdf_con_formato),
                         save=True
                     )
-                    output_buffer_centromedica.close()
-                    print(f"PDF de Centromédica del archivo masivo guardado para {recibo.empleado.legajo}")
+                    
+                    print(f"✅ PDF CON FORMATO CENTROMÉDICA aplicado a TODOS los archivos: {nombre_archivo_empleado}")
+                    print(f"💾 Archivo principal formateado: {nombre_archivo_empleado}")
+                    print(f"💾 Archivo Centromédica formateado: {nombre_archivo_centromedica}")
+                    print(f"📊 Tamaño PDF con formato: {len(pdf_con_formato)} bytes")
                 else:
-                    print(f"Ya existe PDF con formato Centromédica generado automáticamente para {recibo.empleado.legajo}")
+                    print(f"⚠️ Error aplicando formato, conservando PDF sin formato para {recibo.empleado.legajo}")
+                    
+            except Exception as format_error:
+                print(f"❌ Error aplicando formato a {recibo.empleado.legajo}: {str(format_error)}")
+                print(f"📋 Conservando PDF sin formato para {recibo.empleado.legajo}")
+            
+            # ===================================================================
+            # OPCIONAL: PROCESAR PÁGINA 2 SI EXISTE (pero ya no es necesaria)
+            # ===================================================================
+            pagina_centromedica = pagina_original + 1
+            if pagina_centromedica < len(reader.pages):
+                print(f"📄 Página {pagina_centromedica + 1} encontrada pero no se procesará (ya tenemos formato aplicado)")
+            else:
+                print(f"📄 Solo hay una página por empleado, formato aplicado correctamente")
+            
+            # Limpiar buffer empleado
+            output_buffer_empleado.close()
+            
+            # ===================================================================
+            # PROCESAR PÁGINAS DE CENTROMÉDICA DEL ARCHIVO MASIVO (SI EXISTEN)
+            # ===================================================================
+            # Si el PDF masivo ya incluía una página de Centromédica, extraerla y también aplicarle formato
+            if pagina_centromedica is not None and pagina_centromedica < len(reader.pages):
+                print(f"📄 Procesando página de Centromédica del archivo masivo (página {pagina_centromedica + 1})")
+                
+                # Extraer la página de Centromédica del archivo masivo
+                writer_centromedica_original = PdfWriter()
+                writer_centromedica_original.add_page(reader.pages[pagina_centromedica])
+                
+                # Crear PDF en memoria (sin guardar archivos temporales)
+                output_buffer_centromedica_temp = BytesIO()
+                writer_centromedica_original.write(output_buffer_centromedica_temp)
+                output_buffer_centromedica_temp.seek(0)
+                
+                # Crear un objeto de recibo temporal en memoria para el formato de Centromédica
+                recibo_centromedica_temporal = type('TempReciboCentromedica', (), {})()
+                recibo_centromedica_temporal.archivo_pdf = type('TempFile', (), {})()
+                recibo_centromedica_temporal.archivo_pdf.read = lambda: output_buffer_centromedica_temp.getvalue()
+                recibo_centromedica_temporal.archivo_pdf.seek = lambda pos: output_buffer_centromedica_temp.seek(pos)
+                
+                try:
+                    # Aplicar el formato de test también a la página de Centromédica
+                    print(f"🎨 Aplicando formato mejorado a la página de Centromédica del archivo masivo")
+                    pdf_centromedica_con_formato = generar_pdf_formato_centromedica_test(recibo_centromedica_temporal, recibo.empleado)
+                    
+                    if pdf_centromedica_con_formato:
+                        # Si no tenemos archivo_pdf_centromedica del proceso anterior, usar este
+                        if not recibo.archivo_pdf_centromedica:
+                            nombre_archivo_centromedica = f"recibo_centromedica_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+                            recibo.archivo_pdf_centromedica.save(
+                                nombre_archivo_centromedica,
+                                ContentFile(pdf_centromedica_con_formato),
+                                save=True
+                            )
+                            print(f"✅ Formato aplicado a página de Centromédica del archivo masivo para {recibo.empleado.legajo}")
+                        else:
+                            print(f"ℹ️ Ya existe PDF con formato aplicado, conservando el formato del PDF original individual")
+                    else:
+                        print(f"⚠️ Error aplicando formato a página de Centromédica")
+                        
+                except Exception as centromedica_error:
+                    print(f"❌ Error procesando página de Centromédica: {str(centromedica_error)}")
+                    # Fallback: guardar la página original de Centromédica sin formato
+                    if not recibo.archivo_pdf_centromedica:
+                        nombre_archivo_centromedica = f"recibo_centromedica_original_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf"
+                        recibo.archivo_pdf_centromedica.save(
+                            nombre_archivo_centromedica,
+                            ContentFile(output_buffer_centromedica_temp.getvalue()),
+                            save=True
+                        )
+                        print(f"📋 Página de Centromédica original guardada como fallback para {recibo.empleado.legajo}")
+                
+                output_buffer_centromedica_temp.close()
+            else:
+                print(f"ℹ️ No hay página de Centromédica adicional en el archivo masivo para {recibo.empleado.legajo}")
+            
+            # ===================================================================
+            # LIMPIEZA DE ARCHIVOS TEMPORALES EXISTENTES (POR SEGURIDAD)
+            # ===================================================================
+            # NOTA: Ya no creamos archivos temporales, pero limpiamos cualquiera que pueda existir de versiones anteriores
+            try:
+                # Limpiar archivos temporales que puedan haber quedado
+                import os
+                from django.conf import settings
+                
+                # Patrones de archivos temporales a limpiar
+                temp_patterns = [
+                    f"temp_original_{recibo.empleado.legajo}_{recibo.periodo}_{recibo.anio}.pdf",
+                    f"temp_centromedica_{recibo.empleado.legajo}.pdf"
+                ]
+                
+                media_root = getattr(settings, 'MEDIA_ROOT', None)
+                if media_root:
+                    recibos_dir = os.path.join(media_root, 'recibos_sueldos')
+                    if os.path.exists(recibos_dir):
+                        for pattern in temp_patterns:
+                            temp_file_path = os.path.join(recibos_dir, pattern)
+                            if os.path.exists(temp_file_path):
+                                try:
+                                    os.remove(temp_file_path)
+                                    print(f"🗑️ Archivo temporal eliminado: {pattern}")
+                                except Exception as cleanup_error:
+                                    print(f"⚠️ Error eliminando archivo temporal {pattern}: {str(cleanup_error)}")
+                
+            except Exception as cleanup_error:
+                print(f"⚠️ Error durante limpieza de archivos temporales: {str(cleanup_error)}")
             
             print(f"✅ Procesamiento completo para empleado {recibo.empleado.legajo}")
             return True
@@ -1112,6 +1272,12 @@ def eliminar_carga_masiva(request, pk):
                 except Exception:
                     pass  # Continuar aunque falle la eliminación del archivo
             
+            if recibo.archivo_pdf_centromedica:
+                try:
+                    recibo.archivo_pdf_centromedica.delete(save=False)
+                except Exception:
+                    pass
+            
             if recibo.archivo_firmado:
                 try:
                     recibo.archivo_firmado.delete(save=False)
@@ -1134,6 +1300,42 @@ def eliminar_carga_masiva(request, pk):
         # Eliminar la carga masiva
         periodo_anio = f"{carga.get_periodo_display()} {carga.anio}"
         carga.delete()
+        
+        # ===================================================================
+        # LIMPIEZA DE ARCHIVOS TEMPORALES RELACIONADOS
+        # ===================================================================
+        try:
+            import os
+            import glob
+            from django.conf import settings
+            
+            media_root = getattr(settings, 'MEDIA_ROOT', None)
+            if media_root:
+                recibos_dir = os.path.join(media_root, 'recibos_sueldos')
+                if os.path.exists(recibos_dir):
+                    # Buscar archivos temporales que puedan estar relacionados con esta carga
+                    temp_patterns = [
+                        'temp_original_*.pdf',
+                        'temp_centromedica_*.pdf'
+                    ]
+                    
+                    archivos_temporales_eliminados = 0
+                    for pattern in temp_patterns:
+                        pattern_path = os.path.join(recibos_dir, pattern)
+                        temp_files = glob.glob(pattern_path)
+                        
+                        for temp_file in temp_files:
+                            try:
+                                os.remove(temp_file)
+                                archivos_temporales_eliminados += 1
+                            except Exception:
+                                pass  # Ignorar errores de limpieza
+                    
+                    if archivos_temporales_eliminados > 0:
+                        print(f"🧹 Eliminados {archivos_temporales_eliminados} archivos temporales durante la limpieza de la carga")
+                        
+        except Exception:
+            pass  # No fallar la eliminación por errores de limpieza
         
         messages.success(request, f'Carga masiva de {periodo_anio} eliminada exitosamente. Se eliminaron {recibos_eliminados} recibos.')
         
