@@ -417,7 +417,7 @@ def aprobar_documento(request, documento_id):
         documento.estado = 'aprobado'
         documento.revisado_por = request.user
         documento.fecha_revision = timezone.now()
-        documento.comentarios_rrhh = comentarios
+        documento.observaciones_rrhh = comentarios
         documento.save()
         
         # Crear entrada en historial
@@ -479,7 +479,7 @@ def rechazar_documento(request, documento_id):
         documento.estado = 'rechazado'
         documento.revisado_por = request.user
         documento.fecha_revision = timezone.now()
-        documento.comentarios_rrhh = comentarios
+        documento.observaciones_rrhh = comentarios
         documento.save()
         
         # Crear entrada en historial
@@ -541,7 +541,7 @@ def solicitar_aclaracion_documento(request, documento_id):
         documento.estado = 'requiere_aclaracion'
         documento.revisado_por = request.user
         documento.fecha_revision = timezone.now()
-        documento.comentarios_rrhh = comentarios
+        documento.observaciones_rrhh = comentarios
         documento.save()
         
         # Crear entrada en historial

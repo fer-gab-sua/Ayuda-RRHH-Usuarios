@@ -121,19 +121,48 @@ class EditarDocumentoView(LoginRequiredMixin, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
+        # Capturar el estado anterior antes de guardar
+        estado_anterior = form.instance.estado
+        
+        # Si el documento requería aclaración, cambiar a pendiente cuando se edite
+        if estado_anterior == 'requiere_aclaracion':
+            form.instance.estado = 'pendiente'
+            form.instance.fecha_revision = None
+            form.instance.revisado_por = None
+            # Limpiar las observaciones de RRHH ya que se está reeditando
+            # form.instance.observaciones_rrhh = None  # Comentado para mantener historial
+        
         response = super().form_valid(form)
+        
+        # Crear entrada en el historial si cambió de estado
+        if estado_anterior == 'requiere_aclaracion':
+            HistorialDocumento.objects.create(
+                documento=form.instance,
+                usuario=self.request.user,
+                estado_anterior=estado_anterior,
+                estado_nuevo='pendiente',
+                observaciones='Documento editado por el empleado para proporcionar aclaraciones'
+            )
         
         # Registrar actividad
         try:
             empleado = Empleado.objects.get(user=self.request.user)
+            descripcion_base = f"Editó el documento: {form.instance.titulo}"
+            if estado_anterior == 'requiere_aclaracion':
+                descripcion_base += " (proporcionando aclaraciones solicitadas)"
+            
             ActividadEmpleado.objects.create(
                 empleado=empleado,
-                descripcion=f"Editó el documento: {form.instance.titulo}"
+                descripcion=descripcion_base
             )
         except Empleado.DoesNotExist:
             pass
         
-        messages.success(self.request, 'Documento actualizado exitosamente.')
+        if estado_anterior == 'requiere_aclaracion':
+            messages.success(self.request, 'Documento actualizado exitosamente. Ha sido enviado nuevamente a RRHH para revisión.')
+        else:
+            messages.success(self.request, 'Documento actualizado exitosamente.')
+        
         return response
 
 

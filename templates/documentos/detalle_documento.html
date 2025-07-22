@@ -5,201 +5,311 @@
 
 {% block content %}
 <div class="container-fluid py-4">
+    <!-- Header mejorado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-center">
+                        <h2 class="mb-1">
+                            <i class="fas fa-file-alt text-primary"></i> 
+                            Detalle del Documento
+                        </h2>
+                        <p class="text-muted mb-3">{{ documento.titulo }}</p>
+                        <a href="{% url 'documentos:mis_documentos' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Volver a Mis Documentos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
+        <!-- Columna principal -->
         <div class="col-lg-8">
-            <!-- Información principal del documento -->
-            <div class="card">
-                <div class="card-header">
+            <!-- Estado del documento -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
                     <div class="row align-items-center">
-                        <div class="col">
-                            <h4><i class="fas fa-file-alt"></i> {{ documento.titulo }}</h4>
-                            <small class="text-muted">
-                                Subido el {{ documento.fecha_subida|date:"d/m/Y H:i" }}
-                            </small>
+                        <div class="col-md-8">
+                            <h4 class="mb-2">{{ documento.titulo }}</h4>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge px-3 py-2
+                                    {% if documento.estado == 'aprobado' %}bg-success
+                                    {% elif documento.estado == 'rechazado' %}bg-danger
+                                    {% elif documento.estado == 'requiere_aclaracion' %}bg-warning
+                                    {% else %}bg-secondary{% endif %}" style="font-size: 0.85rem;">
+                                    <i class="fas fa-
+                                        {% if documento.estado == 'aprobado' %}check-circle
+                                        {% elif documento.estado == 'rechazado' %}times-circle
+                                        {% elif documento.estado == 'requiere_aclaracion' %}question-circle
+                                        {% else %}clock{% endif %} me-1"></i>
+                                    {{ documento.get_estado_display|upper }}
+                                </span>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Subido el {{ documento.fecha_subida|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
                         </div>
-                        <div class="col-auto">
-                            {% if documento.estado == 'pendiente' %}
-                                <span class="badge bg-warning text-dark fs-6">
-                                    <i class="fas fa-clock"></i> Pendiente
-                                </span>
-                            {% elif documento.estado == 'aprobado' %}
-                                <span class="badge bg-success fs-6">
-                                    <i class="fas fa-check"></i> Aprobado
-                                </span>
-                            {% elif documento.estado == 'rechazado' %}
-                                <span class="badge bg-danger fs-6">
-                                    <i class="fas fa-times"></i> Rechazado
-                                </span>
-                            {% elif documento.estado == 'requiere_aclaracion' %}
-                                <span class="badge bg-info fs-6">
-                                    <i class="fas fa-question"></i> Requiere Aclaración
-                                </span>
+                        <div class="col-md-4 text-end">
+                            {% if documento.archivo %}
+                                <a href="{% url 'documentos:ver_archivo' documento.id %}" target="_blank" class="btn btn-primary">
+                                    <i class="fas fa-eye me-2"></i>Ver Documento
+                                </a>
                             {% endif %}
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Información detallada -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Información del Documento
+                    </h5>
+                </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <h6>Información del Documento</h6>
-                            <table class="table table-sm">
-                                <tr>
-                                    <td><strong>Tipo:</strong></td>
-                                    <td>{{ documento.tipo_documento.nombre }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Archivo:</strong></td>
-                                    <td>
-                                        {% if documento.archivo %}
-                                            {{ documento.nombre_archivo }}
-                                            <br>
-                                            <a href="{% url 'documentos:ver_archivo' documento.id %}" 
-                                               class="btn btn-sm btn-primary mt-1" 
-                                               target="_blank">
-                                                <i class="fas fa-download"></i> Ver/Descargar
-                                            </a>
-                                        {% else %}
-                                            <em class="text-muted">No hay archivo adjunto</em>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% if documento.fecha_desde %}
-                                <tr>
-                                    <td><strong>Período:</strong></td>
-                                    <td>
-                                        Del {{ documento.fecha_desde|date:"d/m/Y" }}
-                                        {% if documento.fecha_hasta %}
-                                            al {{ documento.fecha_hasta|date:"d/m/Y" }}
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                            </table>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Estado y Revisión</h6>
-                            <table class="table table-sm">
-                                <tr>
-                                    <td><strong>Estado:</strong></td>
-                                    <td>
-                                        {% if documento.estado == 'pendiente' %}
-                                            <span class="text-warning"><i class="fas fa-clock"></i> Pendiente de revisión</span>
-                                        {% elif documento.estado == 'aprobado' %}
-                                            <span class="text-success"><i class="fas fa-check"></i> Aprobado</span>
-                                        {% elif documento.estado == 'rechazado' %}
-                                            <span class="text-danger"><i class="fas fa-times"></i> Rechazado</span>
-                                        {% elif documento.estado == 'requiere_aclaracion' %}
-                                            <span class="text-info"><i class="fas fa-question"></i> Requiere aclaración</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% if documento.fecha_revision %}
-                                <tr>
-                                    <td><strong>Fecha de revisión:</strong></td>
-                                    <td>{{ documento.fecha_revision|date:"d/m/Y H:i" }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if documento.revisado_por %}
-                                <tr>
-                                    <td><strong>Revisado por:</strong></td>
-                                    <td>{{ documento.revisado_por.get_full_name|default:documento.revisado_por.username }}</td>
-                                </tr>
-                                {% endif %}
-                            </table>
-                        </div>
-                    </div>
-
-                    {% if documento.descripcion %}
-                    <div class="mt-3">
-                        <h6>Descripción</h6>
-                        <p class="text-muted">{{ documento.descripcion }}</p>
-                    </div>
-                    {% endif %}
-
-                    {% if documento.observaciones_rrhh %}
-                    <div class="mt-3">
-                        <h6>Comentarios de RRHH</h6>
-                        {% if documento.estado == 'aprobado' %}
-                        <div class="alert alert-success">
-                        {% elif documento.estado == 'rechazado' %}
-                        <div class="alert alert-danger">
-                        {% else %}
-                        <div class="alert alert-info">
-                        {% endif %}
-                            {{ documento.observaciones_rrhh }}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if documento.inasistencia %}
-                    <div class="mt-3">
-                        <h6>Relacionado con Inasistencia</h6>
-                        <div class="alert alert-info">
-                            <i class="fas fa-calendar-times"></i>
-                            Este documento justifica la inasistencia del 
-                            <strong>{{ documento.inasistencia.fecha_desde|date:"d/m/Y" }}</strong>
-                            {% if documento.inasistencia.fecha_hasta %}
-                                al <strong>{{ documento.inasistencia.fecha_hasta|date:"d/m/Y" }}</strong>
+                            <div class="detail-group">
+                                <label class="detail-label">Tipo de Documento</label>
+                                <p class="detail-value">{{ documento.tipo_documento.nombre }}</p>
+                            </div>
+                            {% if documento.fecha_desde %}
+                                <div class="detail-group">
+                                    <label class="detail-label">Fecha Desde</label>
+                                    <p class="detail-value">{{ documento.fecha_desde|date:"d/m/Y" }}</p>
+                                </div>
                             {% endif %}
-                            <br>
-                            <small class="text-muted">Motivo: {{ documento.inasistencia.motivo }}</small>
+                            {% if documento.archivo %}
+                                <div class="detail-group">
+                                    <label class="detail-label">Archivo</label>
+                                    <p class="detail-value">{{ documento.nombre_archivo }}</p>
+                                </div>
+                            {% endif %}
                         </div>
+                        <div class="col-md-6">
+                            <div class="detail-group">
+                                <label class="detail-label">Fecha de Subida</label>
+                                <p class="detail-value">{{ documento.fecha_subida|date:"d/m/Y H:i" }}</p>
+                            </div>
+                            {% if documento.fecha_hasta %}
+                                <div class="detail-group">
+                                    <label class="detail-label">Fecha Hasta</label>
+                                    <p class="detail-value">{{ documento.fecha_hasta|date:"d/m/Y" }}</p>
+                                </div>
+                            {% endif %}
+                            {% if documento.fecha_revision %}
+                                <div class="detail-group">
+                                    <label class="detail-label">Fecha de Revisión</label>
+                                    <p class="detail-value">{{ documento.fecha_revision|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        {% if documento.descripcion %}
+                            <div class="col-12">
+                                <div class="detail-group">
+                                    <label class="detail-label">Descripción</label>
+                                    <div class="detail-value description-box">
+                                        {{ documento.descripcion|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if documento.revisado_por %}
+                            <div class="col-12">
+                                <hr class="my-3">
+                                <div class="revision-info">
+                                    <h6 class="text-muted mb-3">
+                                        <i class="fas fa-user-check me-2"></i>Información de Revisión
+                                    </h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small class="mb-2 d-block"><strong>Revisado por:</strong> {{ documento.revisado_por.get_full_name }}</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="mb-2 d-block"><strong>Fecha:</strong> {{ documento.fecha_revision|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comentarios de RRHH prominentes -->
+            {% if documento.observaciones_rrhh %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header border-0
+                    {% if documento.estado == 'aprobado' %}bg-success text-white
+                    {% elif documento.estado == 'rechazado' %}bg-danger text-white
+                    {% elif documento.estado == 'requiere_aclaracion' %}bg-warning text-dark
+                    {% else %}bg-primary text-white{% endif %}">
+                    <h5 class="mb-0">
+                        <i class="fas fa-
+                            {% if documento.estado == 'aprobado' %}check-circle
+                            {% elif documento.estado == 'rechazado' %}times-circle
+                            {% elif documento.estado == 'requiere_aclaracion' %}question-circle
+                            {% else %}comment{% endif %} me-2"></i>
+                        {% if documento.estado == 'aprobado' %}
+                            Comentarios de Aprobación
+                        {% elif documento.estado == 'rechazado' %}
+                            Motivos de Rechazo
+                        {% elif documento.estado == 'requiere_aclaracion' %}
+                            Aclaraciones Solicitadas
+                        {% else %}
+                            Comentarios de RRHH
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert 
+                        {% if documento.estado == 'aprobado' %}alert-success
+                        {% elif documento.estado == 'rechazado' %}alert-danger
+                        {% elif documento.estado == 'requiere_aclaracion' %}alert-warning
+                        {% else %}alert-info{% endif %} border-0 shadow-sm">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-
+                                    {% if documento.estado == 'aprobado' %}check-circle
+                                    {% elif documento.estado == 'rechazado' %}exclamation-triangle
+                                    {% elif documento.estado == 'requiere_aclaracion' %}info-circle
+                                    {% else %}comment{% endif %} fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">
+                                    {% if documento.estado == 'requiere_aclaracion' %}
+                                        Se requieren las siguientes aclaraciones:
+                                    {% elif documento.estado == 'rechazado' %}
+                                        El documento fue rechazado por los siguientes motivos:
+                                    {% elif documento.estado == 'aprobado' %}
+                                        El documento fue aprobado con los siguientes comentarios:
+                                    {% else %}
+                                        Comentarios de RRHH:
+                                    {% endif %}
+                                </h6>
+                                <!-- Solo mostrar observaciones_rrhh (campo correcto del modelo) -->
+                                <div class="mb-0" style="white-space: pre-line; font-size: 1.1rem; line-height: 1.6;">
+                                    {{ documento.observaciones_rrhh }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if documento.estado == 'requiere_aclaracion' %}
+                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded">
+                        <div>
+                            <h6 class="mb-1">
+                                <i class="fas fa-lightbulb text-warning me-2"></i>¿Qué debo hacer?
+                            </h6>
+                            <p class="mb-0 text-muted">
+                                Puedes editar este documento para proporcionar las aclaraciones solicitadas y volver a enviarlo para revisión.
+                            </p>
+                        </div>
+                        {% if documento.puede_editar %}
+                        <a href="{% url 'documentos:editar' documento.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit me-1"></i>Editar Documento
+                        </a>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
 
-            <!-- Historial de cambios -->
-            {% if historial %}
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h5><i class="fas fa-history"></i> Historial de Cambios</h5>
+            <!-- Información relacionada -->
+            {% if documento.inasistencia %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-times text-primary me-2"></i>
+                        Inasistencia Relacionada
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <div class="timeline">
-                        {% for evento in historial %}
-                        <div class="timeline-item">
-                            <div class="timeline-marker">
-                                {% if evento.accion == 'creado' %}
-                                    <i class="fas fa-plus text-primary"></i>
-                                {% elif evento.accion == 'editado' %}
-                                    <i class="fas fa-edit text-warning"></i>
-                                {% elif evento.accion == 'aprobado' %}
-                                    <i class="fas fa-check text-success"></i>
-                                {% elif evento.accion == 'rechazado' %}
-                                    <i class="fas fa-times text-danger"></i>
-                                {% elif evento.accion == 'requiere_aclaracion' %}
-                                    <i class="fas fa-question text-info"></i>
-                                {% else %}
-                                    <i class="fas fa-circle text-secondary"></i>
-                                {% endif %}
+                    <div class="alert alert-info border-0">
+                        <div class="d-flex">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-calendar-times fa-2x"></i>
                             </div>
-                            <div class="timeline-content">
-                                <div class="d-flex justify-content-between">
-                                    <strong>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading">Justificación de Inasistencia</h6>
+                                <p class="mb-2">
+                                    Este documento justifica la inasistencia del 
+                                    <strong>{{ documento.inasistencia.fecha_desde|date:"d/m/Y" }}</strong>
+                                    {% if documento.inasistencia.fecha_hasta %}
+                                        al <strong>{{ documento.inasistencia.fecha_hasta|date:"d/m/Y" }}</strong>
+                                    {% endif %}
+                                </p>
+                                <small class="text-muted">
+                                    <strong>Motivo:</strong> {{ documento.inasistencia.motivo }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Historial mejorado -->
+            {% if historial %}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history text-primary me-2"></i>
+                        Historial de Cambios
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline-modern">
+                        {% for evento in historial %}
+                        <div class="timeline-item-modern">
+                            <div class="timeline-marker-modern 
+                                {% if evento.accion == 'aprobado' %}bg-success
+                                {% elif evento.accion == 'rechazado' %}bg-danger
+                                {% elif evento.accion == 'requiere_aclaracion' %}bg-warning
+                                {% elif evento.accion == 'creado' %}bg-primary
+                                {% elif evento.accion == 'editado' %}bg-info
+                                {% else %}bg-secondary{% endif %}">
+                                <i class="fas fa-
+                                    {% if evento.accion == 'creado' %}plus
+                                    {% elif evento.accion == 'editado' %}edit
+                                    {% elif evento.accion == 'aprobado' %}check
+                                    {% elif evento.accion == 'rechazado' %}times
+                                    {% elif evento.accion == 'requiere_aclaracion' %}question
+                                    {% else %}circle{% endif %}"></i>
+                            </div>
+                            <div class="timeline-content-modern">
+                                <div class="timeline-header">
+                                    <h6 class="timeline-title-modern">
                                         {% if evento.accion == 'creado' %}
-                                            Documento creado
+                                            Documento Creado
                                         {% elif evento.accion == 'editado' %}
-                                            Documento editado
+                                            Documento Editado
                                         {% elif evento.accion == 'aprobado' %}
-                                            Documento aprobado
+                                            Documento Aprobado
                                         {% elif evento.accion == 'rechazado' %}
-                                            Documento rechazado
+                                            Documento Rechazado
                                         {% elif evento.accion == 'requiere_aclaracion' %}
-                                            Solicitud de aclaración
+                                            Solicitud de Aclaración
                                         {% else %}
                                             {{ evento.accion|title }}
                                         {% endif %}
-                                    </strong>
-                                    <small class="text-muted">{{ evento.fecha|date:"d/m/Y H:i" }}</small>
+                                    </h6>
+                                    <span class="timeline-date">{{ evento.fecha|date:"d/m/Y H:i" }}</span>
                                 </div>
-                                <div class="text-muted">
-                                    por {{ evento.usuario.get_full_name|default:evento.usuario.username }}
-                                </div>
+                                <p class="timeline-user">Por: <strong>{{ evento.usuario.get_full_name|default:evento.usuario.username }}</strong></p>
                                 {% if evento.comentarios %}
-                                <div class="mt-1">
-                                    <em>"{{ evento.comentarios }}"</em>
-                                </div>
+                                    <div class="timeline-comments">
+                                        {{ evento.comentarios|linebreaks }}
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>
@@ -210,11 +320,80 @@
             {% endif %}
         </div>
 
+        <!-- Sidebar derecho -->
         <div class="col-lg-4">
-            <!-- Acciones disponibles -->
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-cogs"></i> Acciones</h5>
+            <!-- Estado del documento mejorado -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header border-0
+                    {% if documento.estado == 'aprobado' %}bg-success text-white
+                    {% elif documento.estado == 'rechazado' %}bg-danger text-white
+                    {% elif documento.estado == 'requiere_aclaracion' %}bg-warning text-dark
+                    {% else %}bg-primary text-white{% endif %}">
+                    <h5 class="mb-0">
+                        <i class="fas fa-
+                            {% if documento.estado == 'aprobado' %}check-circle
+                            {% elif documento.estado == 'rechazado' %}times-circle
+                            {% elif documento.estado == 'requiere_aclaracion' %}question-circle
+                            {% else %}clock{% endif %} me-2"></i>
+                        Estado del Documento
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if documento.estado == 'pendiente' %}
+                        <div class="text-center mb-3">
+                            <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                            <h6 class="text-warning">Pendiente de Revisión</h6>
+                        </div>
+                        <div class="alert alert-warning border-0">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>En Proceso
+                            </h6>
+                            <p class="mb-0">Tu documento está en cola para ser revisado por el equipo de RRHH. Te notificaremos cuando haya actualizaciones.</p>
+                        </div>
+                    {% elif documento.estado == 'aprobado' %}
+                        <div class="text-center mb-3">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h6 class="text-success">Documento Aprobado</h6>
+                        </div>
+                        <div class="alert alert-success border-0">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-thumbs-up me-2"></i>¡Excelente!
+                            </h6>
+                            <p class="mb-0">Tu documento ha sido aprobado por RRHH y está oficialmente validado en el sistema.</p>
+                        </div>
+                    {% elif documento.estado == 'rechazado' %}
+                        <div class="text-center mb-3">
+                            <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                            <h6 class="text-danger">Documento Rechazado</h6>
+                        </div>
+                        <div class="alert alert-danger border-0">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Acción Requerida
+                            </h6>
+                            <p class="mb-0">Tu documento ha sido rechazado. Revisa los comentarios de RRHH y considera subir un nuevo documento con las correcciones necesarias.</p>
+                        </div>
+                    {% elif documento.estado == 'requiere_aclaracion' %}
+                        <div class="text-center mb-3">
+                            <i class="fas fa-question-circle fa-3x text-warning mb-3"></i>
+                            <h6 class="text-warning">Requiere Aclaración</h6>
+                        </div>
+                        <div class="alert alert-warning border-0">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>Información Adicional Necesaria
+                            </h6>
+                            <p class="mb-0">RRHH necesita información adicional sobre tu documento. Revisa los comentarios y edita el documento para proporcionar las aclaraciones solicitadas.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Acciones disponibles mejoradas -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs text-primary me-2"></i>
+                        Acciones Disponibles
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
@@ -222,56 +401,85 @@
                             <a href="{% url 'documentos:ver_archivo' documento.id %}" 
                                class="btn btn-primary" 
                                target="_blank">
-                                <i class="fas fa-eye"></i> Ver Documento
+                                <i class="fas fa-eye me-2"></i>Ver Documento
                             </a>
                         {% endif %}
 
                         {% if documento.puede_editar %}
                             <a href="{% url 'documentos:editar' documento.id %}" 
                                class="btn btn-warning">
-                                <i class="fas fa-edit"></i> Editar
+                                <i class="fas fa-edit me-2"></i>Editar Documento
                             </a>
                             <button class="btn btn-danger" 
                                     onclick="eliminarDocumento({{ documento.id }})">
-                                <i class="fas fa-trash"></i> Eliminar
+                                <i class="fas fa-trash me-2"></i>Eliminar Documento
                             </button>
                         {% endif %}
 
                         <a href="{% url 'documentos:mis_documentos' %}" 
-                           class="btn btn-secondary">
-                            <i class="fas fa-arrow-left"></i> Volver a Mis Documentos
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Volver a Mis Documentos
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Información del estado -->
-            <div class="card mt-4">
-                <div class="card-header">
-                    <h6><i class="fas fa-info-circle"></i> Estado del Documento</h6>
+            <!-- Información rápida -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Información Rápida
+                    </h6>
                 </div>
                 <div class="card-body">
-                    {% if documento.estado == 'pendiente' %}
-                        <div class="alert alert-warning">
-                            <h6>Pendiente de Revisión</h6>
-                            <p class="mb-0">Tu documento está en cola para ser revisado por el equipo de RRHH. Te notificaremos cuando haya actualizaciones.</p>
+                    <div class="quick-info">
+                        <div class="info-item mb-3">
+                            <div class="info-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="info-content">
+                                <strong>Tipo</strong>
+                                <div class="info-text">{{ documento.tipo_documento.nombre }}</div>
+                            </div>
                         </div>
-                    {% elif documento.estado == 'aprobado' %}
-                        <div class="alert alert-success">
-                            <h6>Documento Aprobado</h6>
-                            <p class="mb-0">¡Excelente! Tu documento ha sido aprobado por RRHH y está oficialmente validado en el sistema.</p>
+                        
+                        <div class="info-item mb-3">
+                            <div class="info-icon">
+                                <i class="fas fa-calendar"></i>
+                            </div>
+                            <div class="info-content">
+                                <strong>Subido</strong>
+                                <div class="info-text">{{ documento.fecha_subida|date:"d/m/Y H:i" }}</div>
+                            </div>
                         </div>
-                    {% elif documento.estado == 'rechazado' %}
-                        <div class="alert alert-danger">
-                            <h6>Documento Rechazado</h6>
-                            <p class="mb-0">Tu documento ha sido rechazado. Revisa los comentarios de RRHH y considera subir un nuevo documento con las correcciones necesarias.</p>
+                        
+                        {% if documento.fecha_revision %}
+                        <div class="info-item mb-3">
+                            <div class="info-icon">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="info-content">
+                                <strong>Revisado</strong>
+                                <div class="info-text">{{ documento.fecha_revision|date:"d/m/Y H:i" }}</div>
+                            </div>
                         </div>
-                    {% elif documento.estado == 'requiere_aclaracion' %}
-                        <div class="alert alert-info">
-                            <h6>Requiere Aclaración</h6>
-                            <p class="mb-0">RRHH necesita información adicional sobre tu documento. Revisa los comentarios y edita el documento para proporcionar las aclaraciones solicitadas.</p>
+                        {% endif %}
+                        
+                        {% if documento.archivo %}
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-paperclip"></i>
+                            </div>
+                            <div class="info-content">
+                                <strong>Archivo</strong>
+                                <div class="info-text filename-text" title="{{ documento.nombre_archivo }}">
+                                    {{ documento.nombre_archivo }}
+                                </div>
+                            </div>
                         </div>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -282,62 +490,382 @@
 <div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalEliminarLabel">Confirmar Eliminación</h5>
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="modalEliminarLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                    Confirmar Eliminación
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                ¿Estás seguro de que deseas eliminar este documento? Esta acción no se puede deshacer.
+                <div class="text-center mb-3">
+                    <i class="fas fa-trash fa-3x text-danger"></i>
+                </div>
+                <p class="text-center">¿Estás seguro de que deseas eliminar este documento?</p>
+                <div class="alert alert-warning border-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Esta acción no se puede deshacer.</strong>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                    <i class="fas fa-trash me-1"></i>Eliminar Documento
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-.timeline {
-    position: relative;
-    padding-left: 30px;
+/* Estilos mejorados para la página de detalle */
+.card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
 }
 
-.timeline-item {
-    position: relative;
-    margin-bottom: 20px;
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
 }
 
-.timeline-marker {
+/* Badge de estado mejorado */
+.badge {
+    font-weight: 500 !important;
+    border-radius: 8px !important;
+    letter-spacing: 0.5px;
+}
+
+/* Estilos para detalles del documento */
+.detail-group {
+    margin-bottom: 1.5rem;
+}
+
+.detail-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.detail-value {
+    font-size: 1rem;
+    color: #212529;
+    margin-bottom: 0;
+    font-weight: 500;
+}
+
+.description-box {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    line-height: 1.6;
+}
+
+/* Información de revisión */
+.revision-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+}
+
+/* Timeline moderna */
+.timeline-modern {
+    position: relative;
+    padding-left: 0;
+}
+
+.timeline-item-modern {
+    position: relative;
+    margin-bottom: 2rem;
+    padding-left: 3rem;
+}
+
+.timeline-item-modern:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item-modern::before {
+    content: '';
     position: absolute;
-    left: -22px;
+    left: 1.25rem;
+    top: 2.5rem;
+    height: calc(100% + 1rem);
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline-item-modern:last-child::before {
+    display: none;
+}
+
+.timeline-marker-modern {
+    position: absolute;
+    left: 0;
     top: 0;
-    width: 24px;
-    height: 24px;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
-    background: white;
-    border: 2px solid #dee2e6;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    color: white;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.timeline::before {
+.timeline-content-modern {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-title-modern {
+    color: #212529;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.timeline-date {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.timeline-user {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-comments {
+    background-color: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-style: italic;
+    color: #495057;
+    margin-top: 0.5rem;
+    border-left: 3px solid #dee2e6;
+}
+
+/* Información rápida en sidebar */
+.quick-info .info-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.quick-info .info-item:last-child {
+    border-bottom: none;
+}
+
+.info-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.info-content {
+    flex: 1;
+    min-width: 0; /* Permite que el contenido se contraiga */
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.info-content strong {
+    color: #495057;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.info-text {
+    color: #212529;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* Estilos específicos para nombres de archivo largos */
+.filename-text {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    color: #6c757d;
+    background-color: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.filename-text:hover {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    background-color: #e9ecef;
+    z-index: 10;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Alertas mejoradas */
+.alert {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.alert-heading {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Botones mejorados */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.btn i {
+    font-size: 0.9rem;
+}
+
+/* Estados de carga */
+.btn.loading {
+    position: relative;
+    color: transparent;
+}
+
+.btn.loading::after {
     content: '';
     position: absolute;
-    left: -11px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background: #dee2e6;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
 }
 
-.timeline-content {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 4px solid #dee2e6;
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .timeline-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .timeline-date {
+        margin-top: 0.25rem;
+    }
+    
+    .quick-info .info-item {
+        flex-direction: row; /* Mantener horizontal en móvil */
+        text-align: left;
+        padding: 0.5rem 0;
+    }
+    
+    .info-icon {
+        width: 35px;
+        height: 35px;
+        margin-right: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .info-content {
+        font-size: 0.85rem;
+    }
+    
+    .info-content strong {
+        font-size: 0.8rem;
+    }
+    
+    .filename-text {
+        font-size: 0.75rem;
+    }
+    
+    /* Mejorar el comportamiento del filename en móvil */
+    .filename-text:hover {
+        white-space: normal;
+        position: static;
+        box-shadow: none;
+    }
+}
+
+/* Animaciones */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.card:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.card:nth-child(4) {
+    animation-delay: 0.3s;
 }
 </style>
 
@@ -347,29 +875,140 @@ function eliminarDocumento(documentoId) {
     modal.show();
     
     document.getElementById('btnConfirmarEliminar').onclick = function() {
+        // Mostrar estado de carga
+        this.classList.add('loading');
+        this.disabled = true;
+        
         const formData = new FormData();
         formData.append('documento_id', documentoId);
         formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
         fetch('{% url "documentos:eliminar" %}', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.href = '{% url "documentos:mis_documentos" %}';
+                // Mostrar mensaje de éxito
+                mostrarMensaje('Documento eliminado exitosamente', 'success');
+                
+                // Redirigir después de un breve delay
+                setTimeout(() => {
+                    window.location.href = '{% url "documentos:mis_documentos" %}';
+                }, 1500);
             } else {
-                alert('Error: ' + data.message);
+                mostrarMensaje('Error: ' + data.message, 'error');
+                
+                // Remover estado de carga
+                this.classList.remove('loading');
+                this.disabled = false;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al eliminar el documento');
+            mostrarMensaje('Error al eliminar el documento', 'error');
+            
+            // Remover estado de carga
+            this.classList.remove('loading');
+            this.disabled = false;
         });
 
         modal.hide();
     };
 }
+
+function mostrarMensaje(mensaje, tipo) {
+    // Remover mensajes anteriores
+    document.querySelectorAll('.alert-mensaje').forEach(alert => alert.remove());
+    
+    const iconos = {
+        success: 'check-circle',
+        error: 'times-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    
+    const alertClass = `alert-${tipo === 'error' ? 'danger' : tipo}`;
+    
+    const alertHTML = `
+        <div class="alert ${alertClass} alert-dismissible fade show border-0 shadow-sm alert-mensaje" 
+             role="alert" style="animation: slideInDown 0.3s ease; position: fixed; top: 20px; right: 20px; z-index: 1060; min-width: 300px;">
+            <i class="fas fa-${iconos[tipo]} me-2"></i>
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', alertHTML);
+    
+    // Auto-remover después de 5 segundos
+    setTimeout(() => {
+        const alert = document.querySelector('.alert-mensaje');
+        if (alert) {
+            alert.classList.add('fade');
+            setTimeout(() => alert.remove(), 300);
+        }
+    }, 5000);
+}
+
+// Mejoras de UX al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    // Añadir CSS adicional para animaciones
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .fade {
+            transition: opacity 0.3s ease;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Smooth scroll para enlaces internos
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    });
+    
+    // Mejorar tooltips si existen
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Mejorar la visualización de nombres de archivo largos
+    const filenameElements = document.querySelectorAll('.filename-text');
+    filenameElements.forEach(function(element) {
+        const fullText = element.textContent;
+        const maxLength = 30; // Número máximo de caracteres a mostrar
+        
+        if (fullText.length > maxLength) {
+            // Mostrar solo los primeros y últimos caracteres con "..." en el medio
+            const start = fullText.substring(0, 15);
+            const end = fullText.substring(fullText.length - 10);
+            element.innerHTML = `${start}...${end}`;
+            
+            // Agregar tooltip con el nombre completo
+            element.setAttribute('title', fullText);
+            element.setAttribute('data-bs-toggle', 'tooltip');
+            element.setAttribute('data-bs-placement', 'top');
+            
+            // Inicializar tooltip
+            new bootstrap.Tooltip(element);
+        }
+    });
+});
 </script>
 {% endblock %}
