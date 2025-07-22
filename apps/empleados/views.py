@@ -55,7 +55,12 @@ class LoginView(AuthLoginView):
         return '/empleados/dashboard/'
 
 class LogoutView(AuthLogoutView):
-    pass
+    next_page = '/empleados/login/'
+    http_method_names = ['get', 'post']
+    
+    def get(self, request, *args, **kwargs):
+        # Permitir logout con GET request
+        return self.post(request, *args, **kwargs)
 
 class DashboardView(LoginRequiredMixin, SoloEmpleadosMixin, TemplateView):
     template_name = 'empleados/dashboard.html'
