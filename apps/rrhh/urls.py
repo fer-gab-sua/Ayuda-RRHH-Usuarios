@@ -20,6 +20,9 @@ urlpatterns = [
     path('documentos/', views.DocumentosRRHHListView.as_view(), name='documentos'),
     path('documentos/confirmar/', views.DocumentacionConfirmarListView.as_view(), name='documentacion_confirmar'),
     path('documentos/<int:pk>/confirmar/', views.ConfirmarDocumentoView.as_view(), name='confirmar_documento'),
+    path('documentos/<int:documento_id>/aprobar/', views.aprobar_documento, name='aprobar_documento'),
+    path('documentos/<int:documento_id>/rechazar/', views.rechazar_documento, name='rechazar_documento'),
+    path('documentos/<int:documento_id>/aclaracion/', views.solicitar_aclaracion_documento, name='solicitar_aclaracion_documento'),
     
     # Solicitudes
     path('solicitudes/', views.SolicitudesRRHHListView.as_view(), name='solicitudes'),

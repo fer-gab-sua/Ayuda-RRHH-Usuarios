@@ -1,0 +1,338 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mis Inasistencias - Portal RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-calendar-times"></i> Mis Inasistencias</h2>
+                <a href="{% url 'documentos:justificar' %}" class="btn btn-primary">
+                    <i class="fas fa-file-upload"></i> Justificar Inasistencia
+                </a>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Total</h5>
+                                    <h3 class="mb-0">{{ total_inasistencias }}</h3>
+                                </div>
+                                <i class="fas fa-calendar-times fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Pendientes</h5>
+                                    <h3 class="mb-0">{{ pendientes }}</h3>
+                                </div>
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Justificadas</h5>
+                                    <h3 class="mb-0">{{ justificadas }}</h3>
+                                </div>
+                                <i class="fas fa-check fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card text-white bg-danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title">Injustificadas</h5>
+                                    <h3 class="mb-0">{{ injustificadas }}</h3>
+                                </div>
+                                <i class="fas fa-times fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de inasistencias -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Lista de Inasistencias</h5>
+                </div>
+                <div class="card-body">
+                    {% if inasistencias %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Motivo</th>
+                                        <th>Estado</th>
+                                        <th>Documento Justificativo</th>
+                                        <th>Registrado por</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inasistencia in inasistencias %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ inasistencia.fecha_desde|date:"d/m/Y" }}</strong>
+                                            {% if inasistencia.fecha_hasta and inasistencia.fecha_hasta != inasistencia.fecha_desde %}
+                                                <br><small class="text-muted">al {{ inasistencia.fecha_hasta|date:"d/m/Y" }}</small>
+                                            {% endif %}
+                                            <br><small class="text-muted">
+                                                Registrado: {{ inasistencia.fecha_registro|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <strong>{{ inasistencia.get_tipo_display|default:"Sin especificar" }}</strong>
+                                            {% if inasistencia.motivo %}
+                                                <br><small class="text-muted">{{ inasistencia.motivo|truncatechars:100 }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if inasistencia.estado == 'pendiente' %}
+                                                <span class="badge bg-warning text-dark badge-sm">
+                                                    <i class="fas fa-clock"></i> Pendiente
+                                                </span>
+                                            {% elif inasistencia.estado == 'justificada' %}
+                                                <span class="badge bg-success badge-sm">
+                                                    <i class="fas fa-check"></i> Justificada
+                                                </span>
+                                            {% elif inasistencia.estado == 'injustificada' %}
+                                                <span class="badge bg-danger badge-sm">
+                                                    <i class="fas fa-times"></i> Injustificada
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if inasistencia.documentos.exists %}
+                                                {% for documento in inasistencia.documentos.all %}
+                                                    <div class="mb-1">
+                                                        <a href="{% url 'documentos:detalle' documento.id %}" 
+                                                           class="btn btn-sm btn-outline-info">
+                                                            <i class="fas fa-file-alt"></i> {{ documento.titulo|truncatechars:20 }}
+                                                        </a>
+                                                        {% if documento.estado == 'aprobado' %}
+                                                            <span class="badge bg-success ms-1 badge-xs">Aprobado</span>
+                                                        {% elif documento.estado == 'rechazado' %}
+                                                            <span class="badge bg-danger ms-1 badge-xs">Rechazado</span>
+                                                        {% elif documento.estado == 'pendiente' %}
+                                                            <span class="badge bg-warning ms-1 badge-xs">Pendiente</span>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <small class="text-muted">Sin documento</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if inasistencia.creado_por %}
+                                                {{ inasistencia.creado_por.get_full_name|default:inasistencia.creado_por.username }}
+                                                <br><small class="text-muted">RRHH</small>
+                                            {% else %}
+                                                <small class="text-muted">Sistema</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if inasistencia.estado == 'pendiente' %}
+                                                <a href="{% url 'documentos:justificar' inasistencia.id %}" 
+                                                   class="btn btn-sm btn-primary" 
+                                                   title="Justificar inasistencia">
+                                                    <i class="fas fa-file-upload"></i> Justificar
+                                                </a>
+                                            {% endif %}
+                                            
+                                            <!-- Siempre mostrar botón para ver detalles -->
+                                            <button class="btn btn-sm btn-outline-info" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#modalDetalle{{ inasistencia.id }}"
+                                                    title="Ver detalles">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginación -->
+                        {% if is_paginated %}
+                            <nav aria-label="Paginación">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1">&laquo; Primera</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&lsaquo; Anterior</a>
+                                        </li>
+                                    {% endif %}
+
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente &rsaquo;</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-check fa-4x text-muted mb-3"></i>
+                            <h5 class="text-muted">No tienes inasistencias registradas</h5>
+                            <p class="text-muted">¡Excelente! No hay registros de inasistencias en tu historial.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales de detalle para cada inasistencia -->
+{% for inasistencia in inasistencias %}
+<div class="modal fade" id="modalDetalle{{ inasistencia.id }}" tabindex="-1" aria-labelledby="modalDetalleLabel{{ inasistencia.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetalleLabel{{ inasistencia.id }}">
+                    Detalle de Inasistencia - {{ inasistencia.fecha_desde|date:"d/m/Y" }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Información de la Inasistencia</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td><strong>Fecha:</strong></td>
+                                <td>
+                                    {{ inasistencia.fecha_desde|date:"d/m/Y" }}
+                                    {% if inasistencia.fecha_hasta and inasistencia.fecha_hasta != inasistencia.fecha_desde %}
+                                        al {{ inasistencia.fecha_hasta|date:"d/m/Y" }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Motivo:</strong></td>
+                                <td>{{ inasistencia.get_tipo_display|default:"Sin especificar" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Estado:</strong></td>
+                                <td>
+                                    {% if inasistencia.estado == 'pendiente' %}
+                                        <span class="badge bg-warning text-dark badge-sm">Pendiente</span>
+                                    {% elif inasistencia.estado == 'justificada' %}
+                                        <span class="badge bg-success badge-sm">Justificada</span>
+                                    {% elif inasistencia.estado == 'injustificada' %}
+                                        <span class="badge bg-danger badge-sm">Injustificada</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Registrado:</strong></td>
+                                <td>{{ inasistencia.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Registrado por:</strong></td>
+                                <td>
+                                    {% if inasistencia.creado_por %}
+                                        {{ inasistencia.creado_por.get_full_name|default:inasistencia.creado_por.username }}
+                                    {% else %}
+                                        Sistema
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Documentos Justificativos</h6>
+                        {% if inasistencia.documentos.exists %}
+                            {% for documento in inasistencia.documentos.all %}
+                                <div class="card mb-2">
+                                    <div class="card-body p-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ documento.titulo }}</strong>
+                                                <br><small class="text-muted">{{ documento.tipo_documento.nombre }}</small>
+                                            </div>
+                                            <div>
+                                                {% if documento.estado == 'aprobado' %}
+                                                    <span class="badge bg-success badge-sm">Aprobado</span>
+                                                {% elif documento.estado == 'rechazado' %}
+                                                    <span class="badge bg-danger badge-sm">Rechazado</span>
+                                                {% elif documento.estado == 'pendiente' %}
+                                                    <span class="badge bg-warning badge-sm">Pendiente</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <a href="{% url 'documentos:detalle' documento.id %}" 
+                                               class="btn btn-sm btn-outline-info">
+                                                <i class="fas fa-eye"></i> Ver Detalle
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                No hay documentos justificativos para esta inasistencia.
+                                {% if inasistencia.estado == 'pendiente' %}
+                                    <br><a href="{% url 'documentos:justificar' inasistencia.id %}" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-file-upload"></i> Subir Justificación
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if inasistencia.motivo %}
+                <div class="mt-3">
+                    <h6>Descripción</h6>
+                    <p class="text-muted">{{ inasistencia.motivo }}</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                {% if inasistencia.estado == 'pendiente' %}
+                    <a href="{% url 'documentos:justificar' inasistencia.id %}" class="btn btn-primary">
+                        <i class="fas fa-file-upload"></i> Justificar Inasistencia
+                    </a>
+                {% endif %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

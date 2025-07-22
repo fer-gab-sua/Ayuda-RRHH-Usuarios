@@ -22,7 +22,7 @@ from io import BytesIO
 from datetime import timedelta
 
 from apps.empleados.models import Empleado, SolicitudCambio, DomicilioEmpleado
-from apps.documentos.models import Documento
+from apps.documentos.models import Documento, TipoDocumento
 from apps.recibos.models import ReciboSueldo
 from apps.recibos.views import aplicar_formato_centromedica_a_pdf_original  # Importar función de formato
 from .models import CargaMasivaRecibos, LogProcesamientoRecibo
@@ -223,6 +223,56 @@ def empleado_ajax(request, pk):
 
 class DocumentosRRHHListView(LoginRequiredMixin, SoloRRHHMixin, TemplateView):
     template_name = 'rrhh/documentos.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Obtener todos los documentos con información relacionada
+        documentos = Documento.objects.select_related(
+            'empleado__user', 'tipo_documento', 'revisado_por'
+        ).all()
+        
+        # Aplicar filtros si existen
+        estado = self.request.GET.get('estado')
+        if estado:
+            documentos = documentos.filter(estado=estado)
+            
+        tipo_documento = self.request.GET.get('tipo_documento')
+        if tipo_documento:
+            documentos = documentos.filter(tipo_documento_id=tipo_documento)
+            
+        empleado_search = self.request.GET.get('empleado')
+        if empleado_search:
+            documentos = documentos.filter(
+                Q(empleado__user__first_name__icontains=empleado_search) |
+                Q(empleado__user__last_name__icontains=empleado_search) |
+                Q(empleado__legajo__icontains=empleado_search)
+            )
+        
+        # Ordenar por fecha de subida descendente
+        documentos = documentos.order_by('-fecha_subida')
+        
+        # Estadísticas
+        total_documentos = documentos.count()
+        pendientes = documentos.filter(estado='pendiente').count()
+        aprobados = documentos.filter(estado='aprobado').count()
+        rechazados = documentos.filter(estado='rechazado').count()
+        requieren_aclaracion = documentos.filter(estado='requiere_aclaracion').count()
+        
+        context.update({
+            'documentos': documentos[:50],  # Limitar a 50 para rendimiento
+            'total_documentos': total_documentos,
+            'pendientes': pendientes,
+            'aprobados': aprobados,
+            'rechazados': rechazados,
+            'requieren_aclaracion': requieren_aclaracion,
+            'tipos_documento': TipoDocumento.objects.filter(activo=True),
+            'estado_selected': estado or '',
+            'tipo_documento_selected': tipo_documento or '',
+            'empleado_search': empleado_search or '',
+        })
+        
+        return context
 
 class AprobarDocumentoView(LoginRequiredMixin, SoloRRHHMixin, TemplateView):
     template_name = 'rrhh/aprobar_documento.html'
@@ -328,9 +378,203 @@ class DocumentacionConfirmarListView(LoginRequiredMixin, SoloRRHHMixin, ListView
     context_object_name = 'documentos'
     queryset = Documento.objects.filter(estado='pendiente')
 
-class ConfirmarDocumentoView(LoginRequiredMixin, SoloRRHHMixin, TemplateView):
+class ConfirmarDocumentoView(LoginRequiredMixin, SoloRRHHMixin, DetailView):
     template_name = 'rrhh/confirmar_documento.html'
-    # Aquí se implementaría la lógica de confirmación/rechazo
+    model = Documento
+    context_object_name = 'documento'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        documento = self.object
+        
+        # Historial del documento
+        context['historial'] = documento.historial.all().select_related('usuario').order_by('-fecha')
+        
+        # Información del empleado
+        context['empleado'] = documento.empleado
+        
+        return context
+
+@login_required
+@require_POST
+def aprobar_documento(request, documento_id):
+    """Vista para aprobar un documento"""
+    try:
+        # Verificar permisos RRHH
+        empleado_rrhh = Empleado.objects.get(user=request.user)
+        if not empleado_rrhh.es_rrhh:
+            return JsonResponse({'success': False, 'message': 'No tienes permisos para realizar esta acción'})
+        
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Obtener comentarios del formulario
+        comentarios = request.POST.get('comentarios', '').strip()
+        
+        # Capturar estado anterior antes de cambiar
+        estado_anterior = documento.estado
+        
+        # Actualizar documento
+        documento.estado = 'aprobado'
+        documento.revisado_por = request.user
+        documento.fecha_revision = timezone.now()
+        documento.comentarios_rrhh = comentarios
+        documento.save()
+        
+        # Crear entrada en historial
+        from apps.documentos.models import HistorialDocumento
+        HistorialDocumento.objects.create(
+            documento=documento,
+            usuario=request.user,
+            estado_anterior=estado_anterior,
+            estado_nuevo='aprobado',
+            observaciones=comentarios
+        )
+        
+        # Registrar actividad
+        from apps.empleados.models import ActividadEmpleado
+        ActividadEmpleado.objects.create(
+            empleado=documento.empleado,
+            descripcion=f"Su documento '{documento.titulo}' fue aprobado por RRHH"
+        )
+        
+        messages.success(request, f'Documento "{documento.titulo}" aprobado exitosamente.')
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': 'Documento aprobado exitosamente'})
+        
+        return redirect('rrhh:documentos')
+        
+    except Empleado.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Usuario no autorizado'})
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+        messages.error(request, f'Error al aprobar documento: {str(e)}')
+        return redirect('rrhh:documentos')
+
+@login_required
+@require_POST
+def rechazar_documento(request, documento_id):
+    """Vista para rechazar un documento"""
+    try:
+        # Verificar permisos RRHH
+        empleado_rrhh = Empleado.objects.get(user=request.user)
+        if not empleado_rrhh.es_rrhh:
+            return JsonResponse({'success': False, 'message': 'No tienes permisos para realizar esta acción'})
+        
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Obtener comentarios del formulario (obligatorios para rechazo)
+        comentarios = request.POST.get('comentarios', '').strip()
+        if not comentarios:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': 'Los comentarios son obligatorios para rechazar un documento'})
+            messages.error(request, 'Los comentarios son obligatorios para rechazar un documento.')
+            return redirect('rrhh:confirmar_documento', pk=documento_id)
+        
+        # Capturar estado anterior antes de cambiar
+        estado_anterior = documento.estado
+        
+        # Actualizar documento
+        documento.estado = 'rechazado'
+        documento.revisado_por = request.user
+        documento.fecha_revision = timezone.now()
+        documento.comentarios_rrhh = comentarios
+        documento.save()
+        
+        # Crear entrada en historial
+        from apps.documentos.models import HistorialDocumento
+        HistorialDocumento.objects.create(
+            documento=documento,
+            usuario=request.user,
+            estado_anterior=documento.estado,
+            estado_nuevo='rechazado',
+            observaciones=comentarios
+        )
+        
+        # Registrar actividad
+        from apps.empleados.models import ActividadEmpleado
+        ActividadEmpleado.objects.create(
+            empleado=documento.empleado,
+            descripcion=f"Su documento '{documento.titulo}' fue rechazado por RRHH. Motivo: {comentarios}"
+        )
+        
+        messages.success(request, f'Documento "{documento.titulo}" rechazado.')
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': 'Documento rechazado'})
+        
+        return redirect('rrhh:documentos')
+        
+    except Empleado.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Usuario no autorizado'})
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+        messages.error(request, f'Error al rechazar documento: {str(e)}')
+        return redirect('rrhh:documentos')
+
+@login_required
+@require_POST 
+def solicitar_aclaracion_documento(request, documento_id):
+    """Vista para solicitar aclaración sobre un documento"""
+    try:
+        # Verificar permisos RRHH
+        empleado_rrhh = Empleado.objects.get(user=request.user)
+        if not empleado_rrhh.es_rrhh:
+            return JsonResponse({'success': False, 'message': 'No tienes permisos para realizar esta acción'})
+        
+        documento = get_object_or_404(Documento, id=documento_id)
+        
+        # Obtener comentarios del formulario (obligatorios)
+        comentarios = request.POST.get('comentarios', '').strip()
+        if not comentarios:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': False, 'message': 'Los comentarios son obligatorios para solicitar aclaración'})
+            messages.error(request, 'Los comentarios son obligatorios para solicitar aclaración.')
+            return redirect('rrhh:confirmar_documento', pk=documento_id)
+        
+        # Capturar estado anterior antes de cambiar
+        estado_anterior = documento.estado
+        
+        # Actualizar documento
+        documento.estado = 'requiere_aclaracion'
+        documento.revisado_por = request.user
+        documento.fecha_revision = timezone.now()
+        documento.comentarios_rrhh = comentarios
+        documento.save()
+        
+        # Crear entrada en historial
+        from apps.documentos.models import HistorialDocumento
+        HistorialDocumento.objects.create(
+            documento=documento,
+            usuario=request.user,
+            estado_anterior=documento.estado,
+            estado_nuevo='requiere_aclaracion',
+            observaciones=comentarios
+        )
+        
+        # Registrar actividad
+        from apps.empleados.models import ActividadEmpleado
+        ActividadEmpleado.objects.create(
+            empleado=documento.empleado,
+            descripcion=f"RRHH solicita aclaración sobre el documento '{documento.titulo}'. Comentarios: {comentarios}"
+        )
+        
+        messages.success(request, f'Se solicitó aclaración sobre el documento "{documento.titulo}".')
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': 'Aclaración solicitada'})
+        
+        return redirect('rrhh:documentos')
+        
+    except Empleado.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Usuario no autorizado'})
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+        messages.error(request, f'Error al solicitar aclaración: {str(e)}')
+        return redirect('rrhh:documentos')
 
 class SubirRecibosView(LoginRequiredMixin, SoloRRHHMixin, FormView):
     template_name = 'rrhh/subir_recibos.html'

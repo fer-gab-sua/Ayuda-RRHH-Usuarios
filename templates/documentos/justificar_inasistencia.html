@@ -1,0 +1,279 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Justificar Inasistencia - Portal RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-file-upload"></i> Justificar Inasistencia</h4>
+                    {% if inasistencia_especifica %}
+                        <small class="text-muted">
+                            Para la inasistencia del {{ inasistencia_especifica.fecha_desde|date:"d/m/Y" }}
+                            {% if inasistencia_especifica.fecha_hasta and inasistencia_especifica.fecha_hasta != inasistencia_especifica.fecha_desde %}
+                                al {{ inasistencia_especifica.fecha_hasta|date:"d/m/Y" }}
+                            {% endif %}
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if inasistencia_especifica %}
+                        <!-- Información de la inasistencia específica -->
+                        <div class="alert alert-info mb-4">
+                            <h6><i class="fas fa-calendar-times"></i> Inasistencia a Justificar</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Fecha:</strong> {{ inasistencia_especifica.fecha_desde|date:"d/m/Y" }}
+                                    {% if inasistencia_especifica.fecha_hasta and inasistencia_especifica.fecha_hasta != inasistencia_especifica.fecha_desde %}
+                                        al {{ inasistencia_especifica.fecha_hasta|date:"d/m/Y" }}
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Motivo:</strong> {{ inasistencia_especifica.motivo|default:"Sin especificar" }}
+                                </div>
+                            </div>
+                            {% if inasistencia_especifica.descripcion %}
+                                <div class="mt-2">
+                                    <strong>Descripción:</strong> {{ inasistencia_especifica.descripcion }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {% if not inasistencia_especifica %}
+                        <div class="mb-3">
+                            <label for="{{ form.inasistencia.id_for_label }}" class="form-label">{{ form.inasistencia.label }}</label>
+                            {{ form.inasistencia }}
+                            {% if form.inasistencia.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.inasistencia.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Selecciona la inasistencia que deseas justificar</div>
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.titulo.id_for_label }}" class="form-label">{{ form.titulo.label }}</label>
+                                {{ form.titulo }}
+                                {% if form.titulo.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.titulo.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tipo_documento.id_for_label }}" class="form-label">{{ form.tipo_documento.label }}</label>
+                                {{ form.tipo_documento }}
+                                {% if form.tipo_documento.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.tipo_documento.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label">{{ form.descripcion.label }}</label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.descripcion.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Explica brevemente por qué este documento justifica tu inasistencia</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.archivo.id_for_label }}" class="form-label">{{ form.archivo.label }}</label>
+                            {{ form.archivo }}
+                            {% if form.archivo.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.archivo.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <strong>Formatos permitidos:</strong> PDF, JPG, PNG, DOC, DOCX<br>
+                                <strong>Tamaño máximo:</strong> 10 MB
+                            </div>
+                        </div>
+
+                        <!-- Tipos de documentos recomendados para justificaciones -->
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-lightbulb"></i> Documentos recomendados para justificar inasistencias:</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="mb-0">
+                                        <li><strong>Certificado médico</strong> - Para enfermedades</li>
+                                        <li><strong>Certificado de estudios</strong> - Para exámenes o trámites académicos</li>
+                                        <li><strong>Certificado de defunción</strong> - Para duelo familiar</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="mb-0">
+                                        <li><strong>Citación judicial</strong> - Para trámites legales</li>
+                                        <li><strong>Constancia de trámite</strong> - Para gestiones oficiales</li>
+                                        <li><strong>Otros certificados</strong> - Según corresponda</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'documentos:mis_inasistencias' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-file-upload"></i> Subir Justificación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-info-circle"></i> Información Importante</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>¿Qué sucede después?</h6>
+                            <ul>
+                                <li>Tu documento será revisado por el equipo de RRHH</li>
+                                <li>Recibirás una notificación cuando sea procesado</li>
+                                <li>El estado de tu inasistencia se actualizará según la decisión</li>
+                                <li>Puedes seguir el progreso en "Mis Documentos"</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Consejos para una justificación exitosa</h6>
+                            <ul>
+                                <li>Asegúrate de que el documento sea legible</li>
+                                <li>Incluye toda la información necesaria</li>
+                                <li>Usa un título descriptivo y claro</li>
+                                <li>Proporciona contexto en la descripción</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar clases Bootstrap a los campos del formulario
+    const formControls = document.querySelectorAll('input[type="text"], select, textarea, input[type="file"]');
+    formControls.forEach(function(element) {
+        element.classList.add('form-control');
+    });
+
+    // Validación del formulario
+    const form = document.querySelector('form');
+    const archivoInput = document.getElementById('{{ form.archivo.id_for_label }}');
+    
+    form.addEventListener('submit', function(e) {
+        const archivo = archivoInput.files[0];
+        
+        if (archivo) {
+            // Validar tamaño (10MB = 10 * 1024 * 1024 bytes)
+            const maxSize = 10 * 1024 * 1024;
+            if (archivo.size > maxSize) {
+                e.preventDefault();
+                alert('El archivo es demasiado grande. El tamaño máximo permitido es 10 MB.');
+                return;
+            }
+            
+            // Validar tipo de archivo
+            const allowedTypes = [
+                'application/pdf',
+                'image/jpeg',
+                'image/jpg', 
+                'image/png',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            
+            if (!allowedTypes.includes(archivo.type)) {
+                e.preventDefault();
+                alert('Tipo de archivo no permitido. Solo se permiten archivos PDF, JPG, PNG, DOC y DOCX.');
+                return;
+            }
+        }
+    });
+
+    // Auto-completar título basado en el tipo de documento y la inasistencia
+    const tipoDocumentoSelect = document.getElementById('{{ form.tipo_documento.id_for_label }}');
+    const tituloInput = document.getElementById('{{ form.titulo.id_for_label }}');
+    
+    {% if not inasistencia_especifica %}
+    const inasistenciaSelect = document.getElementById('{{ form.inasistencia.id_for_label }}');
+    
+    function actualizarTitulo() {
+        if (tituloInput.value === '') {
+            let titulo = '';
+            
+            // Agregar tipo de documento
+            const tipoOption = tipoDocumentoSelect.options[tipoDocumentoSelect.selectedIndex];
+            if (tipoOption.value) {
+                titulo = tipoOption.text;
+            }
+            
+            // Agregar información de la inasistencia
+            const inasistenciaOption = inasistenciaSelect.options[inasistenciaSelect.selectedIndex];
+            if (inasistenciaOption.value && inasistenciaOption.text) {
+                const fechaMatch = inasistenciaOption.text.match(/\d{2}\/\d{2}\/\d{4}/);
+                if (fechaMatch) {
+                    titulo += titulo ? ` - ${fechaMatch[0]}` : `Justificación ${fechaMatch[0]}`;
+                }
+            }
+            
+            tituloInput.value = titulo;
+        }
+    }
+    
+    tipoDocumentoSelect.addEventListener('change', actualizarTitulo);
+    inasistenciaSelect.addEventListener('change', actualizarTitulo);
+    {% else %}
+    tipoDocumentoSelect.addEventListener('change', function() {
+        if (tituloInput.value === '') {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                tituloInput.value = selectedOption.text + ' - {{ inasistencia_especifica.fecha_desde|date:"d/m/Y" }}';
+            }
+        }
+    });
+    {% endif %}
+
+    // Mostrar información del archivo seleccionado
+    archivoInput.addEventListener('change', function() {
+        const archivo = this.files[0];
+        if (archivo) {
+            const sizeInMB = (archivo.size / (1024 * 1024)).toFixed(2);
+            console.log(`Archivo seleccionado: ${archivo.name} (${sizeInMB} MB)`);
+        }
+    });
+});
+</script>
+{% endblock %}

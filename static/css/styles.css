@@ -1097,3 +1097,191 @@ tr:nth-child(even) {
     font-size: 0.85em;
     padding: 0.35em 0.65em;
 }
+
+/* ====== Estilos para dropdown de navegación ====== */
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-link.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+/* Estilos modernos para el dropdown principal */
+.nav-link.modern-dropdown {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 4px 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-link.modern-dropdown:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-link-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-icon {
+  font-size: 1.1em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dropdown-arrow {
+  font-size: 0.8em;
+  transition: transform 0.3s ease;
+  margin-left: auto;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nav-link.dropdown-toggle[aria-expanded="true"] .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Submenu moderno */
+.nav-submenu.modern-submenu {
+  padding: 8px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));
+  border-radius: 12px;
+  margin: 8px 4px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-sublink.modern-sublink {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  gap: 12px;
+}
+
+.nav-sublink.modern-sublink::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.nav-sublink.modern-sublink:hover::before {
+  left: 100%;
+}
+
+.nav-sublink.modern-sublink:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  color: white;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sublink-icon {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.sublink-icon i {
+  font-size: 1.1em;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.nav-sublink.modern-sublink:hover .sublink-icon {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.sublink-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sublink-title {
+  font-weight: 600;
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.sublink-desc {
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 400;
+}
+
+.nav-sublink.modern-sublink:hover .sublink-title {
+  color: white;
+}
+
+.nav-sublink.modern-sublink:hover .sublink-desc {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.nav-sublink.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.nav-sublink.active::before {
+  background: white;
+}
+
+.nav-sublink i {
+  width: 16px;
+  margin-right: 12px;
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
+.nav-sublink span {
+  font-weight: 500;
+}
+
+/* Animación suave para el collapse */
+.collapse {
+  transition: height 0.3s ease;
+}
+
+/* Badge pequeños para las tablas */
+.badge-sm {
+  font-size: 0.7rem !important;
+  padding: 0.25rem 0.4rem !important;
+  font-weight: 500 !important;
+}
+
+.badge-xs {
+  font-size: 0.65rem !important;
+  padding: 0.2rem 0.3rem !important;
+  font-weight: 500 !important;
+}
+
+.collapsing {
+  transition: height 0.3s ease;
+}

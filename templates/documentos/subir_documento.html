@@ -1,0 +1,216 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Subir Documento - Portal RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-upload"></i> Subir Nuevo Documento</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.titulo.id_for_label }}" class="form-label">{{ form.titulo.label }}</label>
+                                {{ form.titulo }}
+                                {% if form.titulo.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.titulo.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tipo_documento.id_for_label }}" class="form-label">{{ form.tipo_documento.label }}</label>
+                                {{ form.tipo_documento }}
+                                {% if form.tipo_documento.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.tipo_documento.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label">{{ form.descripcion.label }}</label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.descripcion.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Describe brevemente el contenido del documento (opcional)</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fecha_desde.id_for_label }}" class="form-label">{{ form.fecha_desde.label }}</label>
+                                {{ form.fecha_desde }}
+                                {% if form.fecha_desde.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.fecha_desde.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Fecha de inicio del período que cubre el documento</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fecha_hasta.id_for_label }}" class="form-label">{{ form.fecha_hasta.label }}</label>
+                                {{ form.fecha_hasta }}
+                                {% if form.fecha_hasta.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.fecha_hasta.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Fecha de fin del período (opcional si es un solo día)</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.archivo.id_for_label }}" class="form-label">{{ form.archivo.label }}</label>
+                            {{ form.archivo }}
+                            {% if form.archivo.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.archivo.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <strong>Formatos permitidos:</strong> PDF, JPG, PNG, DOC, DOCX<br>
+                                <strong>Tamaño máximo:</strong> 10 MB
+                            </div>
+                        </div>
+
+                        <!-- Información sobre tipos de documentos -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> Tipos de documentos disponibles:</h6>
+                            <div class="row">
+                                {% for tipo in tipos_documento %}
+                                    <div class="col-md-4 mb-2">
+                                        <small><strong>{{ tipo.nombre }}</strong></small>
+                                        {% if tipo.descripcion %}
+                                            <br><small class="text-muted">{{ tipo.descripcion }}</small>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'documentos:mis_documentos' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-upload"></i> Subir Documento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Consejos para subir documentos -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-lightbulb"></i> Consejos para subir documentos</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>Calidad:</strong> Asegúrate de que el documento sea legible y esté bien iluminado si es una foto.</li>
+                        <li><strong>Completitud:</strong> Incluye todas las páginas necesarias del documento.</li>
+                        <li><strong>Título descriptivo:</strong> Usa un título claro que identifique fácilmente el documento.</li>
+                        <li><strong>Fechas:</strong> Especifica las fechas del período que cubre el documento para mejor organización.</li>
+                        <li><strong>Tipo correcto:</strong> Selecciona el tipo de documento más apropiado para facilitar la revisión por RRHH.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar clases Bootstrap a los campos del formulario
+    const formControls = document.querySelectorAll('input[type="text"], input[type="date"], select, textarea, input[type="file"]');
+    formControls.forEach(function(element) {
+        if (element.type === 'file') {
+            element.classList.add('form-control');
+        } else {
+            element.classList.add('form-control');
+        }
+    });
+
+    // Validación del formulario
+    const form = document.querySelector('form');
+    const archivoInput = document.getElementById('{{ form.archivo.id_for_label }}');
+    
+    form.addEventListener('submit', function(e) {
+        const archivo = archivoInput.files[0];
+        
+        if (archivo) {
+            // Validar tamaño (10MB = 10 * 1024 * 1024 bytes)
+            const maxSize = 10 * 1024 * 1024;
+            if (archivo.size > maxSize) {
+                e.preventDefault();
+                alert('El archivo es demasiado grande. El tamaño máximo permitido es 10 MB.');
+                return;
+            }
+            
+            // Validar tipo de archivo
+            const allowedTypes = [
+                'application/pdf',
+                'image/jpeg',
+                'image/jpg', 
+                'image/png',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            
+            if (!allowedTypes.includes(archivo.type)) {
+                e.preventDefault();
+                alert('Tipo de archivo no permitido. Solo se permiten archivos PDF, JPG, PNG, DOC y DOCX.');
+                return;
+            }
+        }
+    });
+
+    // Mostrar información del archivo seleccionado
+    archivoInput.addEventListener('change', function() {
+        const archivo = this.files[0];
+        if (archivo) {
+            const sizeInMB = (archivo.size / (1024 * 1024)).toFixed(2);
+            console.log(`Archivo seleccionado: ${archivo.name} (${sizeInMB} MB)`);
+        }
+    });
+
+    // Auto-completar título basado en el tipo de documento
+    const tipoDocumentoSelect = document.getElementById('{{ form.tipo_documento.id_for_label }}');
+    const tituloInput = document.getElementById('{{ form.titulo.id_for_label }}');
+    
+    tipoDocumentoSelect.addEventListener('change', function() {
+        if (tituloInput.value === '') {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                tituloInput.value = selectedOption.text;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

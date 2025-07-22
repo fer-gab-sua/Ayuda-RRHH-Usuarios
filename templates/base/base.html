@@ -71,10 +71,46 @@
       
       <div class="nav-section">
         <span class="nav-section-title">Gestión</span>
-        <a href="{% url 'documentos:lista' %}" class="nav-link">
-          <i class="fas fa-folder-open"></i>
-          <span class="nav-text">Documentos</span>
-        </a>
+        <div class="nav-dropdown">
+          <a href="#" class="nav-link dropdown-toggle modern-dropdown" data-bs-toggle="collapse" data-bs-target="#documentosSubmenu" aria-expanded="false">
+            <div class="nav-link-content">
+              <i class="fas fa-folder-open nav-icon"></i>
+              <span class="nav-text">Documentos</span>
+            </div>
+            <i class="fas fa-chevron-down dropdown-arrow"></i>
+          </a>
+          <div class="collapse" id="documentosSubmenu">
+            <div class="nav-submenu modern-submenu">
+              <a href="{% url 'documentos:mis_documentos' %}" class="nav-sublink modern-sublink">
+                <div class="sublink-icon">
+                  <i class="fas fa-file-text"></i>
+                </div>
+                <div class="sublink-content">
+                  <span class="sublink-title">Mis Documentos</span>
+                  <span class="sublink-desc">Ver y gestionar archivos</span>
+                </div>
+              </a>
+              <a href="{% url 'documentos:subir' %}" class="nav-sublink modern-sublink">
+                <div class="sublink-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="sublink-content">
+                  <span class="sublink-title">Subir Documento</span>
+                  <span class="sublink-desc">Cargar nuevos archivos</span>
+                </div>
+              </a>
+              <a href="{% url 'documentos:mis_inasistencias' %}" class="nav-sublink modern-sublink">
+                <div class="sublink-icon">
+                  <i class="fas fa-calendar-exclamation"></i>
+                </div>
+                <div class="sublink-content">
+                  <span class="sublink-title">Mis Inasistencias</span>
+                  <span class="sublink-desc">Control de ausencias</span>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
         <a href="{% url 'solicitudes:lista' %}" class="nav-link">
           <i class="fas fa-clipboard-list"></i>
           <span class="nav-text">Solicitudes</span>

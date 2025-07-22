@@ -1,0 +1,229 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Editar Documento - Portal RRHH{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-edit"></i> Editar Documento</h4>
+                    <small class="text-muted">
+                        Documento creado el {{ object.fecha_subida|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <!-- Información del estado actual -->
+                    <div class="alert alert-info mb-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6 class="mb-1">Estado actual del documento:</h6>
+                                {% if object.estado == 'pendiente' %}
+                                    <span class="badge bg-warning text-dark fs-6">
+                                        <i class="fas fa-clock"></i> Pendiente de revisión
+                                    </span>
+                                {% elif object.estado == 'requiere_aclaracion' %}
+                                    <span class="badge bg-info fs-6">
+                                        <i class="fas fa-question"></i> Requiere aclaración
+                                    </span>
+                                {% endif %}
+                                {% if object.observaciones_rrhh %}
+                                    <div class="mt-2">
+                                        <small><strong>Comentarios de RRHH:</strong></small>
+                                        <p class="mb-0 small">{{ object.observaciones_rrhh }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 text-end">
+                                {% if object.archivo %}
+                                    <a href="{% url 'documentos:ver_archivo' object.id %}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       target="_blank">
+                                        <i class="fas fa-eye"></i> Ver archivo actual
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.titulo.id_for_label }}" class="form-label">{{ form.titulo.label }}</label>
+                                {{ form.titulo }}
+                                {% if form.titulo.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.titulo.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tipo_documento.id_for_label }}" class="form-label">{{ form.tipo_documento.label }}</label>
+                                {{ form.tipo_documento }}
+                                {% if form.tipo_documento.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.tipo_documento.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.descripcion.id_for_label }}" class="form-label">{{ form.descripcion.label }}</label>
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.descripcion.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Actualiza la descripción si es necesario</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fecha_desde.id_for_label }}" class="form-label">{{ form.fecha_desde.label }}</label>
+                                {{ form.fecha_desde }}
+                                {% if form.fecha_desde.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.fecha_desde.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fecha_hasta.id_for_label }}" class="form-label">{{ form.fecha_hasta.label }}</label>
+                                {{ form.fecha_hasta }}
+                                {% if form.fecha_hasta.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.fecha_hasta.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.archivo.id_for_label }}" class="form-label">{{ form.archivo.label }}</label>
+                            {{ form.archivo }}
+                            {% if form.archivo.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.archivo.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <strong>Archivo actual:</strong> {{ object.nombre_archivo }}<br>
+                                <strong>Nota:</strong> Deja este campo vacío si no quieres cambiar el archivo<br>
+                                <strong>Formatos permitidos:</strong> PDF, JPG, PNG, DOC, DOCX | <strong>Tamaño máximo:</strong> 10 MB
+                            </div>
+                        </div>
+
+                        {% if object.estado == 'requiere_aclaracion' %}
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Aclaración requerida</h6>
+                                <p class="mb-0">
+                                    RRHH ha solicitado una aclaración para este documento. 
+                                    Revisa los comentarios arriba y actualiza la información necesaria.
+                                </p>
+                            </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'documentos:mis_documentos' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6><i class="fas fa-info-circle"></i> Información</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Solo puedes editar documentos que estén <strong>pendientes</strong> o que <strong>requieran aclaración</strong>.</li>
+                        <li>Una vez que RRHH apruebe o rechace el documento, no podrá ser editado.</li>
+                        <li>Si cambias el archivo, el anterior será reemplazado completamente.</li>
+                        <li>Cualquier modificación reiniciará el proceso de revisión por parte de RRHH.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar clases Bootstrap a los campos del formulario
+    const formControls = document.querySelectorAll('input[type="text"], input[type="date"], select, textarea, input[type="file"]');
+    formControls.forEach(function(element) {
+        element.classList.add('form-control');
+    });
+
+    // Validación del formulario
+    const form = document.querySelector('form');
+    const archivoInput = document.getElementById('{{ form.archivo.id_for_label }}');
+    
+    form.addEventListener('submit', function(e) {
+        const archivo = archivoInput.files[0];
+        
+        if (archivo) {
+            // Validar tamaño (10MB = 10 * 1024 * 1024 bytes)
+            const maxSize = 10 * 1024 * 1024;
+            if (archivo.size > maxSize) {
+                e.preventDefault();
+                alert('El archivo es demasiado grande. El tamaño máximo permitido es 10 MB.');
+                return;
+            }
+            
+            // Validar tipo de archivo
+            const allowedTypes = [
+                'application/pdf',
+                'image/jpeg',
+                'image/jpg', 
+                'image/png',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            
+            if (!allowedTypes.includes(archivo.type)) {
+                e.preventDefault();
+                alert('Tipo de archivo no permitido. Solo se permiten archivos PDF, JPG, PNG, DOC y DOCX.');
+                return;
+            }
+        }
+    });
+
+    // Confirmar cambios si se está editando un archivo
+    archivoInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            const confirmar = confirm('¿Estás seguro de que quieres reemplazar el archivo actual?');
+            if (!confirmar) {
+                this.value = '';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
