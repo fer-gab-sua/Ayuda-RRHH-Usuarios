@@ -20,14 +20,15 @@ class ObraSocialInline(admin.StackedInline):
 
 @admin.register(Empleado)
 class EmpleadoAdmin(admin.ModelAdmin):
-    list_display = ['legajo', 'user', 'puesto', 'departamento', 'fecha_contrato']
-    list_filter = ['departamento', 'tipo_contrato', 'fecha_contrato']
+    list_display = ['legajo', 'user', 'puesto', 'departamento', 'fecha_contrato', 'debe_cambiar_password']
+    list_filter = ['departamento', 'tipo_contrato', 'fecha_contrato', 'debe_cambiar_password', 'es_rrhh']
     search_fields = ['legajo', 'user__first_name', 'user__last_name', 'user__email']
     inlines = [FamiliarInline, ActividadInline, DomicilioInline, ObraSocialInline]
+    actions = ['marcar_cambio_password', 'desmarcar_cambio_password']
     
     fieldsets = (
         ('Usuario', {
-            'fields': ('user', 'legajo', 'foto_perfil')
+            'fields': ('user', 'legajo', 'foto_perfil', 'es_rrhh')
         }),
         ('Datos Personales', {
             'fields': ('dni', 'cuil', 'fecha_nacimiento', 'telefono')
@@ -41,7 +42,23 @@ class EmpleadoAdmin(admin.ModelAdmin):
         ('Firma Digital', {
             'fields': ('firma_imagen', 'firma_pin')
         }),
+        ('Seguridad', {
+            'fields': ('debe_cambiar_password',),
+            'description': 'Configuraciones de seguridad y acceso'
+        }),
     )
+    
+    def marcar_cambio_password(self, request, queryset):
+        """Acción para marcar empleados que deben cambiar contraseña"""
+        updated = queryset.update(debe_cambiar_password=True)
+        self.message_user(request, f'{updated} empleado(s) marcado(s) para cambio obligatorio de contraseña.')
+    marcar_cambio_password.short_description = "Marcar para cambio obligatorio de contraseña"
+    
+    def desmarcar_cambio_password(self, request, queryset):
+        """Acción para desmarcar empleados que ya no necesitan cambiar contraseña"""
+        updated = queryset.update(debe_cambiar_password=False)
+        self.message_user(request, f'{updated} empleado(s) desmarcado(s) del cambio obligatorio de contraseña.')
+    desmarcar_cambio_password.short_description = "Desmarcar cambio obligatorio de contraseña"
 
 @admin.register(FamiliarEmpleado)
 class FamiliarEmpleadoAdmin(admin.ModelAdmin):

@@ -2,6 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.views import LoginView as AuthLoginView, LogoutView as AuthLogoutView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 from django.views.generic import TemplateView
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
@@ -48,6 +50,12 @@ class LoginView(AuthLoginView):
     def get_success_url(self):
         try:
             empleado = Empleado.objects.get(user=self.request.user)
+            
+            # Verificar si debe cambiar la contraseña
+            if empleado.debe_cambiar_password:
+                return reverse('empleados:cambiar_password_obligatorio')
+            
+            # Redirigir según el tipo de usuario
             if empleado.es_rrhh:
                 return '/rrhh/dashboard/'
         except Empleado.DoesNotExist:
@@ -61,6 +69,72 @@ class LogoutView(AuthLogoutView):
     def get(self, request, *args, **kwargs):
         # Permitir logout con GET request
         return self.post(request, *args, **kwargs)
+
+
+class CambiarPasswordObligatorioView(LoginRequiredMixin, TemplateView):
+    """Vista para cambio obligatorio de contraseña en primer login"""
+    template_name = 'empleados/cambiar_password_obligatorio.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Verificar que realmente necesite cambiar la contraseña
+        try:
+            empleado = Empleado.objects.get(user=request.user)
+            if not empleado.debe_cambiar_password:
+                # Si ya no necesita cambiar la contraseña, redirigir al dashboard
+                if empleado.es_rrhh:
+                    return redirect('rrhh:dashboard')
+                else:
+                    return redirect('empleados:dashboard')
+        except Empleado.DoesNotExist:
+            return redirect('empleados:login')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = PasswordChangeForm(user=self.request.user)
+        return context
+    
+    def post(self, request, *args, **kwargs):
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        
+        if form.is_valid():
+            # Cambiar la contraseña
+            user = form.save()
+            update_session_auth_hash(request, user)  # Mantener la sesión activa
+            
+            # Marcar que ya no necesita cambiar la contraseña
+            try:
+                empleado = Empleado.objects.get(user=user)
+                empleado.debe_cambiar_password = False
+                empleado.save()
+                
+                # Registrar actividad
+                ActividadEmpleado.objects.create(
+                    empleado=empleado,
+                    descripcion="Cambió su contraseña obligatoria en el primer login"
+                )
+                
+                messages.success(request, '¡Contraseña cambiada exitosamente! Ahora puedes acceder al sistema.')
+                
+                # Redirigir según el tipo de usuario
+                if empleado.es_rrhh:
+                    return redirect('rrhh:dashboard')
+                else:
+                    return redirect('empleados:dashboard')
+                    
+            except Empleado.DoesNotExist:
+                messages.error(request, 'Error al actualizar el perfil del empleado.')
+                return redirect('empleados:login')
+        else:
+            # Si hay errores en el formulario, mostrarlos
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{error}')
+        
+        context = self.get_context_data(**kwargs)
+        context['form'] = form
+        return self.render_to_response(context)
 
 class DashboardView(LoginRequiredMixin, SoloEmpleadosMixin, TemplateView):
     template_name = 'empleados/dashboard.html'

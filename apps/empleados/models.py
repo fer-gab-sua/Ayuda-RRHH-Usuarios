@@ -44,6 +44,10 @@ class Empleado(models.Model):
     firma_imagen = models.ImageField(upload_to='firmas/', blank=True, null=True)
     firma_pin = models.CharField(max_length=6, blank=True)
     
+    # Control de contraseña
+    debe_cambiar_password = models.BooleanField(default=False, verbose_name="Debe cambiar contraseña", 
+                                               help_text="Marcar si el usuario debe cambiar su contraseña en el próximo login")
+    
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.legajo}"
     
