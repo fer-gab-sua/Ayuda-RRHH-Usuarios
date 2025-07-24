@@ -1,0 +1,13 @@
+<!-- Botón para cambiar de rol (incluir en templates que lo necesiten) -->
+{% if user.empleado.es_rrhh %}
+<div class="role-switcher">
+    <a href="{% url 'empleados:cambiar_rol' %}" class="btn btn-outline-secondary btn-sm" title="Cambiar de rol">
+        <i class="fas fa-exchange-alt"></i>
+        {% if request.session.rol_activo == 'rrhh' %}
+            Cambiar a Vista Empleado
+        {% else %}
+            Cambiar a Vista RRHH
+        {% endif %}
+    </a>
+</div>
+{% endif %}

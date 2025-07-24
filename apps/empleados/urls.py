@@ -1,11 +1,14 @@
 from django.urls import path
 from . import views
+from .views_seleccion_rol import seleccionar_rol, cambiar_rol
 
 app_name = 'empleados'
 
 urlpatterns = [
     path('login/', views.LoginView.as_view(), name='login'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
+    path('seleccionar-rol/', seleccionar_rol, name='seleccionar_rol'),
+    path('cambiar-rol/', cambiar_rol, name='cambiar_rol'),
     path('cambiar-password/', views.CambiarPasswordObligatorioView.as_view(), name='cambiar_password_obligatorio'),
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     path('perfil/', views.PerfilView.as_view(), name='perfil'),

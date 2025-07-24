@@ -22,7 +22,9 @@ from io import BytesIO
 from datetime import timedelta
 
 from apps.empleados.models import Empleado, SolicitudCambio, DomicilioEmpleado
-from apps.documentos.models import Documento, TipoDocumento
+from apps.documentos.models import Documento, TipoDocumento, Inasistencia, HistorialDocumento
+from apps.documentos.forms import CrearInasistenciaForm
+from apps.notificaciones.models import Notificacion
 from apps.recibos.models import ReciboSueldo
 from apps.recibos.views import aplicar_formato_centromedica_a_pdf_original  # Importar función de formato
 from .models import CargaMasivaRecibos, LogProcesamientoRecibo
@@ -437,6 +439,28 @@ def aprobar_documento(request, documento_id):
             descripcion=f"Su documento '{documento.titulo}' fue aprobado por RRHH"
         )
         
+        # Crear notificación para el empleado
+        try:
+            Notificacion.objects.crear_notificacion_documento_revisado(
+                empleado=documento.empleado,
+                documento=documento,
+                estado='aprobado'
+            )
+        except Exception as e:
+            print(f"Error al crear notificación: {e}")
+        
+        # Si el documento justifica una inasistencia, actualizar su estado
+        if documento.inasistencia:
+            inasistencia = documento.inasistencia
+            nuevo_estado = inasistencia.actualizar_estado_segun_justificaciones()
+            
+            if nuevo_estado == 'justificada':
+                # Registrar actividad adicional
+                ActividadEmpleado.objects.create(
+                    empleado=documento.empleado,
+                    descripcion=f"Su inasistencia del {inasistencia.fecha_desde} al {inasistencia.fecha_hasta} fue marcada como justificada"
+                )
+        
         messages.success(request, f'Documento "{documento.titulo}" aprobado exitosamente.')
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -499,6 +523,34 @@ def rechazar_documento(request, documento_id):
             descripcion=f"Su documento '{documento.titulo}' fue rechazado por RRHH. Motivo: {comentarios}"
         )
         
+        # Crear notificación para el empleado
+        try:
+            Notificacion.objects.crear_notificacion_documento_revisado(
+                empleado=documento.empleado,
+                documento=documento,
+                estado='rechazado'
+            )
+        except Exception as e:
+            print(f"Error al crear notificación: {e}")
+        
+        # Si el documento justificaba una inasistencia, reevaluar su estado
+        if documento.inasistencia:
+            inasistencia = documento.inasistencia
+            # Verificar si quedan documentos aprobados para esta inasistencia
+            documentos_aprobados = inasistencia.documentos.filter(estado='aprobado').count()
+            
+            if documentos_aprobados == 0:
+                # No quedan documentos aprobados, volver a injustificada
+                if inasistencia.estado in ['pendiente', 'justificada']:
+                    inasistencia.estado = 'injustificada'
+                    inasistencia.save()
+                    
+                    # Registrar actividad adicional
+                    ActividadEmpleado.objects.create(
+                        empleado=documento.empleado,
+                        descripcion=f"Su inasistencia del {inasistencia.fecha_desde} al {inasistencia.fecha_hasta} volvió a estado injustificada"
+                    )
+        
         messages.success(request, f'Documento "{documento.titulo}" rechazado.')
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -560,6 +612,16 @@ def solicitar_aclaracion_documento(request, documento_id):
             empleado=documento.empleado,
             descripcion=f"RRHH solicita aclaración sobre el documento '{documento.titulo}'. Comentarios: {comentarios}"
         )
+        
+        # Crear notificación para el empleado
+        try:
+            Notificacion.objects.crear_notificacion_documento_revisado(
+                empleado=documento.empleado,
+                documento=documento,
+                estado='requiere_aclaracion'
+            )
+        except Exception as e:
+            print(f"Error al crear notificación: {e}")
         
         messages.success(request, f'Se solicitó aclaración sobre el documento "{documento.titulo}".')
         
@@ -1665,4 +1727,171 @@ def corregir_recibo_no_encontrado(request, pk):
         return JsonResponse({
             'success': False,
             'message': f'Error al corregir el recibo: {str(e)}'
+        })
+
+
+# Vista para gestionar inasistencias desde RRHH
+class InasistenciasRRHHListView(LoginRequiredMixin, SoloRRHHMixin, ListView):
+    """Vista para listar y gestionar inasistencias desde RRHH"""
+    template_name = 'rrhh/inasistencias.html'
+    model = Inasistencia
+    context_object_name = 'inasistencias'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Inasistencia.objects.select_related('empleado__user').order_by('-fecha_desde')
+        
+        # Filtros
+        empleado_search = self.request.GET.get('empleado')
+        estado = self.request.GET.get('estado')
+        tipo = self.request.GET.get('tipo')
+        fecha_desde = self.request.GET.get('fecha_desde')
+        fecha_hasta = self.request.GET.get('fecha_hasta')
+        
+        if empleado_search:
+            queryset = queryset.filter(
+                Q(empleado__user__first_name__icontains=empleado_search) |
+                Q(empleado__user__last_name__icontains=empleado_search) |
+                Q(empleado__legajo__icontains=empleado_search)
+            )
+        
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        
+        if tipo:
+            queryset = queryset.filter(tipo=tipo)
+        
+        if fecha_desde:
+            queryset = queryset.filter(fecha_desde__gte=fecha_desde)
+        
+        if fecha_hasta:
+            queryset = queryset.filter(fecha_hasta__lte=fecha_hasta)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Estadísticas
+        total_inasistencias = self.get_queryset().count()
+        pendientes = self.get_queryset().filter(estado='pendiente').count()
+        justificadas = self.get_queryset().filter(estado='justificada').count()
+        injustificadas = self.get_queryset().filter(estado='injustificada').count()
+        
+        context.update({
+            'total_inasistencias': total_inasistencias,
+            'pendientes': pendientes,
+            'justificadas': justificadas,
+            'injustificadas': injustificadas,
+            'tipos_inasistencia': Inasistencia.TIPO_CHOICES,
+            'estados_inasistencia': Inasistencia.ESTADO_CHOICES,
+            # Filtros actuales
+            'empleado_search': self.request.GET.get('empleado', ''),
+            'estado_selected': self.request.GET.get('estado', ''),
+            'tipo_selected': self.request.GET.get('tipo', ''),
+            'fecha_desde_selected': self.request.GET.get('fecha_desde', ''),
+            'fecha_hasta_selected': self.request.GET.get('fecha_hasta', ''),
+        })
+        
+        return context
+
+
+class CrearInasistenciaView(LoginRequiredMixin, SoloRRHHMixin, CreateView):
+    """Vista para crear una nueva inasistencia desde RRHH"""
+    model = Inasistencia
+    form_class = CrearInasistenciaForm
+    template_name = 'rrhh/crear_inasistencia.html'
+    success_url = reverse_lazy('rrhh:inasistencias')
+    
+    def form_valid(self, form):
+        # Establecer quien creó la inasistencia
+        form.instance.creado_por = self.request.user
+        
+        response = super().form_valid(form)
+        
+        # Crear notificación para el empleado
+        try:
+            Notificacion.objects.crear_notificacion_inasistencia(
+                empleado=self.object.empleado,
+                inasistencia=self.object
+            )
+        except Exception as e:
+            # Log del error pero no fallar la creación de la inasistencia
+            print(f"Error al crear notificación: {e}")
+        
+        messages.success(
+            self.request, 
+            f'Inasistencia creada exitosamente para {self.object.empleado.user.get_full_name()}. '
+            f'El empleado ha sido notificado y podrá justificarla subiendo documentos.'
+        )
+        
+        return response
+
+
+class EditarInasistenciaView(LoginRequiredMixin, SoloRRHHMixin, UpdateView):
+    """Vista para editar una inasistencia desde RRHH"""
+    model = Inasistencia
+    form_class = CrearInasistenciaForm
+    template_name = 'rrhh/editar_inasistencia.html'
+    success_url = reverse_lazy('rrhh:inasistencias')
+    
+    def form_valid(self, form):
+        # Registrar quien modificó la inasistencia
+        form.instance.modificado_por = self.request.user
+        
+        response = super().form_valid(form)
+        
+        messages.success(
+            self.request, 
+            f'Inasistencia de {self.object.empleado.user.get_full_name()} actualizada exitosamente.'
+        )
+        
+        return response
+
+
+@login_required
+@require_POST
+def cambiar_estado_inasistencia(request, inasistencia_id):
+    """Vista para cambiar el estado de una inasistencia"""
+    try:
+        # Verificar que sea usuario RRHH
+        empleado = Empleado.objects.get(user=request.user)
+        if not empleado.es_rrhh:
+            return JsonResponse({'success': False, 'message': 'Sin permisos'})
+        
+        inasistencia = get_object_or_404(Inasistencia, id=inasistencia_id)
+        nuevo_estado = request.POST.get('estado')
+        observaciones = request.POST.get('observaciones', '')
+        
+        if nuevo_estado not in ['pendiente', 'justificada', 'injustificada']:
+            return JsonResponse({
+                'success': False, 
+                'message': 'Estado no válido'
+            })
+        
+        estado_anterior = inasistencia.estado
+        inasistencia.estado = nuevo_estado
+        if observaciones:
+            inasistencia.observaciones_rrhh = observaciones
+        inasistencia.modificado_por = request.user
+        inasistencia.save()
+        
+        messages.success(
+            request, 
+            f'Estado de inasistencia cambiado de "{inasistencia.get_estado_display()}" a "{dict(Inasistencia.ESTADO_CHOICES)[nuevo_estado]}"'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Estado actualizado exitosamente',
+            'nuevo_estado': nuevo_estado,
+            'nuevo_estado_display': dict(Inasistencia.ESTADO_CHOICES)[nuevo_estado]
+        })
+        
+    except Empleado.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Usuario no encontrado'})
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'message': f'Error: {str(e)}'
         })

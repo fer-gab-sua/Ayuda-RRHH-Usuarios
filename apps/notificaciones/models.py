@@ -1,6 +1,56 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class NotificacionManager(models.Manager):
+    """Manager personalizado para notificaciones"""
+    
+    def crear_notificacion(self, destinatario, titulo, mensaje, tipo='INFO'):
+        """Función helper para crear notificaciones fácilmente"""
+        return self.create(
+            destinatario=destinatario,
+            titulo=titulo,
+            mensaje=mensaje,
+            tipo=tipo
+        )
+    
+    def crear_notificacion_inasistencia(self, empleado, inasistencia):
+        """Crear notificación específica para nueva inasistencia"""
+        titulo = "Nueva inasistencia registrada"
+        mensaje = f"Se ha registrado una inasistencia del {inasistencia.fecha_desde.strftime('%d/%m/%Y')} al {inasistencia.fecha_hasta.strftime('%d/%m/%Y')}. Puedes justificarla subiendo la documentación correspondiente."
+        
+        return self.crear_notificacion(
+            destinatario=empleado,
+            titulo=titulo,
+            mensaje=mensaje,
+            tipo='AVISO'
+        )
+    
+    def crear_notificacion_documento_revisado(self, empleado, documento, estado):
+        """Crear notificación cuando RRHH revisa un documento"""
+        estados_titulo = {
+            'aprobado': 'Documento aprobado',
+            'rechazado': 'Documento rechazado',
+            'requiere_aclaracion': 'Documento requiere aclaración'
+        }
+        
+        titulo = estados_titulo.get(estado, 'Documento revisado')
+        
+        if estado == 'aprobado':
+            mensaje = f"Tu documento '{documento.titulo}' ha sido aprobado por RRHH."
+        elif estado == 'rechazado':
+            mensaje = f"Tu documento '{documento.titulo}' ha sido rechazado. Revisa las observaciones de RRHH."
+        elif estado == 'requiere_aclaracion':
+            mensaje = f"Tu documento '{documento.titulo}' requiere aclaraciones. Por favor, revísalo y actualízalo."
+        else:
+            mensaje = f"Tu documento '{documento.titulo}' ha sido revisado por RRHH."
+        
+        return self.crear_notificacion(
+            destinatario=empleado,
+            titulo=titulo,
+            mensaje=mensaje,
+            tipo='DOCUMENTO'
+        )
+
 class Notificacion(models.Model):
     TIPOS_NOTIFICACION = [
         ('INFO', 'Información'),
@@ -18,6 +68,8 @@ class Notificacion(models.Model):
     leida = models.BooleanField(default=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_leida = models.DateTimeField(null=True, blank=True)
+    
+    objects = NotificacionManager()
     
     class Meta:
         ordering = ['-fecha_creacion']

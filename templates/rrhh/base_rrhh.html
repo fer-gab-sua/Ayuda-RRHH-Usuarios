@@ -76,13 +76,13 @@
           <i class="fas fa-file-invoice-dollar"></i>
           <span class="nav-text">Recibos de Sueldo</span>
         </a>
-        <a href="{% url 'rrhh:subir_recibos' %}" class="nav-link {% if request.resolver_match.url_name == 'subir_recibos' %}active{% endif %}">
-          <i class="fas fa-cloud-upload-alt"></i>
-          <span class="nav-text">Subir Recibos</span>
-        </a>
         <a href="{% url 'rrhh:documentos' %}" class="nav-link {% if request.resolver_match.url_name == 'documentos' %}active{% endif %}">
           <i class="fas fa-folder-open"></i>
           <span class="nav-text">Documentos</span>
+        </a>
+        <a href="{% url 'rrhh:inasistencias' %}" class="nav-link {% if request.resolver_match.url_name == 'inasistencias' or request.resolver_match.url_name == 'crear_inasistencia' or request.resolver_match.url_name == 'editar_inasistencia' %}active{% endif %}">
+          <i class="fas fa-calendar-times"></i>
+          <span class="nav-text">Inasistencias</span>
         </a>
         <a href="{% url 'rrhh:documentacion_confirmar' %}" class="nav-link {% if request.resolver_match.url_name == 'documentacion_confirmar' %}active{% endif %}">
           <i class="fas fa-check-circle"></i>
@@ -99,6 +99,10 @@
         <a href="{% url 'empleados:perfil' %}" class="nav-link">
           <i class="fas fa-user"></i>
           <span class="nav-text">Ver Mi Perfil</span>
+        </a>
+        <a href="{% url 'empleados:cambiar_rol' %}" class="nav-link" style="color: #10b981;">
+          <i class="fas fa-exchange-alt"></i>
+          <span class="nav-text">Cambiar a Vista Empleado</span>
         </a>
       </div>
     </nav>

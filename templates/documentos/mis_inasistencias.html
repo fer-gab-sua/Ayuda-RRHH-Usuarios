@@ -98,7 +98,7 @@
                                                 <br><small class="text-muted">al {{ inasistencia.fecha_hasta|date:"d/m/Y" }}</small>
                                             {% endif %}
                                             <br><small class="text-muted">
-                                                Registrado: {{ inasistencia.fecha_registro|date:"d/m/Y H:i" }}
+                                                Registrado: {{ inasistencia.fecha_creacion|date:"d/m/Y H:i" }}
                                             </small>
                                         </td>
                                         <td>
@@ -112,6 +112,19 @@
                                                 <span class="badge bg-warning text-dark badge-sm">
                                                     <i class="fas fa-clock"></i> Pendiente
                                                 </span>
+                                                <!-- Mostrar progreso de justificación -->
+                                                {% if inasistencia.documentos.exists %}
+                                                    <br><small class="text-muted mt-1">
+                                                        <i class="fas fa-chart-pie"></i>
+                                                        {{ inasistencia.porcentaje_justificado }}% justificado
+                                                    </small>
+                                                    <div class="progress mt-1" style="height: 4px;">
+                                                        <div class="progress-bar" role="progressbar" 
+                                                             style="width: {{ inasistencia.porcentaje_justificado }}%"
+                                                             aria-valuenow="{{ inasistencia.porcentaje_justificado }}" 
+                                                             aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>
+                                                {% endif %}
                                             {% elif inasistencia.estado == 'justificada' %}
                                                 <span class="badge bg-success badge-sm">
                                                     <i class="fas fa-check"></i> Justificada
@@ -125,7 +138,7 @@
                                         <td>
                                             {% if inasistencia.documentos.exists %}
                                                 {% for documento in inasistencia.documentos.all %}
-                                                    <div class="mb-1">
+                                                    <div class="mb-2">
                                                         <a href="{% url 'documentos:detalle' documento.id %}" 
                                                            class="btn btn-sm btn-outline-info">
                                                             <i class="fas fa-file-alt"></i> {{ documento.titulo|truncatechars:20 }}
@@ -136,6 +149,19 @@
                                                             <span class="badge bg-danger ms-1 badge-xs">Rechazado</span>
                                                         {% elif documento.estado == 'pendiente' %}
                                                             <span class="badge bg-warning ms-1 badge-xs">Pendiente</span>
+                                                        {% elif documento.estado == 'requiere_aclaracion' %}
+                                                            <span class="badge bg-info ms-1 badge-xs">Requiere aclaración</span>
+                                                        {% endif %}
+                                                        
+                                                        <!-- Mostrar fechas específicas justificadas -->
+                                                        {% if documento.fecha_desde and documento.fecha_hasta %}
+                                                            <br><small class="text-muted">
+                                                                <i class="fas fa-calendar-check"></i>
+                                                                Justifica: {{ documento.fecha_desde|date:"d/m/Y" }}
+                                                                {% if documento.fecha_hasta != documento.fecha_desde %}
+                                                                    al {{ documento.fecha_hasta|date:"d/m/Y" }}
+                                                                {% endif %}
+                                                            </small>
                                                         {% endif %}
                                                     </div>
                                                 {% endfor %}
@@ -152,8 +178,8 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            {% if inasistencia.estado == 'pendiente' %}
-                                                <a href="{% url 'documentos:justificar' inasistencia.id %}" 
+                                            {% if inasistencia.estado == 'injustificada' or inasistencia.estado == 'pendiente' %}
+                                                <a href="{% url 'documentos:justificar_inasistencia' inasistencia.id %}" 
                                                    class="btn btn-sm btn-primary" 
                                                    title="Justificar inasistencia">
                                                     <i class="fas fa-file-upload"></i> Justificar
@@ -307,7 +333,7 @@
                                 <i class="fas fa-exclamation-triangle"></i>
                                 No hay documentos justificativos para esta inasistencia.
                                 {% if inasistencia.estado == 'pendiente' %}
-                                    <br><a href="{% url 'documentos:justificar' inasistencia.id %}" class="btn btn-sm btn-primary mt-2">
+                                    <br><a href="{% url 'documentos:justificar_inasistencia' inasistencia.id %}" class="btn btn-sm btn-primary mt-2">
                                         <i class="fas fa-file-upload"></i> Subir Justificación
                                     </a>
                                 {% endif %}
@@ -325,7 +351,7 @@
             </div>
             <div class="modal-footer">
                 {% if inasistencia.estado == 'pendiente' %}
-                    <a href="{% url 'documentos:justificar' inasistencia.id %}" class="btn btn-primary">
+                    <a href="{% url 'documentos:justificar_inasistencia' inasistencia.id %}" class="btn btn-primary">
                         <i class="fas fa-file-upload"></i> Justificar Inasistencia
                     </a>
                 {% endif %}

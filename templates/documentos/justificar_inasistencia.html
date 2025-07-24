@@ -26,18 +26,43 @@
                             <h6><i class="fas fa-calendar-times"></i> Inasistencia a Justificar</h6>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <strong>Fecha:</strong> {{ inasistencia_especifica.fecha_desde|date:"d/m/Y" }}
+                                    <strong>Fechas:</strong> {{ inasistencia_especifica.fecha_desde|date:"d/m/Y" }}
                                     {% if inasistencia_especifica.fecha_hasta and inasistencia_especifica.fecha_hasta != inasistencia_especifica.fecha_desde %}
                                         al {{ inasistencia_especifica.fecha_hasta|date:"d/m/Y" }}
                                     {% endif %}
+                                    <br><small class="text-muted">
+                                        <i class="fas fa-calendar-alt"></i> 
+                                        {{ inasistencia_especifica.dias_inasistencia }} día{{ inasistencia_especifica.dias_inasistencia|pluralize }} de inasistencia
+                                    </small>
                                 </div>
                                 <div class="col-md-6">
-                                    <strong>Motivo:</strong> {{ inasistencia_especifica.motivo|default:"Sin especificar" }}
+                                    <strong>Tipo:</strong> {{ inasistencia_especifica.get_tipo_display }}
+                                    <br><strong>Motivo:</strong> {{ inasistencia_especifica.motivo|default:"Sin especificar" }}
                                 </div>
                             </div>
-                            {% if inasistencia_especifica.descripcion %}
+                            {% if inasistencia_especifica.observaciones_rrhh %}
                                 <div class="mt-2">
-                                    <strong>Descripción:</strong> {{ inasistencia_especifica.descripcion }}
+                                    <strong>Observaciones RRHH:</strong> {{ inasistencia_especifica.observaciones_rrhh }}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Mostrar documentos ya subidos para esta inasistencia -->
+                            {% if inasistencia_especifica.documentos.exists %}
+                                <div class="mt-3">
+                                    <strong>Documentos ya subidos para esta inasistencia:</strong>
+                                    <div class="mt-2">
+                                        {% for documento in inasistencia_especifica.documentos.all %}
+                                            <span class="badge me-2 mb-1
+                                                {% if documento.estado == 'aprobado' %}bg-success
+                                                {% elif documento.estado == 'rechazado' %}bg-danger
+                                                {% elif documento.estado == 'pendiente' %}bg-warning
+                                                {% elif documento.estado == 'requiere_aclaracion' %}bg-info
+                                                {% else %}bg-secondary{% endif %}">
+                                                <i class="fas fa-file-alt"></i> {{ documento.titulo }} - {{ documento.get_estado_display }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">Puedes subir documentos adicionales para complementar la justificación.</small>
                                 </div>
                             {% endif %}
                         </div>
@@ -46,7 +71,10 @@
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         
-                        {% if not inasistencia_especifica %}
+                        {% if inasistencia_especifica %}
+                            <!-- Campo oculto para la inasistencia específica -->
+                            {{ form.inasistencia }}
+                        {% else %}
                         <div class="mb-3">
                             <label for="{{ form.inasistencia.id_for_label }}" class="form-label">{{ form.inasistencia.label }}</label>
                             {{ form.inasistencia }}
@@ -98,6 +126,51 @@
                                 </div>
                             {% endif %}
                             <div class="form-text">Explica brevemente por qué este documento justifica tu inasistencia</div>
+                        </div>
+
+                        <!-- Fechas de justificación -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-calendar-check"></i> Período que justifica este documento</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning small mb-3">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Importante:</strong> Selecciona las fechas específicas que este documento justifica.
+                                    {% if inasistencia_especifica %}
+                                        Las fechas deben estar entre el {{ inasistencia_especifica.fecha_desde|date:"d/m/Y" }} y el {{ inasistencia_especifica.fecha_hasta|date:"d/m/Y" }}.
+                                    {% endif %}
+                                    Puedes subir múltiples documentos para diferentes períodos si es necesario.
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.fecha_desde.id_for_label }}" class="form-label">{{ form.fecha_desde.label }} *</label>
+                                        {{ form.fecha_desde }}
+                                        {% if form.fecha_desde.errors %}
+                                            <div class="text-danger small">
+                                                {% for error in form.fecha_desde.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Fecha desde la cual el documento justifica la inasistencia</div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.fecha_hasta.id_for_label }}" class="form-label">{{ form.fecha_hasta.label }} *</label>
+                                        {{ form.fecha_hasta }}
+                                        {% if form.fecha_hasta.errors %}
+                                            <div class="text-danger small">
+                                                {% for error in form.fecha_hasta.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="form-text">Fecha hasta la cual el documento justifica la inasistencia</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-4">

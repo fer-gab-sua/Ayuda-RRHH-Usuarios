@@ -29,8 +29,10 @@ def redirect_by_role(request):
     
     try:
         empleado = Empleado.objects.get(user=request.user)
+        
+        # Si es RRHH, mostrar selección de rol
         if empleado.es_rrhh:
-            return redirect('rrhh:dashboard')
+            return redirect('empleados:seleccionar_rol')
         else:
             return redirect('empleados:dashboard')
     except Empleado.DoesNotExist:

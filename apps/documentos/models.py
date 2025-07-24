@@ -30,16 +30,16 @@ class Inasistencia(models.Model):
     ]
     
     ESTADO_CHOICES = [
+        ('injustificada', 'Injustificada'),
         ('pendiente', 'Pendiente Justificación'),
         ('justificada', 'Justificada'),
-        ('injustificada', 'Injustificada'),
     ]
     
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, related_name='inasistencias')
     fecha_desde = models.DateField()
     fecha_hasta = models.DateField()
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
-    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='injustificada')
     motivo = models.TextField(blank=True, help_text="Descripción del motivo de la inasistencia")
     observaciones_rrhh = models.TextField(blank=True, help_text="Observaciones del área de RRHH")
     
@@ -58,7 +58,73 @@ class Inasistencia(models.Model):
     @property
     def puede_ser_justificada(self):
         """Verificar si la inasistencia puede ser justificada con documentos"""
-        return self.estado == 'pendiente'
+        return self.estado in ['injustificada', 'pendiente']
+    
+    def fechas_justificadas(self):
+        """Obtener lista de fechas que ya tienen documentos justificativos aprobados"""
+        from datetime import date, timedelta
+        
+        fechas_cubiertas = set()
+        documentos_aprobados = self.documentos.filter(estado='aprobado')
+        
+        for documento in documentos_aprobados:
+            if documento.fecha_desde and documento.fecha_hasta:
+                fecha_actual = documento.fecha_desde
+                while fecha_actual <= documento.fecha_hasta:
+                    fechas_cubiertas.add(fecha_actual)
+                    fecha_actual += timedelta(days=1)
+        
+        return sorted(list(fechas_cubiertas))
+    
+    def fechas_pendientes(self):
+        """Obtener lista de fechas que aún necesitan justificación"""
+        from datetime import date, timedelta
+        
+        todas_las_fechas = set()
+        fecha_actual = self.fecha_desde
+        while fecha_actual <= self.fecha_hasta:
+            todas_las_fechas.add(fecha_actual)
+            fecha_actual += timedelta(days=1)
+        
+        fechas_justificadas = set(self.fechas_justificadas())
+        return sorted(list(todas_las_fechas - fechas_justificadas))
+    
+    @property 
+    def porcentaje_justificado(self):
+        """Calcular qué porcentaje de días está justificado"""
+        total_dias = self.dias_inasistencia
+        dias_justificados = len(self.fechas_justificadas())
+        
+        if total_dias == 0:
+            return 0
+        
+        return round((dias_justificados / total_dias) * 100, 1)
+    
+    def actualizar_estado_segun_justificaciones(self):
+        """Actualizar el estado de la inasistencia basado en los documentos justificativos"""
+        # Si hay documentos justificativos subidos, cambiar a pendiente
+        documentos_justificativos = self.documentos.exists()
+        
+        if documentos_justificativos and self.estado == 'injustificada':
+            self.estado = 'pendiente'
+            self.save()
+            return 'pendiente'
+        
+        # Si hay documentos aprobados, verificar si está completamente justificada
+        documentos_aprobados = self.documentos.filter(estado='aprobado')
+        
+        if documentos_aprobados.exists():
+            fechas_justificadas = self.fechas_justificadas()
+            total_dias = self.dias_inasistencia
+            
+            # Si todos los días están justificados, marcar como justificada
+            if len(fechas_justificadas) >= total_dias:
+                if self.estado != 'justificada':
+                    self.estado = 'justificada'
+                    self.save()
+                    return 'justificada'
+        
+        return self.estado
     
     def __str__(self):
         return f"{self.empleado.user.get_full_name()} - {self.fecha_desde} al {self.fecha_hasta} ({self.get_tipo_display()})"
@@ -81,6 +147,7 @@ class Documento(models.Model):
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, related_name='documentos')
     tipo_documento = models.ForeignKey(TipoDocumento, on_delete=models.CASCADE)
     inasistencia = models.ForeignKey(Inasistencia, on_delete=models.CASCADE, null=True, blank=True, 
+                                   related_name='documentos',
                                    help_text="Inasistencia que justifica este documento (opcional)")
     
     titulo = models.CharField(max_length=200)

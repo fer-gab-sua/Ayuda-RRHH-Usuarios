@@ -55,9 +55,9 @@ class LoginView(AuthLoginView):
             if empleado.debe_cambiar_password:
                 return reverse('empleados:cambiar_password_obligatorio')
             
-            # Redirigir según el tipo de usuario
+            # Si es RRHH (puede acceder a ambos roles), mostrar selección
             if empleado.es_rrhh:
-                return '/rrhh/dashboard/'
+                return reverse('empleados:seleccionar_rol')
         except Empleado.DoesNotExist:
             pass
         return '/empleados/dashboard/'
@@ -82,7 +82,7 @@ class CambiarPasswordObligatorioView(LoginRequiredMixin, TemplateView):
             if not empleado.debe_cambiar_password:
                 # Si ya no necesita cambiar la contraseña, redirigir al dashboard
                 if empleado.es_rrhh:
-                    return redirect('rrhh:dashboard')
+                    return redirect('empleados:seleccionar_rol')
                 else:
                     return redirect('empleados:dashboard')
         except Empleado.DoesNotExist:
@@ -119,7 +119,7 @@ class CambiarPasswordObligatorioView(LoginRequiredMixin, TemplateView):
                 
                 # Redirigir según el tipo de usuario
                 if empleado.es_rrhh:
-                    return redirect('rrhh:dashboard')
+                    return redirect('empleados:seleccionar_rol')
                 else:
                     return redirect('empleados:dashboard')
                     

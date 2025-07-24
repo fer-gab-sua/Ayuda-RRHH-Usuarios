@@ -286,6 +286,27 @@ class JustificarInasistenciaView(LoginRequiredMixin, CreateView):
         kwargs = super().get_form_kwargs()
         try:
             kwargs['empleado'] = Empleado.objects.get(user=self.request.user)
+            
+            # Si hay una inasistencia específica, pre-configurar el formulario
+            inasistencia_id = self.kwargs.get('pk')
+            if inasistencia_id:
+                try:
+                    # Primero verificar que la inasistencia existe y pertenece al empleado
+                    inasistencia = Inasistencia.objects.get(
+                        id=inasistencia_id, 
+                        empleado=kwargs['empleado']
+                    )
+                    
+                    # Verificar que puede ser justificada
+                    if inasistencia.puede_ser_justificada:
+                        kwargs['inasistencia_especifica'] = inasistencia
+                    else:
+                        # La inasistencia no puede ser justificada
+                        raise Http404(f"La inasistencia está en estado '{inasistencia.get_estado_display()}' y no puede ser justificada.")
+                        
+                except Inasistencia.DoesNotExist:
+                    raise Http404("La inasistencia no existe o no tienes permisos para acceder a ella.")
+                    
         except Empleado.DoesNotExist:
             kwargs['empleado'] = None
         return kwargs
@@ -295,17 +316,63 @@ class JustificarInasistenciaView(LoginRequiredMixin, CreateView):
             empleado = Empleado.objects.get(user=self.request.user)
             form.instance.empleado = empleado
             
-            # Establecer fechas del documento basadas en la inasistencia
-            inasistencia = form.cleaned_data['inasistencia']
-            form.instance.fecha_desde = inasistencia.fecha_desde
-            form.instance.fecha_hasta = inasistencia.fecha_hasta
+            # Obtener la inasistencia (ya sea del formulario o del URL)
+            inasistencia = form.cleaned_data.get('inasistencia')
+            if not inasistencia:
+                # Si no viene del formulario, intentar obtenerla del URL
+                inasistencia_id = self.kwargs.get('pk')
+                if inasistencia_id:
+                    try:
+                        inasistencia = Inasistencia.objects.get(
+                            id=inasistencia_id, 
+                            empleado=empleado
+                        )
+                        # Verificar que puede ser justificada
+                        if not inasistencia.puede_ser_justificada:
+                            messages.error(self.request, f'Esta inasistencia está en estado "{inasistencia.get_estado_display()}" y no puede ser justificada.')
+                            return self.form_invalid(form)
+                        
+                        form.instance.inasistencia = inasistencia
+                    except Inasistencia.DoesNotExist:
+                        messages.error(self.request, 'La inasistencia no existe o no tienes permisos para acceder a ella.')
+                        return self.form_invalid(form)
+            
+            if not inasistencia:
+                messages.error(self.request, 'Error: No se pudo identificar la inasistencia a justificar.')
+                return self.form_invalid(form)
+            
+            # Las fechas ya vienen del formulario, no las sobreescribimos
+            # Solo verificamos que estén dentro del rango de la inasistencia
+            fecha_desde = form.cleaned_data.get('fecha_desde')
+            fecha_hasta = form.cleaned_data.get('fecha_hasta')
+            
+            if fecha_desde and fecha_hasta:
+                if fecha_desde < inasistencia.fecha_desde or fecha_hasta > inasistencia.fecha_hasta:
+                    messages.error(self.request, 'Las fechas seleccionadas deben estar dentro del período de la inasistencia.')
+                    return self.form_invalid(form)
             
             response = super().form_valid(form)
             
+            # Actualizar estado de la inasistencia cuando se sube un justificativo
+            nuevo_estado = inasistencia.actualizar_estado_segun_justificaciones()
+            if nuevo_estado == 'pendiente':
+                # Registrar actividad adicional de cambio de estado
+                ActividadEmpleado.objects.create(
+                    empleado=empleado,
+                    descripcion=f"Inasistencia del {inasistencia.fecha_desde} al {inasistencia.fecha_hasta} cambió a estado pendiente por subir justificativo"
+                )
+            
             # Registrar actividad
+            periodo_justificado = ""
+            if fecha_desde and fecha_hasta:
+                if fecha_desde == fecha_hasta:
+                    periodo_justificado = f"para el día {fecha_desde}"
+                else:
+                    periodo_justificado = f"del {fecha_desde} al {fecha_hasta}"
+            
             ActividadEmpleado.objects.create(
                 empleado=empleado,
-                descripcion=f"Subió documento justificativo para inasistencia del {inasistencia.fecha_desde} al {inasistencia.fecha_hasta}"
+                descripcion=f"Subió documento justificativo para inasistencia {periodo_justificado}"
             )
             
             messages.success(self.request, '¡Documento justificativo subido exitosamente! RRHH lo revisará.')
@@ -314,6 +381,9 @@ class JustificarInasistenciaView(LoginRequiredMixin, CreateView):
         except Empleado.DoesNotExist:
             messages.error(self.request, 'Error: No se encontró el perfil de empleado.')
             return redirect('empleados:dashboard')
+        except Exception as e:
+            messages.error(self.request, f'Error al subir el documento: {str(e)}')
+            return self.form_invalid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -327,7 +397,7 @@ class JustificarInasistenciaView(LoginRequiredMixin, CreateView):
                     Inasistencia, 
                     id=inasistencia_id, 
                     empleado=empleado,
-                    estado='pendiente'
+                    estado__in=['injustificada', 'pendiente']
                 )
                 context['inasistencia_especifica'] = inasistencia
             except Empleado.DoesNotExist:

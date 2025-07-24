@@ -150,6 +150,27 @@ h3 {
   padding: 24px 0;
   position: relative;
   z-index: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 350px); /* Aumentamos el espacio para el footer */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.3) transparent;
+}
+
+.nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nav::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 3px;
+}
+
+.nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
 }
 
 .nav-section {
@@ -241,6 +262,8 @@ h3 {
   border-top: 1px solid rgba(255,255,255,0.1);
   position: relative;
   z-index: 1;
+  margin-top: auto; /* Esto empuja el footer al fondo */
+  flex-shrink: 0; /* Evita que se comprima */
 }
 
 .logout-btn {
@@ -1284,4 +1307,69 @@ tr:nth-child(even) {
 
 .collapsing {
   transition: height 0.3s ease;
+}
+
+/* ====== Media Queries para Desktop ====== */
+@media (min-width: 1024px) {
+  .sidebar {
+    transform: translateX(0); /* Siempre visible en desktop */
+    position: fixed;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .nav {
+    max-height: calc(100vh - 320px); /* Más espacio para el footer en desktop */
+  }
+  
+  .sidebar-footer {
+    position: relative;
+    margin-top: auto;
+    flex-shrink: 0;
+    width: 100%;
+  }
+  
+  .logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  
+  .main-content {
+    margin-left: 280px;
+    padding: 24px;
+    min-height: 100vh;
+  }
+}
+
+/* ====== Media Queries para pantallas muy grandes ====== */
+@media (min-width: 1440px) {
+  .sidebar {
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sidebar-footer {
+    position: relative;
+    margin-top: auto;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.1);
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  
+  .logout-btn {
+    background: rgba(239, 68, 68, 0.2);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+  
+  .nav {
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 350px);
+  }
 }
