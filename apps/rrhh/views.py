@@ -12,12 +12,14 @@ from django.db.models import Q
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.http import require_POST
 from django.core.files.base import ContentFile
+from django.db import transaction
 import os
 import mimetypes
 import re
 import traceback
 import PyPDF2
 from PyPDF2 import PdfReader, PdfWriter
+import threading
 from io import BytesIO
 from datetime import timedelta
 
@@ -907,6 +909,38 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
         form.instance.usuario_carga = self.request.user
         response = super().form_valid(form)
         
+        # Si es una petición AJAX, retornar JSON con el ID
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # Inicializar el estado
+            self.object.estado = 'procesando'
+            self.object.fecha_procesamiento = timezone.now()
+            self.object.save()
+            
+            # Procesar el archivo en un hilo separado para no bloquear la respuesta
+            def procesar_async():
+                from django.db import connection
+                try:
+                    print(f"Iniciando procesamiento asíncrono para carga ID: {self.object.id}")
+                    self.procesar_archivo_recibos(self.object)
+                    print(f"Procesamiento completado para carga ID: {self.object.id}")
+                except Exception as e:
+                    print(f"Error en procesamiento asíncrono: {e}")
+                    # Marcar como error
+                    self.object.estado = 'error'
+                    self.object.errores_procesamiento = str(e)
+                    self.object.save()
+                finally:
+                    connection.close()
+            
+            print(f"Iniciando hilo de procesamiento para carga ID: {self.object.id}")
+            threading.Thread(target=procesar_async, daemon=True).start()
+            
+            return JsonResponse({
+                'success': True,
+                'carga_id': self.object.id,
+                'message': 'Archivo cargado exitosamente. El procesamiento ha comenzado.'
+            })
+        
         # Procesar el archivo en background (por ahora de forma síncrona)
         self.procesar_archivo_recibos(self.object)
         
@@ -916,12 +950,19 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
     def procesar_archivo_recibos(self, carga_masiva):
         """Procesa el archivo PDF y genera recibos individuales"""
         try:
-            carga_masiva.estado = 'procesando'
-            carga_masiva.fecha_procesamiento = timezone.now()
-            carga_masiva.save()
+            # El estado ya está configurado como 'procesando' antes de llamar a esta función
             
-            # Obtener todos los empleados activos
-            empleados = Empleado.objects.select_related('user').all()
+            # Obtener todos los empleados activos, excluyendo solo empleados sin datos válidos
+            empleados = Empleado.objects.select_related('user').filter(
+                user__first_name__isnull=False,  # Debe tener nombre
+                user__last_name__isnull=False,   # Debe tener apellido
+                user__first_name__gt='',         # Nombre no vacío
+                user__last_name__gt='',          # Apellido no vacío
+                legajo__isnull=False,            # Debe tener legajo
+                legajo__gt=''                    # Legajo no vacío
+            ).exclude(
+                legajo__in=['LEG001', 'EMP0001', 'ADMIN', 'TEST']  # Excluir solo legajos administrativos específicos
+            )
             carga_masiva.total_empleados = empleados.count()
             carga_masiva.save()
             
@@ -931,29 +972,6 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
             # Por cada empleado, verificar si existe en el PDF antes de crear el recibo
             for empleado in empleados:
                 try:
-                    # Validar que el empleado tenga datos básicos válidos
-                    if not empleado.legajo or not empleado.legajo.strip():
-                        LogProcesamientoRecibo.objects.create(
-                            carga_masiva=carga_masiva,
-                            legajo_empleado=empleado.legajo or "SIN_LEGAJO",
-                            nombre_empleado=empleado.user.get_full_name(),
-                            estado='error',
-                            mensaje='Empleado sin legajo válido - no procesado'
-                        )
-                        errores.append(f"Empleado {empleado.user.get_full_name()}: Sin legajo válido")
-                        continue
-                    
-                    if not empleado.user.first_name or not empleado.user.last_name:
-                        LogProcesamientoRecibo.objects.create(
-                            carga_masiva=carga_masiva,
-                            legajo_empleado=empleado.legajo,
-                            nombre_empleado=empleado.user.get_full_name(),
-                            estado='error',
-                            mensaje='Empleado sin nombre/apellido válido - no procesado'
-                        )
-                        errores.append(f"Empleado {empleado.legajo}: Sin nombre/apellido válido")
-                        continue
-                    
                     # Verificar que no exista ya un recibo para este período
                     if ReciboSueldo.objects.filter(
                         empleado=empleado,
@@ -1086,6 +1104,11 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
     def buscar_empleado_en_pdf(self, empleado, archivo_masivo):
         """Busca un empleado específico en el PDF usando CUIL + nombre - BÚSQUEDA SEGURA"""
         try:
+            # Filtro adicional: no procesar empleados administrativos (pero SÍ empleados de RRHH)
+            if empleado.legajo in ['LEG001', 'EMP0001', 'ADMIN', 'TEST']:
+                print(f"Empleado administrativo no procesado: {empleado.legajo}")
+                return None
+                
             archivo_masivo.seek(0)
             reader = PdfReader(archivo_masivo)
             
@@ -1895,3 +1918,56 @@ def cambiar_estado_inasistencia(request, inasistencia_id):
             'success': False, 
             'message': f'Error: {str(e)}'
         })
+
+
+@login_required
+def obtener_progreso_carga(request, carga_id):
+    """Endpoint para obtener el progreso de una carga masiva"""
+    print(f"Consultando progreso para carga ID: {carga_id}")
+    try:
+        carga_masiva = CargaMasivaRecibos.objects.get(id=carga_id)
+        print(f"Estado de la carga: {carga_masiva.estado}")
+        
+        # Calcular progreso basado en los recibos procesados
+        total_empleados = carga_masiva.total_empleados or 0
+        
+        # Buscar recibos relacionados por período, año y usuario
+        from apps.recibos.models import ReciboSueldo
+        recibos_creados = ReciboSueldo.objects.filter(
+            periodo=carga_masiva.periodo,
+            anio=carga_masiva.anio,
+            subido_por=carga_masiva.usuario_carga
+        ).count()
+        
+        # Contar logs de procesamiento
+        logs_procesados = carga_masiva.logs_procesamiento.count()
+        errores_count = carga_masiva.logs_procesamiento.filter(estado='error').count()
+        
+        # El progreso se basa en todos los empleados que se han procesado (exitosos + errores)
+        procesados = logs_procesados
+        
+        if total_empleados > 0:
+            porcentaje = min(int((procesados / total_empleados) * 100), 100)
+        else:
+            porcentaje = 0
+        
+        print(f"Progreso: {procesados}/{total_empleados} = {porcentaje}%")
+            
+        resultado = {
+            'estado': carga_masiva.estado,
+            'total_empleados': total_empleados,
+            'procesados': procesados,
+            'recibos_creados': recibos_creados,
+            'errores': errores_count,
+            'porcentaje': porcentaje,
+            'completado': carga_masiva.estado in ['completado', 'error'],
+            'mensaje': 'Procesamiento completado' if carga_masiva.estado == 'completado' else 'Procesando...'
+        }
+        
+        print(f"Retornando: {resultado}")
+        return JsonResponse(resultado)
+        
+    except CargaMasivaRecibos.DoesNotExist:
+        return JsonResponse({'error': 'Carga no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

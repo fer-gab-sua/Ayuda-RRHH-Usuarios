@@ -32,6 +32,7 @@ urlpatterns = [
     # Recibos
     path('recibos/', views.RRHHRecibosView.as_view(), name='recibos_dashboard'),
     path('recibos/cargar/', views.CargaMasivaCreateView.as_view(), name='cargar_recibos_masivo'),
+    path('recibos/progreso/<int:carga_id>/', views.obtener_progreso_carga, name='progreso_carga'),
     path('recibos/lista/', views.CargaMasivaListView.as_view(), name='lista_cargas_masivas'),
     path('recibos/carga/<int:pk>/', views.CargaMasivaDetailView.as_view(), name='detalle_carga_masiva'),
     path('recibos/carga/<int:pk>/validar/', views.validar_carga_masiva, name='validar_carga_masiva'),

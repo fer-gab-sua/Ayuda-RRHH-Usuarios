@@ -405,6 +405,15 @@
                                             </a>
                                         {% endif %}
                                         
+                                        {% if recibo.estado == 'firmado' and recibo.archivo_pdf_centromedica %}
+                                            <a href="{% url 'recibos:ver_recibo_centromedica' recibo.id %}" 
+                                               class="btn btn-info" 
+                                               target="_blank"
+                                               title="Ver recibo con formato oficial de Centromédica">
+                                                🏥 Ver Centromédica
+                                            </a>
+                                        {% endif %}
+                                        
                                         {% if recibo.observaciones_empleado %}
                                             <button class="btn btn-info" 
                                                     onclick="verObservaciones('{{ recibo.id }}', '{{ recibo.observaciones_empleado|escapejs }}', '{{ recibo.observaciones_rrhh|escapejs }}')">

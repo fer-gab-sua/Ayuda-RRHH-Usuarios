@@ -413,6 +413,34 @@
                     </div>
                 {% endif %}
                 
+                <!-- Opciones de descarga para recibos firmados -->
+                {% if recibo.estado == 'firmado' %}
+                    <div class="alert alert-success">
+                        <strong>✅ Recibo firmado exitosamente</strong><br>
+                        Tu recibo ha sido firmado. Puedes descargar las siguientes versiones:
+                    </div>
+                    
+                    <div class="download-options" style="margin: 15px 0;">
+                        {% if recibo.archivo_firmado %}
+                            <a href="{% url 'recibos:ver_recibo_firmado' recibo.id %}" 
+                               class="btn btn-success" 
+                               target="_blank"
+                               title="Ver tu recibo firmado digitalmente">
+                                📋 Ver Recibo Firmado por Ti
+                            </a>
+                        {% endif %}
+                        
+                        {% if recibo.archivo_pdf_centromedica %}
+                            <a href="{% url 'recibos:ver_recibo_centromedica' recibo.id %}" 
+                               class="btn btn-info" 
+                               target="_blank"
+                               title="Descargar recibo con formato oficial de Centromédica">
+                                🏥 Ver Formato Centromédica
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
                 <!-- Botones de acción -->
                 <div class="btn-group">
                     {% if puede_observar and recibo.estado != 'observado' %}

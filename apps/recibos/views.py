@@ -595,11 +595,6 @@ def generar_pdf_firmado_sobre_original(recibo, empleado, tipo_firma, observacion
         # Configurar fuente
         c.setFont("Helvetica-Bold", 9)
         
-        # Crear un fondo sutil para la firma (sin tapar contenido)
-        c.setFillColorRGB(0.99, 0.99, 0.99, alpha=0.9)  # Fondo blanco casi transparente
-        c.setStrokeColorRGB(0.7, 0.7, 0.7)  # Borde gris muy suave
-        c.rect(firma_x - 5, firma_y - 100, 155, 140, fill=1, stroke=1)  # Caja más compacta
-        
         # Agregar información de la firma
         c.setFillColorRGB(0, 0, 0)  # Texto negro
         c.setFont("Helvetica-Bold", 9)
@@ -821,6 +816,51 @@ def ver_recibo_firmado(request, recibo_id):
         
         response = HttpResponse(archivo_content, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="recibo_firmado_{recibo.periodo}_{recibo.anio}_{empleado.legajo}.pdf"'
+        response['X-Frame-Options'] = 'SAMEORIGIN'
+        response['Content-Security-Policy'] = "frame-ancestors 'self'"
+        return response
+        
+    except Empleado.DoesNotExist:
+        raise Http404("Empleado no encontrado")
+
+
+@login_required
+def ver_recibo_centromedica(request, recibo_id):
+    """Ver/descargar el PDF con formato Centromédica"""
+    try:
+        empleado = Empleado.objects.get(user=request.user)
+        recibo = get_object_or_404(ReciboSueldo, id=recibo_id, empleado=empleado)
+        
+        # Verificar que pueda ver este recibo
+        if not recibo.puede_ver:
+            messages.error(request, 'No puedes ver este recibo. Debes firmar el recibo anterior primero.')
+            return redirect('recibos:mis_recibos')
+        
+        # Verificar que el recibo esté firmado (necesario para que exista el archivo de Centromédica)
+        if recibo.estado not in ['firmado']:
+            messages.error(request, 'El recibo con formato Centromédica solo está disponible después de firmar.')
+            return redirect('recibos:mis_recibos')
+        
+        # Verificar que existe el archivo con formato Centromédica
+        if not recibo.archivo_pdf_centromedica:
+            messages.error(request, 'No se encontró el archivo con formato Centromédica.')
+            return redirect('recibos:mis_recibos')
+        
+        # Registrar actividad
+        ActividadEmpleado.objects.create(
+            empleado=empleado,
+            descripcion=f"Descargó el recibo con formato Centromédica de {recibo.get_periodo_display()} {recibo.anio}"
+        )
+        
+        # Leer el contenido del archivo con formato Centromédica
+        try:
+            recibo.archivo_pdf_centromedica.seek(0)
+            archivo_content = recibo.archivo_pdf_centromedica.read()
+        except Exception as e:
+            raise Http404(f"Error al leer el archivo con formato Centromédica: {str(e)}")
+        
+        response = HttpResponse(archivo_content, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="recibo_centromedica_{recibo.periodo}_{recibo.anio}_{empleado.legajo}.pdf"'
         response['X-Frame-Options'] = 'SAMEORIGIN'
         response['Content-Security-Policy'] = "frame-ancestors 'self'"
         return response
