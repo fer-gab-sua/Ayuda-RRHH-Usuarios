@@ -28,6 +28,18 @@ SECRET_KEY = 'django-insecure-v!x)u*u_#4lfhi_-se23===hc6%f8a&pfx!%!hwr#5#nulv%02
 DEBUG = True
 
 ALLOWED_HOSTS = ['ayuda-rrhh-usuarios.onrender.com']
+CSRF_TRUSTED_ORIGINS = [
+    'https://ayuda-rrhh-usuarios.onrender.com',
+]
+# También agregar para cookies seguras en producción
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+CSRF_COOKIE_SECURE = False  # Cambiar a True cuando tengas HTTPS configurado
+SESSION_COOKIE_SECURE = False  # Cambiar a True cuando tengas HTTPS configurado
+
+# Si estás usando un proxy inverso (como Render lo hace)
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 
 # Application definition
