@@ -49,6 +49,18 @@
                 <p>Documentos Pendientes</p>
             </div>
         </div>
+        
+        {% if observaciones_pendientes_count > 0 %}
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-comments text-warning"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ observaciones_pendientes_count }}</h3>
+                <p>Observaciones Pendientes</p>
+            </div>
+        </div>
+        {% endif %}
     </div>
     
     <div class="dashboard-actions">
@@ -75,6 +87,14 @@
                     <i class="fas fa-user-plus"></i>
                     <span>Gestionar Empleados</span>
                 </a>
+                {% if observaciones_pendientes_count > 0 %}
+                <a href="{% url 'rrhh:observaciones_recibos' %}" class="action-btn">
+                    <i class="fas fa-comments"></i>
+                    <span>Observaciones de Recibos 
+                        <span class="badge bg-warning">{{ observaciones_pendientes_count }}</span>
+                    </span>
+                </a>
+                {% endif %}
             </div>
         </div>
         

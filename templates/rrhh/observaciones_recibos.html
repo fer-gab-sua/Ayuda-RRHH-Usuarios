@@ -1,0 +1,342 @@
+{% extends 'rrhh/base_rrhh.html' %}
+
+{% block title %}Observaciones de Recibos - Portal RH{% endblock %}
+
+{% block content %}
+<div class="rrhh-dashboard-content">
+    <div class="dashboard-header">
+        <h1><i class="fas fa-comments"></i> Observaciones de Recibos</h1>
+        <p>Gestiona las observaciones de los empleados sobre sus recibos</p>
+    </div>
+    
+    <!-- Estadísticas -->
+    <div class="dashboard-stats mb-4">
+        <div class="stat-card text-warning">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_observaciones_pendientes }}</h3>
+                <p>Observaciones Pendientes</p>
+            </div>
+        </div>
+        
+        <div class="stat-card text-success">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>{{ total_observaciones_respondidas }}</h3>
+                <p>Observaciones Respondidas</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pestañas -->
+    <ul class="nav nav-tabs" id="observacionesTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="pendientes-tab" data-bs-toggle="tab" data-bs-target="#pendientes" type="button" role="tab">
+                <i class="fas fa-clock"></i> Pendientes ({{ total_observaciones_pendientes }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="respondidas-tab" data-bs-toggle="tab" data-bs-target="#respondidas" type="button" role="tab">
+                <i class="fas fa-check"></i> Respondidas ({{ total_observaciones_respondidas }})
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="observacionesTabsContent">
+        <!-- Observaciones Pendientes -->
+        <div class="tab-pane fade show active" id="pendientes" role="tabpanel">
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-exclamation-triangle text-warning"></i> Observaciones Pendientes de Respuesta</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recibos_observados %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Período</th>
+                                        <th>Tipo</th>
+                                        <th>Observación</th>
+                                        <th>Fecha Observación</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for recibo in recibos_observados %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ recibo.empleado.user.get_full_name }}</strong><br>
+                                            <small class="text-muted">{{ recibo.empleado.legajo }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ recibo.get_periodo_display }} {{ recibo.anio }}</span>
+                                        </td>
+                                        <td>
+                                            {% if recibo.tipo_recibo == 'sueldo' %}
+                                                <span class="badge bg-secondary">Sueldo</span>
+                                            {% elif recibo.tipo_recibo == 'sac_1' %}
+                                                <span class="badge bg-info">SAC 1</span>
+                                            {% elif recibo.tipo_recibo == 'sac_2' %}
+                                                <span class="badge bg-warning">SAC 2</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="observacion-texto">
+                                                {{ recibo.observaciones_empleado|truncatewords:15 }}
+                                                {% if recibo.observaciones_empleado|length > 100 %}
+                                                    <a href="#" class="ver-completa" data-bs-toggle="modal" data-bs-target="#modalObservacion{{ recibo.id }}">Ver completa</a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <small>{{ recibo.fecha_observacion|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{% url 'rrhh:ver_recibo_rrhh' recibo.id %}" 
+                                                   class="btn btn-outline-primary" 
+                                                   target="_blank" 
+                                                   title="Ver Recibo">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <button class="btn btn-success" 
+                                                        onclick="responderObservacion({{ recibo.id }})" 
+                                                        title="Responder">
+                                                    <i class="fas fa-reply"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Modal para observación completa -->
+                                    <div class="modal fade" id="modalObservacion{{ recibo.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Observación Completa</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p><strong>Empleado:</strong> {{ recibo.empleado.user.get_full_name }}</p>
+                                                    <p><strong>Recibo:</strong> {{ recibo.get_tipo_recibo_display }} {{ recibo.get_periodo_display }} {{ recibo.anio }}</p>
+                                                    <p><strong>Observación:</strong></p>
+                                                    <div class="alert alert-light">{{ recibo.observaciones_empleado }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5>¡Excelente!</h5>
+                            <p class="text-muted">No hay observaciones pendientes de respuesta.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Observaciones Respondidas -->
+        <div class="tab-pane fade" id="respondidas" role="tabpanel">
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5><i class="fas fa-check-circle text-success"></i> Observaciones Respondidas</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recibos_respondidos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Empleado</th>
+                                        <th>Período</th>
+                                        <th>Tipo</th>
+                                        <th>Observación</th>
+                                        <th>Respuesta RRHH</th>
+                                        <th>Respondido por</th>
+                                        <th>Fecha Respuesta</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for recibo in recibos_respondidos %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ recibo.empleado.user.get_full_name }}</strong><br>
+                                            <small class="text-muted">{{ recibo.empleado.legajo }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ recibo.get_periodo_display }} {{ recibo.anio }}</span>
+                                        </td>
+                                        <td>
+                                            {% if recibo.tipo_recibo == 'sueldo' %}
+                                                <span class="badge bg-secondary">Sueldo</span>
+                                            {% elif recibo.tipo_recibo == 'sac_1' %}
+                                                <span class="badge bg-info">SAC 1</span>
+                                            {% elif recibo.tipo_recibo == 'sac_2' %}
+                                                <span class="badge bg-warning">SAC 2</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small>{{ recibo.observaciones_empleado|truncatewords:10 }}</small>
+                                        </td>
+                                        <td>
+                                            <small>{{ recibo.observaciones_rrhh|truncatewords:10 }}</small>
+                                        </td>
+                                        <td>
+                                            <small>{{ recibo.respondido_por.get_full_name|default:"No especificado" }}</small>
+                                        </td>
+                                        <td>
+                                            <small>{{ recibo.fecha_respuesta_rrhh|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'rrhh:ver_recibo_rrhh' recibo.id %}" 
+                                               class="btn btn-sm btn-outline-primary" 
+                                               target="_blank" 
+                                               title="Ver Recibo">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5>Sin Historial</h5>
+                            <p class="text-muted">No hay observaciones respondidas aún.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para responder observación -->
+<div class="modal fade" id="modalResponderObservacion" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Responder Observación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="contenidoModalRespuesta">
+                    <!-- Se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function responderObservacion(reciboId) {
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(document.getElementById('modalResponderObservacion'));
+    
+    // Obtener los datos del recibo
+    fetch(`/rrhh/recibos/observacion/${reciboId}/responder/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('contenidoModalRespuesta').innerHTML = html;
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar el formulario de respuesta.');
+        });
+}
+
+function enviarRespuesta(reciboId) {
+    const respuesta = document.getElementById('respuesta_rrhh').value.trim();
+    
+    if (!respuesta) {
+        alert('La respuesta no puede estar vacía.');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('respuesta_rrhh', respuesta);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch(`/rrhh/recibos/observacion/${reciboId}/responder/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Cerrar modal
+            bootstrap.Modal.getInstance(document.getElementById('modalResponderObservacion')).hide();
+            
+            // Mostrar mensaje de éxito
+            alert(data.message);
+            
+            // Recargar página para actualizar la lista
+            location.reload();
+        } else {
+            alert(data.message || 'Error al enviar la respuesta.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al enviar la respuesta.');
+    });
+}
+</script>
+
+<style>
+.observacion-texto {
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-right: 15px;
+}
+
+.stat-content h3 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #666;
+}
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+</style>
+{% endblock %}

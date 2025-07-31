@@ -4,7 +4,7 @@ from django.contrib.auth.views import LoginView as AuthLoginView
 from django.views.generic import TemplateView, ListView, FormView, UpdateView, CreateView, DetailView
 from django.contrib.auth.models import User
 from django.utils import timezone
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, FileResponse
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -58,6 +58,7 @@ class RRHHDashboardView(LoginRequiredMixin, SoloRRHHMixin, TemplateView):
         context['solicitudes_count'] = SolicitudCambio.objects.filter(estado='pendiente').count()
         context['recibos_count'] = ReciboSueldo.objects.count()
         context['documentos_count'] = Documento.objects.filter(estado='pendiente').count()
+        context['observaciones_pendientes_count'] = ReciboSueldo.objects.filter(estado='observado').count()
         print(context)
         return context
 
@@ -1993,3 +1994,185 @@ def obtener_progreso_carga(request, carga_id):
         return JsonResponse({'error': 'Carga no encontrada'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+class ObservacionesRecibosListView(LoginRequiredMixin, TemplateView):
+    """Vista para mostrar todos los recibos con observaciones pendientes"""
+    template_name = 'rrhh/observaciones_recibos.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            empleado = Empleado.objects.get(user=request.user)
+            if not empleado.es_rrhh:
+                messages.error(request, "No tienes permisos para acceder a esta página.")
+                return redirect('empleados:dashboard')
+        except Empleado.DoesNotExist:
+            messages.error(request, "Usuario no encontrado.")
+            return redirect('empleados:dashboard')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from apps.recibos.models import ReciboSueldo
+        
+        # Recibos con observaciones pendientes (estado 'observado')
+        recibos_observados = ReciboSueldo.objects.filter(
+            estado='observado'
+        ).select_related('empleado__user').order_by('-fecha_observacion')
+        
+        # Recibos con observaciones ya respondidas (estado 'respondido')
+        recibos_respondidos = ReciboSueldo.objects.filter(
+            estado='respondido'
+        ).select_related('empleado__user').order_by('-fecha_respuesta_rrhh')
+        
+        context.update({
+            'recibos_observados': recibos_observados,
+            'recibos_respondidos': recibos_respondidos,
+            'total_observaciones_pendientes': recibos_observados.count(),
+            'total_observaciones_respondidas': recibos_respondidos.count(),
+        })
+        
+        return context
+
+
+@login_required
+def responder_observacion_recibo(request, recibo_id):
+    """Vista para responder a una observación de recibo"""
+    from apps.recibos.models import ReciboSueldo
+    from apps.notificaciones.models import Notificacion
+    from django.utils import timezone
+    
+    recibo = get_object_or_404(ReciboSueldo, pk=recibo_id)
+    
+    # Verificar permisos de RRHH
+    try:
+        empleado_rrhh = Empleado.objects.get(user=request.user)
+        if not empleado_rrhh.es_rrhh:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No tienes permisos para responder observaciones.'
+                })
+            messages.error(request, "No tienes permisos para responder observaciones.")
+            return redirect('empleados:dashboard')
+    except Empleado.DoesNotExist:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'message': 'Usuario no encontrado.'
+            })
+        messages.error(request, "Usuario no encontrado.")
+        return redirect('empleados:dashboard')
+    
+    if request.method == 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # Respuesta AJAX
+            respuesta = request.POST.get('respuesta_rrhh', '').strip()
+            
+            if not respuesta:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'La respuesta no puede estar vacía.'
+                })
+            
+            # Solo se pueden responder recibos con estado 'observado'
+            if recibo.estado != 'observado':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Solo se pueden responder observaciones en estado pendiente.'
+                })
+            
+            # Actualizar el recibo
+            recibo.observaciones_rrhh = respuesta
+            recibo.fecha_respuesta_rrhh = timezone.now()
+            recibo.respondido_por = request.user
+            recibo.estado = 'respondido'
+            recibo.save()
+            
+            # Crear notificación para el empleado
+            try:
+                Notificacion.objects.create(
+                    usuario=recibo.empleado.user,
+                    tipo='respuesta_observacion',
+                    titulo='Respuesta a tu observación',
+                    descripcion=f'RRHH ha respondido a tu observación sobre el recibo de {recibo.get_tipo_recibo_display()} {recibo.get_periodo_display()} {recibo.anio}'
+                )
+            except Exception as e:
+                print(f"Error creando notificación: {e}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Respuesta enviada correctamente.',
+                'nuevo_estado': recibo.get_estado_display()
+            })
+        
+        else:
+            # Respuesta tradicional (formulario)
+            respuesta = request.POST.get('respuesta_rrhh', '').strip()
+            
+            if respuesta and recibo.estado == 'observado':
+                recibo.observaciones_rrhh = respuesta
+                recibo.fecha_respuesta_rrhh = timezone.now()
+                recibo.respondido_por = request.user
+                recibo.estado = 'respondido'
+                recibo.save()
+                
+                # Crear notificación para el empleado
+                try:
+                    Notificacion.objects.create(
+                        usuario=recibo.empleado.user,
+                        tipo='respuesta_observacion',
+                        titulo='Respuesta a tu observación',
+                        descripcion=f'RRHH ha respondido a tu observación sobre el recibo de {recibo.get_tipo_recibo_display()} {recibo.get_periodo_display()} {recibo.anio}'
+                    )
+                except Exception as e:
+                    print(f"Error creando notificación: {e}")
+                
+                messages.success(request, 'Respuesta enviada correctamente.')
+            else:
+                messages.error(request, 'Error al procesar la respuesta.')
+            
+            return redirect('rrhh:observaciones_recibos')
+    
+    # GET: Mostrar el formulario (si no es AJAX)
+    return render(request, 'rrhh/responder_observacion_recibo.html', {
+        'recibo': recibo
+    })
+
+
+@login_required
+def ver_recibo_rrhh(request, recibo_id):
+    """Vista para que RRHH pueda ver cualquier recibo (sin restricciones de empleado)"""
+    from apps.recibos.models import ReciboSueldo
+    
+    recibo = get_object_or_404(ReciboSueldo, pk=recibo_id)
+    
+    # Verificar permisos de RRHH
+    try:
+        empleado_rrhh = Empleado.objects.get(user=request.user)
+        if not empleado_rrhh.es_rrhh:
+            messages.error(request, "No tienes permisos para ver este recibo.")
+            return redirect('empleados:dashboard')
+    except Empleado.DoesNotExist:
+        messages.error(request, "Usuario no encontrado.")
+        return redirect('empleados:dashboard')
+    
+    # RRHH puede ver cualquier archivo (centromédica si existe, si no el original)
+    if recibo.archivo_pdf_centromedica:
+        response = FileResponse(
+            recibo.archivo_pdf_centromedica.open('rb'),
+            content_type='application/pdf'
+        )
+        response['Content-Disposition'] = f'inline; filename="{recibo.nombre_archivo}"'
+        return response
+    elif recibo.archivo_pdf:
+        response = FileResponse(
+            recibo.archivo_pdf.open('rb'),
+            content_type='application/pdf'
+        )
+        response['Content-Disposition'] = f'inline; filename="{recibo.nombre_archivo}"'
+        return response
+    else:
+        messages.error(request, "Archivo de recibo no encontrado.")
+        return redirect('rrhh:observaciones_recibos')

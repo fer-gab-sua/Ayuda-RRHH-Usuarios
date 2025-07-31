@@ -17,6 +17,16 @@
                     <a href="{% url 'rrhh:lista_cargas_masivas' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-list"></i> Ver Todas las Cargas
                     </a>
+                    {% if recibos_observados > 0 %}
+                    <a href="{% url 'rrhh:observaciones_recibos' %}" class="btn btn-warning">
+                        <i class="fas fa-comments"></i> Observaciones 
+                        <span class="badge bg-white text-warning">{{ recibos_observados }}</span>
+                    </a>
+                    {% else %}
+                    <a href="{% url 'rrhh:observaciones_recibos' %}" class="btn btn-outline-warning">
+                        <i class="fas fa-comments"></i> Observaciones
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -126,20 +136,25 @@
         </div>
         
         <div class="col-md-3">
-            <div class="card border-left-warning">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Recibos Observados</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recibos_observados }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-exclamation-circle fa-2x text-gray-300"></i>
+            <a href="{% url 'rrhh:observaciones_recibos' %}" class="text-decoration-none">
+                <div class="card border-left-warning {% if recibos_observados > 0 %}shadow-lg{% endif %}">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Recibos Observados</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ recibos_observados }}</div>
+                                {% if recibos_observados > 0 %}
+                                    <small class="text-warning">¡Requieren atención!</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-exclamation-circle fa-2x {% if recibos_observados > 0 %}text-warning{% else %}text-gray-300{% endif %}"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
         
         <div class="col-md-3">
@@ -261,6 +276,23 @@
 }
 .text-xs {
     font-size: 0.7rem;
+}
+
+/* Efecto hover para las tarjetas clickeables */
+a.text-decoration-none .card:hover {
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* Destacar la tarjeta de observaciones cuando hay observaciones pendientes */
+.card.border-left-warning.shadow-lg {
+    animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+    0% { box-shadow: 0 0 0 0 rgba(246, 194, 62, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(246, 194, 62, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(246, 194, 62, 0); }
 }
 </style>
 {% endblock %}

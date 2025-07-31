@@ -40,6 +40,9 @@ urlpatterns = [
     path('recibos/carga/<int:pk>/eliminar/', views.eliminar_carga_masiva, name='eliminar_carga_masiva'),
     path('recibos/recibo/<int:pk>/corregir/', views.corregir_recibo_no_encontrado, name='corregir_recibo_no_encontrado'),
     path('recibos/subir/', views.SubirRecibosView.as_view(), name='subir_recibos'),
+    path('recibos/observaciones/', views.ObservacionesRecibosListView.as_view(), name='observaciones_recibos'),
+    path('recibos/observacion/<int:recibo_id>/responder/', views.responder_observacion_recibo, name='responder_observacion_recibo'),
+    path('recibos/recibo/<int:recibo_id>/ver/', views.ver_recibo_rrhh, name='ver_recibo_rrhh'),
     
     # Inasistencias
     path('inasistencias/', views.InasistenciasRRHHListView.as_view(), name='inasistencias'),
