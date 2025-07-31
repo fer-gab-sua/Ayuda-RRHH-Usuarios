@@ -27,9 +27,10 @@ SECRET_KEY = 'django-insecure-v!x)u*u_#4lfhi_-se23===hc6%f8a&pfx!%!hwr#5#nulv%02
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['ayuda-rrhh-usuarios.onrender.com']
+ALLOWED_HOSTS = ['ayuda-rrhh-usuarios.onrender.com', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = [
     'https://ayuda-rrhh-usuarios.onrender.com',
+    'http://localhost:8000',
 ]
 # También agregar para cookies seguras en producción
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None

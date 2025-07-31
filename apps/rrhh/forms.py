@@ -81,13 +81,14 @@ class CrearEmpleadoForm(forms.ModelForm):
             'telefono', 'puesto', 'departamento', 'supervisor', 
             'tipo_contrato', 'salario', 'fecha_contrato',
             'contacto_emergencia', 'telefono_emergencia', 'relacion_emergencia',
-            'es_rrhh'
+            'es_rrhh', 'is_active'
         ]
         widgets = {
             'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'}),
             'fecha_contrato': forms.DateInput(attrs={'type': 'date'}),
             'salario': forms.NumberInput(attrs={'step': '0.01'}),
-            'es_rrhh': forms.CheckboxInput()
+            'es_rrhh': forms.CheckboxInput(),
+            'is_active': forms.CheckboxInput()
         }
         labels = {
             'legajo': 'Legajo',
@@ -105,7 +106,8 @@ class CrearEmpleadoForm(forms.ModelForm):
             'contacto_emergencia': 'Contacto de emergencia',
             'telefono_emergencia': 'Teléfono de emergencia',
             'relacion_emergencia': 'Relación de emergencia',
-            'es_rrhh': '¿Es personal de RRHH?'
+            'es_rrhh': '¿Es personal de RRHH?',
+            'is_active': 'Empleado Activo'
         }
 
     def __init__(self, *args, **kwargs):
@@ -193,13 +195,14 @@ class EditarEmpleadoForm(forms.ModelForm):
             'telefono', 'puesto', 'departamento', 'supervisor', 
             'tipo_contrato', 'salario', 'fecha_contrato',
             'contacto_emergencia', 'telefono_emergencia', 'relacion_emergencia',
-            'es_rrhh'
+            'es_rrhh', 'is_active'
         ]
         widgets = {
             'fecha_nacimiento': forms.DateInput(attrs={'type': 'date'}),
             'fecha_contrato': forms.DateInput(attrs={'type': 'date'}),
             'salario': forms.NumberInput(attrs={'step': '0.01'}),
-            'es_rrhh': forms.CheckboxInput()
+            'es_rrhh': forms.CheckboxInput(),
+            'is_active': forms.CheckboxInput()
         }
         labels = {
             'legajo': 'Legajo',
@@ -217,7 +220,8 @@ class EditarEmpleadoForm(forms.ModelForm):
             'contacto_emergencia': 'Contacto de emergencia',
             'telefono_emergencia': 'Teléfono de emergencia',
             'relacion_emergencia': 'Relación de emergencia',
-            'es_rrhh': '¿Es personal de RRHH?'
+            'es_rrhh': '¿Es personal de RRHH?',
+            'is_active': 'Empleado Activo'
         }
 
     def __init__(self, *args, **kwargs):

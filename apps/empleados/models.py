@@ -19,6 +19,7 @@ class Empleado(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     es_rrhh = models.BooleanField(default=False, verbose_name="¿Es RRHH?", help_text="Marcar si este usuario pertenece al área de RRHH y debe acceder al panel de gestión RRHH.")
+    is_active = models.BooleanField(default=True, verbose_name="Empleado Activo", help_text="Indica si el empleado está activo. Los empleados inactivos no aparecen en las cargas masivas de recibos.")
     legajo = models.CharField(max_length=20, unique=True)
     numero_legajo = models.IntegerField(null=True, blank=True, help_text="Número de legajo para facilitar búsquedas")
     dni = models.CharField(max_length=20)

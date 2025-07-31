@@ -973,8 +973,9 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
         try:
             # El estado ya está configurado como 'procesando' antes de llamar a esta función
             
-            # Obtener todos los empleados activos, excluyendo solo empleados sin datos válidos
+            # Obtener todos los empleados activos, excluyendo empleados inactivos y sin datos válidos
             empleados = Empleado.objects.select_related('user').filter(
+                is_active=True,                  # Solo empleados activos
                 user__first_name__isnull=False,  # Debe tener nombre
                 user__last_name__isnull=False,   # Debe tener apellido
                 user__first_name__gt='',         # Nombre no vacío
@@ -2176,3 +2177,75 @@ def ver_recibo_rrhh(request, recibo_id):
     else:
         messages.error(request, "Archivo de recibo no encontrado.")
         return redirect('rrhh:observaciones_recibos')
+
+
+@login_required
+@require_POST
+def cambiar_estado_empleado(request, empleado_id):
+    """Vista AJAX para cambiar el estado activo/inactivo de un empleado"""
+    
+    print(f"DEBUG: cambiar_estado_empleado llamado para empleado_id: {empleado_id}")
+    print(f"DEBUG: Usuario actual: {request.user}")
+    print(f"DEBUG: Es POST: {request.method == 'POST'}")
+    
+    # Verificar permisos de RRHH
+    try:
+        empleado_rrhh = Empleado.objects.get(user=request.user)
+        print(f"DEBUG: Empleado RRHH: {empleado_rrhh.user.username}, es_rrhh: {empleado_rrhh.es_rrhh}")
+        if not empleado_rrhh.es_rrhh:
+            return JsonResponse({
+                'success': False,
+                'message': 'No tienes permisos para cambiar el estado de empleados.'
+            })
+    except Empleado.DoesNotExist:
+        print(f"DEBUG: Empleado RRHH no encontrado para usuario: {request.user}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Usuario no encontrado.'
+        })
+    
+    # Obtener el empleado a modificar
+    try:
+        empleado = Empleado.objects.get(pk=empleado_id)
+        print(f"DEBUG: Empleado a cambiar: {empleado.user.username}, estado actual: {empleado.is_active}")
+    except Empleado.DoesNotExist:
+        print(f"DEBUG: Empleado no encontrado con ID: {empleado_id}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Empleado no encontrado.'
+        })
+    
+    # Prevenir que se desactive a sí mismo
+    if empleado.user == request.user:
+        print(f"DEBUG: Usuario intentando cambiar su propio estado")
+        return JsonResponse({
+            'success': False,
+            'message': 'No puedes cambiar tu propio estado.'
+        })
+    
+    # Cambiar el estado
+    estado_anterior = empleado.is_active
+    empleado.is_active = not empleado.is_active
+    empleado.save()
+    
+    print(f"DEBUG: Estado cambiado de {estado_anterior} a {empleado.is_active}")
+    
+    # Crear notificación para el empleado si se desactiva
+    if not empleado.is_active:
+        from apps.notificaciones.models import Notificacion
+        try:
+            Notificacion.objects.create(
+                usuario=empleado.user,
+                tipo='info',
+                titulo='Estado de cuenta actualizado',
+                descripcion='Tu cuenta ha sido marcada como inactiva. Contacta con RRHH si tienes dudas.'
+            )
+            print(f"DEBUG: Notificación creada para empleado desactivado")
+        except Exception as e:
+            print(f"Error creando notificación: {e}")
+    
+    return JsonResponse({
+        'success': True,
+        'nuevo_estado': empleado.is_active,
+        'mensaje': f'Empleado {"activado" if empleado.is_active else "desactivado"} correctamente.'
+    })
