@@ -28,9 +28,16 @@ class ReciboSueldo(models.Model):
         ('diciembre', 'Diciembre'),
     ]
     
+    TIPO_RECIBO_CHOICES = [
+        ('sueldo', 'Sueldo'),
+        ('sac_1', 'SAC 1'),
+        ('sac_2', 'SAC 2'),
+    ]
+    
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, related_name='recibos_sueldo')
     periodo = models.CharField(max_length=20, choices=PERIODO_CHOICES)
     anio = models.IntegerField()
+    tipo_recibo = models.CharField(max_length=10, choices=TIPO_RECIBO_CHOICES, default='sueldo')
     fecha_emision = models.DateTimeField(auto_now_add=True)
     fecha_vencimiento = models.DateTimeField()  # Fecha límite para firmar
     fecha_firma = models.DateTimeField(null=True, blank=True)
@@ -61,10 +68,10 @@ class ReciboSueldo(models.Model):
         verbose_name = "Recibo de Sueldo"
         verbose_name_plural = "Recibos de Sueldo"
         ordering = ['anio', 'periodo']  # Orden cronológico correcto
-        unique_together = ['empleado', 'periodo', 'anio']
+        unique_together = ['empleado', 'periodo', 'anio', 'tipo_recibo']
     
     def __str__(self):
-        return f"{self.empleado.user.get_full_name()} - {self.get_periodo_display()} {self.anio}"
+        return f"{self.empleado.user.get_full_name()} - {self.get_tipo_recibo_display()} {self.get_periodo_display()} {self.anio}"
     
     @property
     def esta_vencido(self):
@@ -184,7 +191,8 @@ class ReciboSueldo(models.Model):
     @property
     def nombre_archivo(self):
         """Nombre del archivo para descarga"""
-        return f"recibo_{self.periodo}_{self.anio}_{self.empleado.legajo}.pdf"
+        tipo_archivo = self.tipo_recibo.replace('_', '')  # sac1, sac2, sueldo
+        return f"recibo_{tipo_archivo}_{self.periodo}_{self.anio}_{self.empleado.legajo}.pdf"
 
 
 class FirmaRecibo(models.Model):

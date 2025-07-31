@@ -273,8 +273,12 @@ class CargaMasivaRecibosForm(forms.ModelForm):
     
     class Meta:
         model = CargaMasivaRecibos
-        fields = ['periodo', 'anio', 'archivo_pdf', 'dias_vencimiento']
+        fields = ['tipo_recibo', 'periodo', 'anio', 'archivo_pdf', 'dias_vencimiento']
         widgets = {
+            'tipo_recibo': forms.Select(attrs={
+                'class': 'form-select',
+                'required': True
+            }),
             'periodo': forms.Select(attrs={
                 'class': 'form-select',
                 'required': True
@@ -300,12 +304,14 @@ class CargaMasivaRecibosForm(forms.ModelForm):
             })
         }
         labels = {
+            'tipo_recibo': 'Tipo de Recibo',
             'periodo': 'Período',
             'anio': 'Año',
             'archivo_pdf': 'Archivo PDF con Recibos',
             'dias_vencimiento': 'Días para Vencimiento'
         }
         help_texts = {
+            'tipo_recibo': 'Selecciona si es sueldo regular, SAC 1 o SAC 2',
             'archivo_pdf': 'Selecciona el archivo PDF que contiene todos los recibos del período',
             'dias_vencimiento': 'Número de días desde la carga hasta el vencimiento de la firma'
         }
@@ -324,12 +330,13 @@ class CargaMasivaRecibosForm(forms.ModelForm):
     
     def clean(self):
         cleaned_data = super().clean()
-        periodo = cleaned_data.get('periodo')
-        anio = cleaned_data.get('anio')
         
-        if periodo and anio:
-            # Verificar que no exista ya una carga para este período y año
-            if CargaMasivaRecibos.objects.filter(periodo=periodo, anio=anio).exists():
-                raise ValidationError(f'Ya existe una carga para {periodo} {anio}. Elimina la anterior antes de crear una nueva.')
+        # Crear una instancia temporal para validar con el modelo
+        if cleaned_data:
+            temp_instance = CargaMasivaRecibos(**cleaned_data)
+            try:
+                temp_instance.clean()
+            except ValidationError as e:
+                raise ValidationError(e.message)
         
         return cleaned_data

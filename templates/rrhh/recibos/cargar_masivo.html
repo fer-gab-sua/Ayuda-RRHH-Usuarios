@@ -29,11 +29,13 @@
                     <div class="alert alert-info">
                         <h6><i class="fas fa-info-circle"></i> Información Importante:</h6>
                         <ul class="mb-0">
-                            <li>El archivo PDF debe contener todos los recibos del período seleccionado</li>
+                            <li><strong>Tipo de Recibo:</strong> Selecciona si son recibos de sueldo, SAC 1 o SAC 2</li>
+                            <li>El archivo PDF debe contener todos los recibos del período y tipo seleccionado</li>
                             <li>Cada página debe corresponder a un empleado</li>
                             <li>Los recibos deben estar ordenados alfabéticamente por apellido</li>
                             <li>El sistema buscará automáticamente el recibo de cada empleado por legajo o nombre</li>
                             <li>Tamaño máximo del archivo: 50MB</li>
+                            <li><strong>SAC:</strong> Puedes cargar sueldos regulares y SACs por separado para el mismo período</li>
                         </ul>
                     </div>
 
@@ -41,10 +43,13 @@
                         {% csrf_token %}
                         
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                {{ form.tipo_recibo|as_crispy_field }}
+                            </div>
+                            <div class="col-md-4">
                                 {{ form.periodo|as_crispy_field }}
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 {{ form.anio|as_crispy_field }}
                             </div>
                         </div>

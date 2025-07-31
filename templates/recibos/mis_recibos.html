@@ -53,6 +53,32 @@
     font-size: 0.9rem;
 }
 
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    border-radius: 0.375rem;
+}
+
+.badge-primary {
+    color: #fff;
+    background-color: #3b82f6;
+}
+
+.badge-success {
+    color: #fff;
+    background-color: #10b981;
+}
+
+.badge-info {
+    color: #fff;
+    background-color: #06b6d4;
+}
+
 .recibos-section {
     background: white;
     border-radius: 12px;
@@ -355,6 +381,7 @@
             <table class="recibos-table">
                 <thead>
                     <tr>
+                        <th>Tipo</th>
                         <th>Período</th>
                         <th>Año</th>
                         <th>Fecha Emisión</th>
@@ -366,6 +393,15 @@
                 <tbody>
                     {% for recibo in recibos %}
                         <tr {% if not recibo.puede_ver %}class="recibo-bloqueado"{% endif %}>
+                            <td data-label="Tipo">
+                                {% if recibo.tipo_recibo == 'sac_1' %}
+                                    <span class="badge badge-success">SAC 1</span>
+                                {% elif recibo.tipo_recibo == 'sac_2' %}
+                                    <span class="badge badge-info">SAC 2</span>
+                                {% else %}
+                                    <span class="badge badge-primary">Sueldo</span>
+                                {% endif %}
+                            </td>
                             <td data-label="Período">{{ recibo.get_periodo_display }}</td>
                             <td data-label="Año">{{ recibo.anio }}</td>
                             <td data-label="Fecha Emisión">{{ recibo.fecha_emision|date:"d/m/Y" }}</td>

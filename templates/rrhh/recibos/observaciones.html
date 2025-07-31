@@ -1,0 +1,352 @@
+{% extends 'rrhh/base_rrhh.html' %}
+{% load static %}
+
+{% block title %}Gestionar Observaciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-exclamation-circle"></i> Observaciones de Recibos
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'rrhh:dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'rrhh:recibos_dashboard' %}">Recibos</a></li>
+                <li class="breadcrumb-item active">Observaciones</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Observaciones Pendientes</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ recibos_observados.count }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Observaciones Respondidas Hoy</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ respondidas_hoy }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-left-info">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Total Respondidas</div>
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ total_respondidas }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Observaciones -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list"></i> Recibos con Observaciones Pendientes
+                </h6>
+                {% if recibos_observados %}
+                <small class="text-muted">{{ recibos_observados.count }} observación{{ recibos_observados.count|pluralize:"es" }} pendiente{{ recibos_observados.count|pluralize:"s" }}</small>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            {% if recibos_observados %}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Empleado</th>
+                                <th>Período</th>
+                                <th>Tipo</th>
+                                <th>Fecha Observación</th>
+                                <th>Observación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for recibo in recibos_observados %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user text-primary mr-2"></i>
+                                        <div>
+                                            <div class="font-weight-bold">{{ recibo.empleado.user.get_full_name }}</div>
+                                            <small class="text-muted">Legajo: {{ recibo.empleado.legajo }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-secondary">{{ recibo.get_periodo_display }}</span>
+                                    <br><small class="text-muted">{{ recibo.anio }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge badge-info">{{ recibo.get_tipo_recibo_display }}</span>
+                                </td>
+                                <td>
+                                    {{ recibo.fecha_observacion|date:"d/m/Y H:i" }}
+                                    <br><small class="text-muted">Hace {{ recibo.fecha_observacion|timesince }}</small>
+                                </td>
+                                <td>
+                                    <div class="observacion-text" style="max-width: 300px;">
+                                        {{ recibo.observaciones_empleado|truncatewords:20 }}
+                                        {% if recibo.observaciones_empleado|length > 100 %}
+                                        <button class="btn btn-link btn-sm p-0 ml-1" onclick="mostrarObservacionCompleta({{ recibo.id }})">
+                                            Ver completa
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-primary btn-sm" onclick="responderObservacion({{ recibo.id }})">
+                                            <i class="fas fa-reply"></i> Responder
+                                        </button>
+                                        {% if recibo.id %}
+                                        <a href="{% url 'rrhh:ver_recibo_empleado' recibo.id %}" class="btn btn-info btn-sm" target="_blank">
+                                            <i class="fas fa-eye"></i> Ver Recibo
+                                        </a>
+                                        {% else %}
+                                        <button class="btn btn-info btn-sm" disabled>
+                                            <i class="fas fa-eye"></i> Sin archivo
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-muted">¡Excelente!</h5>
+                    <p class="text-muted">No hay observaciones pendientes en este momento.</p>
+                    <a href="{% url 'rrhh:recibos_dashboard' %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Volver al Dashboard de Recibos
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para responder observación -->
+<div class="modal fade" id="modalResponderObservacion" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-reply"></i> Responder Observación
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="formResponderObservacion" method="post">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" id="recibo_id" name="recibo_id">
+                    
+                    <!-- Información del empleado y recibo -->
+                    <div class="alert alert-info">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Empleado:</strong> <span id="modal_empleado"></span><br>
+                                <strong>Legajo:</strong> <span id="modal_legajo"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Período:</strong> <span id="modal_periodo"></span><br>
+                                <strong>Tipo:</strong> <span id="modal_tipo"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Observación del empleado -->
+                    <div class="form-group">
+                        <label><strong><i class="fas fa-user"></i> Observación del Empleado:</strong></label>
+                        <div class="card">
+                            <div class="card-body bg-light">
+                                <p id="modal_observacion_empleado" class="mb-0"></p>
+                                <small class="text-muted">Fecha: <span id="modal_fecha_observacion"></span></small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Respuesta de RRHH -->
+                    <div class="form-group">
+                        <label for="respuesta_rrhh"><strong><i class="fas fa-building"></i> Respuesta de RRHH:</strong></label>
+                        <textarea class="form-control" id="respuesta_rrhh" name="respuesta_rrhh" rows="4" 
+                                  placeholder="Escriba aquí la respuesta a la observación del empleado..." required></textarea>
+                        <small class="form-text text-muted">
+                            Esta respuesta será visible para el empleado y quedará registrada en el historial.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Enviar Respuesta
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para observación completa -->
+<div class="modal fade" id="modalObservacionCompleta" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-comment"></i> Observación Completa
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="observacion_completa_texto"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Datos de recibos para JavaScript
+const recibosData = {
+    {% for recibo in recibos_observados %}
+    {{ recibo.id }}: {
+        empleado: '{{ recibo.empleado.user.get_full_name }}',
+        legajo: '{{ recibo.empleado.legajo }}',
+        periodo: '{{ recibo.get_periodo_display }}',
+        tipo: '{{ recibo.get_tipo_recibo_display }}',
+        observacion: '{{ recibo.observaciones_empleado|escapejs }}',
+        fecha_observacion: '{{ recibo.fecha_observacion|date:"d/m/Y H:i" }}'
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+function responderObservacion(reciboId) {
+    const recibo = recibosData[reciboId];
+    if (!recibo) return;
+    
+    // Llenar el modal con los datos
+    document.getElementById('recibo_id').value = reciboId;
+    document.getElementById('modal_empleado').textContent = recibo.empleado;
+    document.getElementById('modal_legajo').textContent = recibo.legajo;
+    document.getElementById('modal_periodo').textContent = recibo.periodo;
+    document.getElementById('modal_tipo').textContent = recibo.tipo;
+    document.getElementById('modal_observacion_empleado').textContent = recibo.observacion;
+    document.getElementById('modal_fecha_observacion').textContent = recibo.fecha_observacion;
+    
+    // Limpiar respuesta anterior
+    document.getElementById('respuesta_rrhh').value = '';
+    
+    // Mostrar modal
+    $('#modalResponderObservacion').modal('show');
+}
+
+function mostrarObservacionCompleta(reciboId) {
+    const recibo = recibosData[reciboId];
+    if (!recibo) return;
+    
+    document.getElementById('observacion_completa_texto').textContent = recibo.observacion;
+    $('#modalObservacionCompleta').modal('show');
+}
+
+// Manejar envío del formulario
+$(document).ready(function() {
+    $('#formResponderObservacion').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch('{% url "rrhh:responder_observacion" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                $('#modalResponderObservacion').modal('hide');
+                // Mostrar mensaje de éxito
+                alert('Respuesta enviada correctamente');
+                location.reload(); // Recargar la página para ver los cambios
+            } else {
+                alert('Error: ' + (data.error || 'No se pudo procesar la respuesta'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al procesar la respuesta: ' + error.message);
+        });
+    });
+});
+</script>
+
+<!-- DataTables -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<script>
+$(document).ready(function() {
+    $('#dataTable').DataTable({
+        "language": {
+            "url": "//cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json"
+        },
+        "order": [[ 3, "desc" ]], // Ordenar por fecha de observación descendente
+        "pageLength": 25
+    });
+});
+</script>
+{% endblock %}

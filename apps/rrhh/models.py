@@ -26,9 +26,16 @@ class CargaMasivaRecibos(models.Model):
         ('diciembre', 'Diciembre'),
     ]
     
+    TIPO_RECIBO_CHOICES = [
+        ('sueldo', 'Sueldo'),
+        ('sac_1', 'SAC 1'),
+        ('sac_2', 'SAC 2'),
+    ]
+    
     # Información del período
     periodo = models.CharField(max_length=20, choices=PERIODO_CHOICES)
     anio = models.IntegerField()
+    tipo_recibo = models.CharField(max_length=10, choices=TIPO_RECIBO_CHOICES, default='sueldo')
     
     # Archivo y procesamiento
     archivo_pdf = models.FileField(upload_to='recibos_masivos/', help_text='PDF con todos los recibos del período')
@@ -56,11 +63,30 @@ class CargaMasivaRecibos(models.Model):
     class Meta:
         verbose_name = "Carga Masiva de Recibos"
         verbose_name_plural = "Cargas Masivas de Recibos"
-        unique_together = ['periodo', 'anio']
+        unique_together = ['periodo', 'anio', 'tipo_recibo']
         ordering = ['-fecha_carga']
     
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        super().clean()
+        
+        # Validación personalizada para unique_together con mensaje más claro
+        if self.periodo and self.anio and self.tipo_recibo:
+            queryset = CargaMasivaRecibos.objects.filter(
+                periodo=self.periodo, 
+                anio=self.anio, 
+                tipo_recibo=self.tipo_recibo
+            )
+            if self.pk:
+                queryset = queryset.exclude(pk=self.pk)
+            
+            if queryset.exists():
+                tipo_display = dict(self.TIPO_RECIBO_CHOICES).get(self.tipo_recibo, self.tipo_recibo)
+                periodo_display = dict(self.PERIODO_CHOICES).get(self.periodo, self.periodo)
+                raise ValidationError(f'Ya existe una carga de {tipo_display} para {periodo_display} {self.anio}. Elimina la anterior antes de crear una nueva.')
+    
     def __str__(self):
-        return f"Recibos {self.get_periodo_display()} {self.anio} - {self.get_estado_display()}"
+        return f"{self.get_tipo_recibo_display()} {self.get_periodo_display()} {self.anio} - {self.get_estado_display()}"
     
     @property
     def fecha_vencimiento_calculada(self):

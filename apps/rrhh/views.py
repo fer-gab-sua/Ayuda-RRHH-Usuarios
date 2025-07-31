@@ -906,11 +906,17 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('rrhh:recibos_dashboard')
     
     def form_valid(self, form):
+        print(f"DEBUG: form_valid llamado")
+        print(f"DEBUG: tipo_recibo = {form.cleaned_data.get('tipo_recibo')}")
+        print(f"DEBUG: periodo = {form.cleaned_data.get('periodo')}")
+        print(f"DEBUG: anio = {form.cleaned_data.get('anio')}")
+        
         form.instance.usuario_carga = self.request.user
         response = super().form_valid(form)
         
         # Si es una petición AJAX, retornar JSON con el ID
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            print(f"DEBUG: Petición AJAX detectada")
             # Inicializar el estado
             self.object.estado = 'procesando'
             self.object.fecha_procesamiento = timezone.now()
@@ -947,6 +953,20 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, 'Archivo cargado exitosamente. El procesamiento ha comenzado.')
         return response
     
+    def form_invalid(self, form):
+        print(f"DEBUG: form_invalid llamado")
+        print(f"DEBUG: Errores del formulario: {form.errors}")
+        
+        # Si es una petición AJAX, retornar JSON con errores
+        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': False,
+                'errors': form.errors,
+                'message': 'Error en la validación del formulario'
+            }, status=400)
+        
+        return super().form_invalid(form)
+    
     def procesar_archivo_recibos(self, carga_masiva):
         """Procesa el archivo PDF y genera recibos individuales"""
         try:
@@ -972,18 +992,19 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
             # Por cada empleado, verificar si existe en el PDF antes de crear el recibo
             for empleado in empleados:
                 try:
-                    # Verificar que no exista ya un recibo para este período
+                    # Verificar que no exista ya un recibo para este período y tipo
                     if ReciboSueldo.objects.filter(
                         empleado=empleado,
                         periodo=carga_masiva.periodo,
-                        anio=carga_masiva.anio
+                        anio=carga_masiva.anio,
+                        tipo_recibo=carga_masiva.tipo_recibo
                     ).exists():
                         LogProcesamientoRecibo.objects.create(
                             carga_masiva=carga_masiva,
                             legajo_empleado=empleado.legajo,
                             nombre_empleado=empleado.user.get_full_name(),
                             estado='error',
-                            mensaje=f'Ya existe un recibo para {carga_masiva.periodo} {carga_masiva.anio}'
+                            mensaje=f'Ya existe un recibo de {carga_masiva.get_tipo_recibo_display()} para {carga_masiva.periodo} {carga_masiva.anio}'
                         )
                         continue
                     
@@ -996,6 +1017,7 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
                             empleado=empleado,
                             periodo=carga_masiva.periodo,
                             anio=carga_masiva.anio,
+                            tipo_recibo=carga_masiva.tipo_recibo,
                             fecha_vencimiento=carga_masiva.fecha_vencimiento_calculada,
                             estado='pendiente',
                             subido_por=self.request.user
@@ -1017,7 +1039,7 @@ class CargaMasivaCreateView(LoginRequiredMixin, CreateView):
                                 legajo_empleado=empleado.legajo,
                                 nombre_empleado=empleado.user.get_full_name(),
                                 estado='exitoso',
-                                mensaje=f'Recibo generado exitosamente ({mensaje_paginas})'
+                                mensaje=f'Recibo de {carga_masiva.get_tipo_recibo_display()} generado exitosamente ({mensaje_paginas})'
                             )
                         else:
                             # Si falla la generación del PDF, eliminar el recibo
