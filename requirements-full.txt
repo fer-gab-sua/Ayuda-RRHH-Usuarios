@@ -1,0 +1,32 @@
+# Requirements completos (instalar solo si son necesarios)
+# Usar: pip install -r requirements-full.txt
+
+# Dependencias básicas (siempre necesarias)
+Django==5.2.4
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.2
+python-decouple==3.8
+Pillow==10.4.0
+
+# Dependencias opcionales para funcionalidades avanzadas
+# Descomentar las que necesites:
+
+# Para generación de PDFs:
+# reportlab==4.2.2
+
+# Para manejo de Excel:
+# openpyxl==3.1.2
+# pandas==2.0.3
+# numpy==1.24.4
+
+# Para procesamiento de PDFs:
+# PyPDF2==3.0.1
+
+# Para PDFs con estilos avanzados:
+# xhtml2pdf==0.2.16
+# arabic-reshaper==3.0.0
+# python-bidi==0.6.6
+
+# Otras utilidades:
+# requests==2.32.3
+# lxml==5.3.0

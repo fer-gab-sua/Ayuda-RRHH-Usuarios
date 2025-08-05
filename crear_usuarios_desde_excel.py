@@ -4,12 +4,26 @@ Script para crear usuarios desde archivo Excel
 Crea usuarios de tipo empleado donde:
 - Usuario: número de documento
 - Contraseña: últimos 6 dígitos del documento
+
+NOTA: Requiere pandas. Instale con: pip install pandas openpyxl xlrd
 """
 
 import os
 import sys
 import django
-import pandas as pd
+
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    print("❌ ERROR: pandas no está instalado.")
+    print("Para usar este script, instale las dependencias completas:")
+    print("pip install -r requirements-full.txt")
+    print("O instale pandas manualmente:")
+    print("pip install pandas openpyxl xlrd")
+    exit(1)
+
 from datetime import datetime
 
 # Configurar Django

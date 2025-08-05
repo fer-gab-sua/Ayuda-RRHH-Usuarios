@@ -1,0 +1,26 @@
+# Requirements para Python 3.10 - Compatible con PythonAnywhere
+# Versiones específicas probadas y funcionales
+
+# Django y componentes principales
+Django==4.2.16
+django-crispy-forms==2.3
+crispy-bootstrap5==2024.2
+python-decouple==3.8
+
+# Manejo de imágenes
+Pillow==10.4.0
+
+# Dependencias para PDFs y Excel (opcionales pero funcionales en Python 3.10)
+reportlab==4.2.5
+PyPDF2==3.0.1
+xhtml2pdf==0.2.16
+
+# Dependencias para Excel
+pandas==2.0.3
+numpy==1.24.4
+openpyxl==3.1.5
+xlrd==2.0.1
+
+# Utilidades adicionales
+python-dateutil==2.9.0
+six==1.16.0

@@ -1,9 +1,21 @@
 #!/usr/bin/env python
 """
 Script para inspeccionar el archivo Excel y ver las columnas disponibles
+NOTA: Requiere pandas. Instale con: pip install pandas openpyxl xlrd
 """
 
-import pandas as pd
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    print("❌ ERROR: pandas no está instalado.")
+    print("Para usar este script, instale las dependencias completas:")
+    print("pip install -r requirements-full.txt")
+    print("O instale pandas manualmente:")
+    print("pip install pandas openpyxl xlrd")
+    exit(1)
+
 import sys
 
 def inspeccionar_excel():

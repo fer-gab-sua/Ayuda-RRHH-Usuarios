@@ -9,6 +9,10 @@ from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.views.decorators.http import require_POST
 from datetime import datetime, timedelta
+from io import BytesIO
+import base64
+
+# Imports para PDF - ahora incluidos en requirements.txt
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
@@ -16,8 +20,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from io import BytesIO
-import base64
 
 from .models import ReciboSueldo, FirmaRecibo
 from apps.empleados.models import Empleado, ActividadEmpleado
